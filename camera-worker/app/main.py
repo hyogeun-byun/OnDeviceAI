@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import logging
 import time
+from queue import Empty, Full, Queue
+from threading import Event, Thread
+
+import cv2
 
 from app.camera.camera_reader import CameraReader
 from app.camera.frame_encoder import FrameEncoder
 from app.config import load_config
+from app.constants import KEYPOINT_INFERENCE_FPS
 from app.inference.pose_estimator import PoseEstimator
-from app.network.server_client import ServerClient
+from app.metrics import CameraWorkerMetrics
+from app.network.websocket_client import WebSocketCameraClient
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,12 +22,116 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+FramePacket = tuple[cv2.typing.MatLike, float]
+
+
+def put_latest(queue: Queue[FramePacket], packet: FramePacket) -> None:
+    try:
+        queue.put_nowait(packet)
+    except Full:
+        try:
+            queue.get_nowait()
+        except Empty:
+            pass
+        queue.put_nowait(packet)
+
+
+def capture_loop(
+    camera_reader: CameraReader,
+    frame_queue: Queue[FramePacket],
+    pose_queue: Queue[FramePacket],
+    target_fps: float,
+    stop_event: Event,
+) -> None:
+    sleep_seconds = 1.0 / target_fps if target_fps > 0 else 0.1
+
+    while not stop_event.is_set():
+        loop_started_at = time.perf_counter()
+        capture_started_at = time.perf_counter()
+        frame = camera_reader.read()
+        capture_ms = (time.perf_counter() - capture_started_at) * 1000
+
+        put_latest(frame_queue, (frame.copy(), capture_ms))
+        put_latest(pose_queue, (frame.copy(), capture_ms))
+
+        elapsed_seconds = time.perf_counter() - loop_started_at
+        time.sleep(max(0.0, sleep_seconds - elapsed_seconds))
+
+
+def frame_sender_loop(
+    frame_queue: Queue[FramePacket],
+    frame_encoder: FrameEncoder,
+    websocket_client: WebSocketCameraClient,
+    metrics: CameraWorkerMetrics,
+    stop_event: Event,
+) -> None:
+    while not stop_event.is_set():
+        try:
+            frame, capture_ms = frame_queue.get(timeout=0.2)
+        except Empty:
+            continue
+
+        encode_started_at = time.perf_counter()
+        frame_bytes = frame_encoder.encode_to_jpeg(frame)
+        encode_ms = (time.perf_counter() - encode_started_at) * 1000
+        frame_upload_ms = websocket_client.send_frame(frame_bytes)
+
+        metrics.record_frame(
+            frame_bytes=len(frame_bytes),
+            capture_ms=capture_ms,
+            encode_ms=encode_ms,
+            frame_upload_ms=frame_upload_ms,
+        )
+
+        metrics_payload = metrics.maybe_collect()
+        if metrics_payload is not None:
+            websocket_client.send_metrics(metrics_payload)
+
+
+def pose_inference_loop(
+    pose_queue: Queue[FramePacket],
+    pose_estimator: PoseEstimator,
+    websocket_client: WebSocketCameraClient,
+    metrics: CameraWorkerMetrics,
+    pose_enabled: bool,
+    stop_event: Event,
+) -> None:
+    inference_interval_seconds = 1.0 / KEYPOINT_INFERENCE_FPS
+
+    while not stop_event.is_set():
+        loop_started_at = time.perf_counter()
+        try:
+            frame, _capture_ms = pose_queue.get(timeout=0.2)
+        except Empty:
+            continue
+
+        if pose_enabled:
+            pose_started_at = time.perf_counter()
+            pose_result = pose_estimator.estimate(frame)
+            pose_ms = (time.perf_counter() - pose_started_at) * 1000
+            pose_upload_ms = websocket_client.send_pose(pose_result)
+            metrics.record_pose(pose_ms=pose_ms, pose_upload_ms=pose_upload_ms)
+
+        elapsed_seconds = time.perf_counter() - loop_started_at
+        time.sleep(max(0.0, inference_interval_seconds - elapsed_seconds))
+
 
 def main() -> None:
     config = load_config()
-    sleep_seconds = 1.0 / config.fps if config.fps > 0 else 0.1
 
-    logger.info("Starting camera worker: camera_id=%s server=%s", config.camera_id, config.server_url)
+    logger.info(
+        (
+            "Starting camera worker: camera_id=%s server=%s target_fps=%.2f "
+            "pose_enabled=%s keypoint_inference_fps=%.2f pose_input_width=%s jpeg_quality=%s"
+        ),
+        config.camera_id,
+        config.server_url,
+        config.fps,
+        config.pose_enabled,
+        KEYPOINT_INFERENCE_FPS,
+        config.pose_input_width,
+        config.jpeg_quality,
+    )
 
     camera_reader = CameraReader(
         camera_index=config.camera_index,
@@ -29,7 +139,11 @@ def main() -> None:
         frame_height=config.frame_height,
     )
     frame_encoder = FrameEncoder(jpeg_quality=config.jpeg_quality)
-    server_client = ServerClient(server_url=config.server_url, camera_id=config.camera_id)
+    websocket_client = WebSocketCameraClient(server_url=config.server_url, camera_id=config.camera_id)
+    metrics = CameraWorkerMetrics(
+        camera_id=config.camera_id,
+        log_interval_seconds=config.log_interval_seconds,
+    )
     pose_estimator = PoseEstimator(
         camera_id=config.camera_id,
         enabled=config.pose_enabled,
@@ -41,71 +155,47 @@ def main() -> None:
         draw_landmarks=config.pose_draw_landmarks,
     )
 
-    # --- TEMP: 단계별 타이밍 계측 (병목 진단용, 진단 후 제거) ---
-    timing_report_every = 30
-    timing_sums = {"read": 0.0, "estimate": 0.0, "send_pose": 0.0, "encode": 0.0, "send_frame": 0.0, "loop": 0.0}
-    timing_counts = {key: 0 for key in timing_sums}
-    timing_window = 0
-    # --- END TEMP ---
+    frame_queue: Queue[FramePacket] = Queue(maxsize=1)
+    pose_queue: Queue[FramePacket] = Queue(maxsize=1)
+    stop_event = Event()
+
+    threads = [
+        Thread(
+            target=capture_loop,
+            name="camera-capture",
+            args=(camera_reader, frame_queue, pose_queue, config.fps, stop_event),
+            daemon=True,
+        ),
+        Thread(
+            target=frame_sender_loop,
+            name="frame-sender",
+            args=(frame_queue, frame_encoder, websocket_client, metrics, stop_event),
+            daemon=True,
+        ),
+        Thread(
+            target=pose_inference_loop,
+            name="pose-inference",
+            args=(pose_queue, pose_estimator, websocket_client, metrics, config.pose_enabled, stop_event),
+            daemon=True,
+        ),
+    ]
 
     try:
         camera_reader.open()
-        frame_index = 0
+        for thread in threads:
+            thread.start()
+
         while True:
-            loop_started = time.perf_counter()
-
-            t0 = time.perf_counter()
-            frame = camera_reader.read()
-            timing_sums["read"] += (time.perf_counter() - t0) * 1000
-            timing_counts["read"] += 1
-
-            if config.pose_enabled and frame_index % config.pose_inference_interval == 0:
-                t0 = time.perf_counter()
-                pose_result = pose_estimator.estimate(frame)
-                timing_sums["estimate"] += (time.perf_counter() - t0) * 1000
-                timing_counts["estimate"] += 1
-
-                t0 = time.perf_counter()
-                server_client.send_pose(pose_result)
-                timing_sums["send_pose"] += (time.perf_counter() - t0) * 1000
-                timing_counts["send_pose"] += 1
-
-            t0 = time.perf_counter()
-            frame_bytes = frame_encoder.encode_to_jpeg(frame)
-            timing_sums["encode"] += (time.perf_counter() - t0) * 1000
-            timing_counts["encode"] += 1
-
-            t0 = time.perf_counter()
-            server_client.send_frame(frame_bytes)
-            timing_sums["send_frame"] += (time.perf_counter() - t0) * 1000
-            timing_counts["send_frame"] += 1
-
-            timing_sums["loop"] += (time.perf_counter() - loop_started) * 1000
-            timing_counts["loop"] += 1
-            timing_window += 1
-
-            if timing_window >= timing_report_every:
-                parts = []
-                for key in ("read", "estimate", "send_pose", "encode", "send_frame", "loop"):
-                    count = timing_counts[key]
-                    avg = timing_sums[key] / count if count else 0.0
-                    parts.append(f"{key}={avg:6.1f}ms")
-                loop_avg = timing_sums["loop"] / timing_counts["loop"] if timing_counts["loop"] else 0.0
-                eff_fps = 1000.0 / loop_avg if loop_avg > 0 else 0.0
-                logger.info("[TIMING] %s  => %.1f loop-FPS (sleep 제외 순수처리)", "  ".join(parts), eff_fps)
-                for key in timing_sums:
-                    timing_sums[key] = 0.0
-                    timing_counts[key] = 0
-                timing_window = 0
-
-            frame_index += 1
-            time.sleep(sleep_seconds)
+            time.sleep(1.0)
     except KeyboardInterrupt:
         logger.info("Stopping camera worker.")
     finally:
+        stop_event.set()
+        for thread in threads:
+            thread.join(timeout=2.0)
+        websocket_client.close()
         pose_estimator.close()
         camera_reader.close()
-        server_client.close()
 
 
 if __name__ == "__main__":
