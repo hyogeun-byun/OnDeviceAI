@@ -10,7 +10,6 @@ import cv2
 from app.camera.camera_reader import CameraReader
 from app.camera.frame_encoder import FrameEncoder
 from app.config import load_config
-from app.constants import KEYPOINT_INFERENCE_FPS
 from app.inference.pose_estimator import PoseEstimator
 from app.metrics import CameraWorkerMetrics
 from app.network.websocket_client import WebSocketCameraClient
@@ -94,9 +93,10 @@ def pose_inference_loop(
     websocket_client: WebSocketCameraClient,
     metrics: CameraWorkerMetrics,
     pose_enabled: bool,
+    target_fps: float,
     stop_event: Event,
 ) -> None:
-    inference_interval_seconds = 1.0 / KEYPOINT_INFERENCE_FPS
+    inference_interval_seconds = 1.0 / target_fps if target_fps > 0 else 0.1
 
     while not stop_event.is_set():
         loop_started_at = time.perf_counter()
@@ -128,7 +128,7 @@ def main() -> None:
         config.server_url,
         config.fps,
         config.pose_enabled,
-        KEYPOINT_INFERENCE_FPS,
+        config.fps,
         config.pose_input_width,
         config.jpeg_quality,
     )
@@ -175,7 +175,7 @@ def main() -> None:
         Thread(
             target=pose_inference_loop,
             name="pose-inference",
-            args=(pose_queue, pose_estimator, websocket_client, metrics, config.pose_enabled, stop_event),
+            args=(pose_queue, pose_estimator, websocket_client, metrics, config.pose_enabled, config.fps, stop_event),
             daemon=True,
         ),
     ]

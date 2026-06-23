@@ -479,7 +479,7 @@ Web 대시보드는 아래처럼 구성하면 된다.
 6. `server/requirements.txt`
 7. `camera-worker/requirements.txt`
 
-현재 최소 구현에서는 카메라 워커가 OpenCV로 프레임을 읽고, MediaPipe Pose를 사용해 keypoint를 추출한 뒤 서버로 전송한다. 라즈베리파이 부담을 줄이기 위해 keypoint 추론은 `KEYPOINT_INFERENCE_FPS = 5.0` 상수로 초당 5회만 실행하고, `POSE_INPUT_WIDTH`, `POSE_MODEL_COMPLEXITY`로 입력 크기와 모델 복잡도를 낮출 수 있게 구성한다.
+현재 최소 구현에서는 카메라 워커가 OpenCV로 프레임을 읽고, MediaPipe Pose를 사용해 keypoint를 추출한 뒤 서버로 전송한다. keypoint 추론 목표 FPS는 영상 전송 목표 FPS와 동일하게 `FPS` 설정을 따르며, `POSE_INPUT_WIDTH`, `POSE_MODEL_COMPLEXITY`로 입력 크기와 모델 복잡도를 낮출 수 있게 구성한다.
 
 ## 15. 요약
 

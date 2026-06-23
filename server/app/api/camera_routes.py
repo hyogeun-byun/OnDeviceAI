@@ -9,6 +9,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.services.stream_manager import StreamManager
+from app.services.pose_similarity import calculate_pose_similarity
 from app.services.traffic_metrics import TrafficMetrics
 
 router = APIRouter(prefix="/api/cameras", tags=["cameras"])
@@ -99,6 +100,7 @@ async def list_cameras(request: Request) -> dict[str, object]:
         cameras.append(
             {
                 **camera,
+                "latest_pose": stream_manager.get_pose(camera_id),
                 "worker_metrics": stream_manager.get_worker_metrics(camera_id),
                 "server_metrics": traffic_metrics.get_latest(camera_id),
             }
@@ -151,6 +153,20 @@ async def receive_metrics(
         metrics=metrics,
         stream_manager=get_stream_manager(request),
     )
+
+
+@router.post("/capture")
+async def capture_measurement(request: Request) -> dict[str, object]:
+    stream_manager = get_stream_manager(request)
+    capture_id, captures = stream_manager.create_capture_set()
+    if not captures:
+        raise HTTPException(status_code=404, detail="No online camera frames are available.")
+
+    return {
+        "capture_id": capture_id,
+        "captures": captures,
+        "similarity": calculate_pose_similarity(captures),
+    }
 
 
 @router.websocket("/{camera_id}/ws")
@@ -216,6 +232,15 @@ async def snapshot(camera_id: str, request: Request) -> Response:
     frame_bytes = stream_manager.get_frame(camera_id)
     if frame_bytes is None:
         raise HTTPException(status_code=404, detail="No frame has been received yet.")
+    return Response(content=frame_bytes, media_type="image/jpeg")
+
+
+@router.get("/{camera_id}/captures/{capture_id}/image")
+async def capture_image(camera_id: str, capture_id: int, request: Request) -> Response:
+    stream_manager = get_stream_manager(request)
+    frame_bytes = stream_manager.get_capture_image(capture_id=capture_id, camera_id=camera_id)
+    if frame_bytes is None:
+        raise HTTPException(status_code=404, detail="Capture image was not found.")
     return Response(content=frame_bytes, media_type="image/jpeg")
 
 

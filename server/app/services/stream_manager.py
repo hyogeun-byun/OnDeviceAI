@@ -26,12 +26,23 @@ class CameraWorkerMetrics:
     version: int
 
 
+@dataclass(frozen=True)
+class CameraCapture:
+    capture_id: int
+    camera_id: str
+    frame_bytes: bytes
+    pose_result: dict[str, object] | None
+    captured_at: datetime
+
+
 class StreamManager:
     def __init__(self, camera_ids: tuple[str, ...]) -> None:
         self._camera_ids = camera_ids
         self._frames: dict[str, CameraFrame] = {}
         self._poses: dict[str, CameraPose] = {}
         self._worker_metrics: dict[str, CameraWorkerMetrics] = {}
+        self._captures: dict[int, dict[str, CameraCapture]] = {}
+        self._capture_id = 0
         self._lock = Lock()
 
     def update_frame(self, camera_id: str, frame_bytes: bytes) -> None:
@@ -97,6 +108,38 @@ class StreamManager:
                 "version": metrics.version,
             }
 
+    def create_capture_set(self) -> tuple[int, list[dict[str, object]]]:
+        with self._lock:
+            self._capture_id += 1
+            capture_id = self._capture_id
+            captured_at = datetime.now(timezone.utc)
+            captures: dict[str, CameraCapture] = {}
+
+            for camera_id in self._camera_ids:
+                frame = self._frames.get(camera_id)
+                if frame is None:
+                    continue
+
+                pose = self._poses.get(camera_id)
+                captures[camera_id] = CameraCapture(
+                    capture_id=capture_id,
+                    camera_id=camera_id,
+                    frame_bytes=frame.frame_bytes,
+                    pose_result=pose.pose_result if pose is not None else None,
+                    captured_at=captured_at,
+                )
+
+            self._captures[capture_id] = captures
+            return capture_id, [
+                self._capture_to_dict(capture)
+                for capture in captures.values()
+            ]
+
+    def get_capture_image(self, capture_id: int, camera_id: str) -> bytes | None:
+        with self._lock:
+            capture = self._captures.get(capture_id, {}).get(camera_id)
+            return capture.frame_bytes if capture is not None else None
+
     def list_camera_statuses(self) -> list[dict[str, object]]:
         with self._lock:
             camera_ids = list(
@@ -129,3 +172,19 @@ class StreamManager:
                 }
                 for camera_id in camera_ids
             ]
+
+    @staticmethod
+    def _capture_to_dict(capture: CameraCapture) -> dict[str, object]:
+        return {
+            "capture_id": capture.capture_id,
+            "camera_id": capture.camera_id,
+            "captured_at": capture.captured_at.isoformat(),
+            "image_url": f"/api/cameras/{capture.camera_id}/captures/{capture.capture_id}/image",
+            "pose": capture.pose_result,
+            "person_detected": capture.pose_result.get("person_detected")
+            if capture.pose_result is not None
+            else False,
+            "keypoint_count": len(capture.pose_result.get("keypoints", []))
+            if capture.pose_result is not None
+            else 0,
+        }
