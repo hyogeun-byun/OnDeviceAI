@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>이구동성 텔레파시</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Inter:wght@400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/game.css" />
+  </head>
+  <body data-player-count="{{ player_count }}">
+    <div class="aurora" aria-hidden="true">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+      <span class="orb orb-c"></span>
+    </div>
+
+    <main class="stage">
+      <header class="stage-top">
+        <div class="brand">
+          <span class="brand-mark">◈</span>
+          <span class="brand-name">이구동성 · 텔레파시</span>
+        </div>
+        <div class="round-pill" id="round-pill">READY</div>
+        <div class="conn" id="conn">연결 중…</div>
+      </header>
+
+      <!-- IDLE -->
+      <section class="screen screen-idle is-active" id="screen-idle">
+        <p class="idle-eyebrow">ON-DEVICE AI PARTY</p>
+        <h1 class="idle-title">여러분의<br /><em>텔레파시</em>는?</h1>
+        <p class="idle-desc">
+          제시어를 보고 <strong>똑같은 동작</strong>을 떠올리세요.<br />
+          서로의 모습은 볼 수 없습니다. 오직 <strong>게이지</strong>만이 진실을 말합니다.
+        </p>
+        <div class="player-dots" id="idle-players"></div>
+        <button class="cta" id="start-btn" type="button">게임 시작</button>
+        <p class="idle-hint">총 5문제 · 라운드당 15초</p>
+      </section>
+
+      <!-- COUNTDOWN -->
+      <section class="screen screen-countdown" id="screen-countdown">
+        <p class="prompt-label">제시어</p>
+        <h2 class="prompt-word" id="cd-prompt">제시어</h2>
+        <div class="count-number" id="cd-number">3</div>
+        <p class="count-hint">자세 준비!</p>
+      </section>
+
+      <!-- PLAYING -->
+      <section class="screen screen-playing" id="screen-playing">
+        <div class="play-head">
+          <p class="prompt-label">제시어</p>
+          <h2 class="prompt-word small" id="play-prompt">제시어</h2>
+        </div>
+
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 240 240">
+            <circle class="gauge-track" cx="120" cy="120" r="104" />
+            <circle class="gauge-fill" id="gauge-fill" cx="120" cy="120" r="104" />
+          </svg>
+          <div class="gauge-center">
+            <span class="gauge-value" id="gauge-value">0</span>
+            <span class="gauge-unit">텔레파시</span>
+          </div>
+        </div>
+
+        <p class="play-tagline" id="play-tagline">동작을 맞춰보세요…</p>
+
+        <div class="play-foot">
+          <div class="timer-bar"><span id="timer-fill"></span></div>
+          <div class="timer-text"><span id="timer-text">15.0</span>s</div>
+          <div class="player-dots compact" id="play-players"></div>
+        </div>
+      </section>
+
+      <!-- RESULT -->
+      <section class="screen screen-result" id="screen-result">
+        <p class="result-round" id="result-round">ROUND 1</p>
+        <p class="result-prompt" id="result-prompt">제시어</p>
+        <div class="result-score" id="result-score">0</div>
+        <p class="result-comment" id="result-comment">결과 집계 중…</p>
+      </section>
+
+      <!-- FINISHED -->
+      <section class="screen screen-final" id="screen-final">
+        <p class="final-eyebrow">FINAL TELEPATHY</p>
+        <div class="final-score" id="final-score">0</div>
+        <h2 class="final-title" id="final-title">—</h2>
+        <ul class="final-breakdown" id="final-breakdown"></ul>
+        <button class="cta" id="restart-btn" type="button">다시 하기</button>
+      </section>
+    </main>
+
+    <script src="/static/js/game.js"></script>
+  </body>
+</html>
