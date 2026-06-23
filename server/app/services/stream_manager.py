@@ -19,11 +19,19 @@ class CameraPose:
     version: int
 
 
+@dataclass(frozen=True)
+class CameraWorkerMetrics:
+    metrics: dict[str, object]
+    updated_at: datetime
+    version: int
+
+
 class StreamManager:
     def __init__(self, camera_ids: tuple[str, ...]) -> None:
         self._camera_ids = camera_ids
         self._frames: dict[str, CameraFrame] = {}
         self._poses: dict[str, CameraPose] = {}
+        self._worker_metrics: dict[str, CameraWorkerMetrics] = {}
         self._lock = Lock()
 
     def update_frame(self, camera_id: str, frame_bytes: bytes) -> None:
@@ -40,6 +48,17 @@ class StreamManager:
             current_version = self._poses.get(camera_id).version if camera_id in self._poses else 0
             self._poses[camera_id] = CameraPose(
                 pose_result=pose_result,
+                updated_at=datetime.now(timezone.utc),
+                version=current_version + 1,
+            )
+
+    def update_worker_metrics(self, camera_id: str, metrics: dict[str, object]) -> None:
+        with self._lock:
+            current_version = (
+                self._worker_metrics.get(camera_id).version if camera_id in self._worker_metrics else 0
+            )
+            self._worker_metrics[camera_id] = CameraWorkerMetrics(
+                metrics=metrics,
                 updated_at=datetime.now(timezone.utc),
                 version=current_version + 1,
             )
@@ -67,9 +86,29 @@ class StreamManager:
                 "version": pose.version,
             }
 
+    def get_worker_metrics(self, camera_id: str) -> dict[str, object] | None:
+        with self._lock:
+            metrics = self._worker_metrics.get(camera_id)
+            if metrics is None:
+                return None
+            return {
+                **metrics.metrics,
+                "updated_at": metrics.updated_at.isoformat(),
+                "version": metrics.version,
+            }
+
     def list_camera_statuses(self) -> list[dict[str, object]]:
         with self._lock:
-            camera_ids = list(dict.fromkeys([*self._camera_ids, *self._frames.keys(), *self._poses.keys()]))
+            camera_ids = list(
+                dict.fromkeys(
+                    [
+                        *self._camera_ids,
+                        *self._frames.keys(),
+                        *self._poses.keys(),
+                        *self._worker_metrics.keys(),
+                    ]
+                )
+            )
             return [
                 {
                     "camera_id": camera_id,

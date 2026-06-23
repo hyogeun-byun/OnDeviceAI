@@ -148,6 +148,68 @@ h2 {
   font-weight: 700;
 }
 
+.metrics-panel {
+  padding: 14px 16px 16px;
+  border-top: 1px solid #262d36;
+}
+
+.metrics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.metrics-row strong {
+  color: #f2f5f8;
+}
+
+.meter {
+  height: 8px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: #0d1014;
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: #7fd1ae;
+  transition: width 180ms ease;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.metrics-grid div {
+  min-width: 0;
+}
+
+.metrics-grid dt {
+  margin: 0 0 4px;
+  color: #7f8996;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.metrics-grid dd {
+  margin: 0;
+  color: #f2f5f8;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 @media (max-width: 980px) {
   .camera-grid {
     grid-template-columns: 1fr;

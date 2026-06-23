@@ -15,6 +15,7 @@ class CameraWorkerConfig:
     frame_height: int
     jpeg_quality: int
     fps: float
+    log_interval_seconds: float
     pose_enabled: bool
     pose_backend: str
     pose_model_complexity: int
@@ -43,6 +44,7 @@ def load_config() -> CameraWorkerConfig:
         frame_height=int(os.getenv("FRAME_HEIGHT", "480")),
         jpeg_quality=int(os.getenv("JPEG_QUALITY", "80")),
         fps=float(os.getenv("FPS", "10")),
+        log_interval_seconds=max(1.0, float(os.getenv("LOG_INTERVAL_SECONDS", "5"))),
         pose_enabled=read_bool("POSE_ENABLED", True),
         pose_backend=os.getenv("POSE_BACKEND", "mediapipe"),
         pose_model_complexity=int(os.getenv("POSE_MODEL_COMPLEXITY", "0")),

@@ -9,12 +9,15 @@ from app.api.camera_routes import router as camera_router
 from app.api.health_routes import router as health_router
 from app.config import load_config
 from app.services.stream_manager import StreamManager
+from app.services.traffic_metrics import TrafficMetrics
 
 config = load_config()
 stream_manager = StreamManager(camera_ids=config.camera_ids)
+traffic_metrics = TrafficMetrics()
 
 app = FastAPI(title="OnDeviceAI Server")
 app.state.stream_manager = stream_manager
+app.state.traffic_metrics = traffic_metrics
 
 app.include_router(health_router)
 app.include_router(camera_router)
@@ -30,6 +33,6 @@ async def dashboard(request: Request) -> HTMLResponse:
         {
             "request": request,
             "camera_ids": config.camera_ids,
+            "visualize_metrics": config.visualize_metrics,
         },
     )
-

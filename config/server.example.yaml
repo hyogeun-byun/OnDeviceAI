@@ -4,4 +4,4 @@ camera_ids:
   - camera_01
   - camera_02
   - camera_03
-
+visualize_metrics: true

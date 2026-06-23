@@ -11,6 +11,14 @@ class ServerConfig:
     host: str
     port: int
     camera_ids: tuple[str, ...]
+    visualize_metrics: bool
+
+
+def read_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_config() -> ServerConfig:
@@ -26,4 +34,5 @@ def load_config() -> ServerConfig:
         host=os.getenv("SERVER_HOST", "0.0.0.0"),
         port=int(os.getenv("SERVER_PORT", "8000")),
         camera_ids=camera_ids,
+        visualize_metrics=read_bool("VISUALIZE_METRICS", True),
     )

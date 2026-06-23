@@ -8,6 +8,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.services.stream_manager import StreamManager
+from app.services.traffic_metrics import TrafficMetrics
 
 router = APIRouter(prefix="/api/cameras", tags=["cameras"])
 
@@ -30,14 +31,49 @@ class PoseResult(BaseModel):
     backend: str = "unknown"
 
 
+class WorkerMetrics(BaseModel):
+    camera_id: str
+    elapsed_seconds: float
+    frame_fps: float
+    pose_fps: float
+    avg_capture_ms: float
+    avg_pose_ms: float
+    avg_encode_ms: float
+    avg_frame_upload_ms: float
+    avg_pose_upload_ms: float
+    avg_frame_kb: float
+    upload_kb_s: float
+    sent_frames: int
+    failed_frames: int
+    sent_poses: int
+    failed_poses: int
+
+
 def get_stream_manager(request: Request) -> StreamManager:
     return request.app.state.stream_manager
+
+
+def get_traffic_metrics(request: Request) -> TrafficMetrics:
+    return request.app.state.traffic_metrics
 
 
 @router.get("")
 async def list_cameras(request: Request) -> dict[str, object]:
     stream_manager = get_stream_manager(request)
-    return {"cameras": stream_manager.list_camera_statuses()}
+    traffic_metrics = get_traffic_metrics(request)
+    cameras = []
+
+    for camera in stream_manager.list_camera_statuses():
+        camera_id = str(camera["camera_id"])
+        cameras.append(
+            {
+                **camera,
+                "worker_metrics": stream_manager.get_worker_metrics(camera_id),
+                "server_metrics": traffic_metrics.get_latest(camera_id),
+            }
+        )
+
+    return {"cameras": cameras}
 
 
 @router.post("/{camera_id}/frame")
@@ -55,6 +91,7 @@ async def receive_frame(
 
     stream_manager = get_stream_manager(request)
     stream_manager.update_frame(camera_id=camera_id, frame_bytes=frame_bytes)
+    get_traffic_metrics(request).record_frame(camera_id=camera_id, frame_bytes=len(frame_bytes))
     return {"camera_id": camera_id, "received_bytes": len(frame_bytes)}
 
 
@@ -69,11 +106,26 @@ async def receive_pose(
 
     stream_manager = get_stream_manager(request)
     stream_manager.update_pose(camera_id=camera_id, pose_result=pose_result.model_dump())
+    get_traffic_metrics(request).record_pose(camera_id=camera_id)
     return {
         "camera_id": camera_id,
         "keypoint_count": len(pose_result.keypoints),
         "person_detected": pose_result.person_detected,
     }
+
+
+@router.post("/{camera_id}/metrics")
+async def receive_metrics(
+    camera_id: str,
+    request: Request,
+    metrics: WorkerMetrics,
+) -> dict[str, object]:
+    if metrics.camera_id != camera_id:
+        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
+
+    stream_manager = get_stream_manager(request)
+    stream_manager.update_worker_metrics(camera_id=camera_id, metrics=metrics.model_dump())
+    return {"camera_id": camera_id, "received": True}
 
 
 @router.get("/{camera_id}/pose")

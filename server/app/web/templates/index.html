@@ -6,7 +6,7 @@
     <title>OnDeviceAI Dashboard</title>
     <link rel="stylesheet" href="/static/css/dashboard.css" />
   </head>
-  <body>
+  <body data-visualize-metrics="{{ 'true' if visualize_metrics else 'false' }}">
     <main class="dashboard">
       <header class="topbar">
         <div>
@@ -40,6 +40,50 @@
               <dd id="{{ camera_id }}-keypoint-count">0</dd>
             </div>
           </dl>
+          {% if visualize_metrics %}
+          <section class="metrics-panel" aria-label="{{ camera_id }} performance metrics">
+            <div class="metrics-row">
+              <span>Frame FPS</span>
+              <strong id="{{ camera_id }}-frame-fps">0.0</strong>
+            </div>
+            <div class="meter">
+              <span id="{{ camera_id }}-frame-fps-bar"></span>
+            </div>
+            <div class="metrics-row">
+              <span>Pose FPS</span>
+              <strong id="{{ camera_id }}-pose-fps">0.0</strong>
+            </div>
+            <div class="meter">
+              <span id="{{ camera_id }}-pose-fps-bar"></span>
+            </div>
+            <dl class="metrics-grid">
+              <div>
+                <dt>Pose</dt>
+                <dd id="{{ camera_id }}-avg-pose-ms">0 ms</dd>
+              </div>
+              <div>
+                <dt>Upload</dt>
+                <dd id="{{ camera_id }}-avg-upload-ms">0 ms</dd>
+              </div>
+              <div>
+                <dt>Traffic</dt>
+                <dd id="{{ camera_id }}-upload-kb-s">0 KB/s</dd>
+              </div>
+              <div>
+                <dt>Frame</dt>
+                <dd id="{{ camera_id }}-avg-frame-kb">0 KB</dd>
+              </div>
+              <div>
+                <dt>Server FPS</dt>
+                <dd id="{{ camera_id }}-server-frame-fps">0.0</dd>
+              </div>
+              <div>
+                <dt>Failures</dt>
+                <dd id="{{ camera_id }}-failures">0</dd>
+              </div>
+            </dl>
+          </section>
+          {% endif %}
         </article>
         {% endfor %}
       </section>
