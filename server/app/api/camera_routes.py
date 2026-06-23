@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -57,6 +58,36 @@ def get_traffic_metrics(request: Request) -> TrafficMetrics:
     return request.app.state.traffic_metrics
 
 
+def update_pose_result(
+    camera_id: str,
+    pose_result: PoseResult,
+    stream_manager: StreamManager,
+    traffic_metrics: TrafficMetrics,
+) -> dict[str, object]:
+    if pose_result.camera_id != camera_id:
+        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
+
+    stream_manager.update_pose(camera_id=camera_id, pose_result=pose_result.model_dump())
+    traffic_metrics.record_pose(camera_id=camera_id)
+    return {
+        "camera_id": camera_id,
+        "keypoint_count": len(pose_result.keypoints),
+        "person_detected": pose_result.person_detected,
+    }
+
+
+def update_worker_metrics(
+    camera_id: str,
+    metrics: WorkerMetrics,
+    stream_manager: StreamManager,
+) -> dict[str, object]:
+    if metrics.camera_id != camera_id:
+        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
+
+    stream_manager.update_worker_metrics(camera_id=camera_id, metrics=metrics.model_dump())
+    return {"camera_id": camera_id, "received": True}
+
+
 @router.get("")
 async def list_cameras(request: Request) -> dict[str, object]:
     stream_manager = get_stream_manager(request)
@@ -101,17 +132,12 @@ async def receive_pose(
     request: Request,
     pose_result: PoseResult,
 ) -> dict[str, object]:
-    if pose_result.camera_id != camera_id:
-        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
-
-    stream_manager = get_stream_manager(request)
-    stream_manager.update_pose(camera_id=camera_id, pose_result=pose_result.model_dump())
-    get_traffic_metrics(request).record_pose(camera_id=camera_id)
-    return {
-        "camera_id": camera_id,
-        "keypoint_count": len(pose_result.keypoints),
-        "person_detected": pose_result.person_detected,
-    }
+    return update_pose_result(
+        camera_id=camera_id,
+        pose_result=pose_result,
+        stream_manager=get_stream_manager(request),
+        traffic_metrics=get_traffic_metrics(request),
+    )
 
 
 @router.post("/{camera_id}/metrics")
@@ -120,12 +146,59 @@ async def receive_metrics(
     request: Request,
     metrics: WorkerMetrics,
 ) -> dict[str, object]:
-    if metrics.camera_id != camera_id:
-        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
+    return update_worker_metrics(
+        camera_id=camera_id,
+        metrics=metrics,
+        stream_manager=get_stream_manager(request),
+    )
 
-    stream_manager = get_stream_manager(request)
-    stream_manager.update_worker_metrics(camera_id=camera_id, metrics=metrics.model_dump())
-    return {"camera_id": camera_id, "received": True}
+
+@router.websocket("/{camera_id}/ws")
+async def camera_websocket(camera_id: str, websocket: WebSocket) -> None:
+    await websocket.accept()
+    stream_manager: StreamManager = websocket.app.state.stream_manager
+    traffic_metrics: TrafficMetrics = websocket.app.state.traffic_metrics
+
+    try:
+        while True:
+            message = await websocket.receive()
+            if message.get("type") == "websocket.disconnect":
+                return
+
+            frame_bytes = message.get("bytes")
+            message_text = message.get("text")
+
+            if frame_bytes is not None:
+                stream_manager.update_frame(camera_id=camera_id, frame_bytes=frame_bytes)
+                traffic_metrics.record_frame(camera_id=camera_id, frame_bytes=len(frame_bytes))
+                continue
+
+            if message_text is None:
+                continue
+
+            try:
+                payload = json.loads(message_text)
+            except json.JSONDecodeError:
+                continue
+
+            message_type = payload.get("type")
+            message_payload = payload.get("payload", {})
+
+            if message_type == "pose":
+                update_pose_result(
+                    camera_id=camera_id,
+                    pose_result=PoseResult.model_validate(message_payload),
+                    stream_manager=stream_manager,
+                    traffic_metrics=traffic_metrics,
+                )
+            elif message_type == "metrics":
+                update_worker_metrics(
+                    camera_id=camera_id,
+                    metrics=WorkerMetrics.model_validate(message_payload),
+                    stream_manager=stream_manager,
+                )
+    except WebSocketDisconnect:
+        return
 
 
 @router.get("/{camera_id}/pose")

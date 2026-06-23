@@ -20,6 +20,8 @@ cp .env.example .env
 python -m app.main
 ```
 
+워커는 `SERVER_URL`을 기준으로 WebSocket 주소를 자동 생성한다. 예를 들어 `SERVER_URL=http://192.168.0.10:8000`이면 내부적으로 `ws://192.168.0.10:8000/api/cameras/camera_01/ws`에 연결한다.
+
 예:
 
 ```text
@@ -27,19 +29,17 @@ SERVER_URL=http://192.168.0.10:8000
 CAMERA_ID=camera_01
 CAMERA_INDEX=0
 POSE_ENABLED=true
-POSE_INFERENCE_INTERVAL=3
 POSE_INPUT_WIDTH=256
 ```
 
-포즈 추정은 MediaPipe Pose를 사용한다. 라즈베리파이 부담을 줄이기 위해 영상 전송 FPS와 포즈 추정 주기를 분리했다.
+포즈 추정은 MediaPipe Pose를 사용한다. 라즈베리파이 부담을 줄이기 위해 영상 전송 FPS와 포즈 추정 FPS를 분리했다.
 
 - `FPS`: 서버로 보내는 카메라 프레임 FPS
-- `POSE_INFERENCE_INTERVAL`: 몇 프레임마다 한 번 포즈 추정을 할지 설정
 - `POSE_INPUT_WIDTH`: 포즈 추정에 넣을 축소 이미지 너비
 - `POSE_MODEL_COMPLEXITY=0`: 가장 가벼운 모델 설정
 - `LOG_INTERVAL_SECONDS`: FPS와 전송량 로그를 몇 초마다 찍을지 설정
 
-예를 들어 `FPS=10`, `POSE_INFERENCE_INTERVAL=3`이면 카메라 화면은 초당 약 10프레임 전송하고, 포즈 추정은 초당 약 3회 실행한다.
+keypoint 추론은 코드 상수 `KEYPOINT_INFERENCE_FPS = 5.0` 기준으로 초당 5회 실행한다. 워커 내부는 카메라 캡처, 프레임 전송, 포즈 추정 스레드로 분리되어 포즈 추정이 영상 전송을 최대한 막지 않도록 구성한다.
 
 ## 속도 확인 로그
 

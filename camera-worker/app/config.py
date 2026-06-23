@@ -19,7 +19,6 @@ class CameraWorkerConfig:
     pose_enabled: bool
     pose_backend: str
     pose_model_complexity: int
-    pose_inference_interval: int
     pose_input_width: int
     pose_min_detection_confidence: float
     pose_min_tracking_confidence: float
@@ -48,7 +47,6 @@ def load_config() -> CameraWorkerConfig:
         pose_enabled=read_bool("POSE_ENABLED", True),
         pose_backend=os.getenv("POSE_BACKEND", "mediapipe"),
         pose_model_complexity=int(os.getenv("POSE_MODEL_COMPLEXITY", "0")),
-        pose_inference_interval=max(1, int(os.getenv("POSE_INFERENCE_INTERVAL", "3"))),
         pose_input_width=max(128, int(os.getenv("POSE_INPUT_WIDTH", "256"))),
         pose_min_detection_confidence=float(os.getenv("POSE_MIN_DETECTION_CONFIDENCE", "0.5")),
         pose_min_tracking_confidence=float(os.getenv("POSE_MIN_TRACKING_CONFIDENCE", "0.5")),
