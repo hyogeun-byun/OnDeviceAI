@@ -479,6 +479,8 @@ Web 대시보드는 아래처럼 구성하면 된다.
 6. `server/requirements.txt`
 7. `camera-worker/requirements.txt`
 
+현재 최소 구현에서는 카메라 워커가 OpenCV로 프레임을 읽고, MediaPipe Pose를 사용해 keypoint를 추출한 뒤 서버로 전송한다. 라즈베리파이 부담을 줄이기 위해 `POSE_INFERENCE_INTERVAL`, `POSE_INPUT_WIDTH`, `POSE_MODEL_COMPLEXITY`로 추론 빈도와 입력 크기를 낮출 수 있게 구성한다.
+
 ## 15. 요약
 
 현재 장비 구성으로 목표 프로젝트는 가능하다.

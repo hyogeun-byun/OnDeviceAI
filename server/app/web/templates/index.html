@@ -30,6 +30,16 @@
               class="stream-image"
             />
           </div>
+          <dl class="pose-summary">
+            <div>
+              <dt>Pose</dt>
+              <dd id="{{ camera_id }}-pose-state">Waiting</dd>
+            </div>
+            <div>
+              <dt>Keypoints</dt>
+              <dd id="{{ camera_id }}-keypoint-count">0</dd>
+            </div>
+          </dl>
         </article>
         {% endfor %}
       </section>
@@ -38,4 +48,3 @@
     <script src="/static/js/dashboard.js"></script>
   </body>
 </html>
-

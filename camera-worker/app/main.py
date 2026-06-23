@@ -6,6 +6,7 @@ import time
 from app.camera.camera_reader import CameraReader
 from app.camera.frame_encoder import FrameEncoder
 from app.config import load_config
+from app.inference.pose_estimator import PoseEstimator
 from app.network.server_client import ServerClient
 
 logging.basicConfig(
@@ -29,20 +30,37 @@ def main() -> None:
     )
     frame_encoder = FrameEncoder(jpeg_quality=config.jpeg_quality)
     server_client = ServerClient(server_url=config.server_url, camera_id=config.camera_id)
+    pose_estimator = PoseEstimator(
+        camera_id=config.camera_id,
+        enabled=config.pose_enabled,
+        backend=config.pose_backend,
+        model_complexity=config.pose_model_complexity,
+        input_width=config.pose_input_width,
+        min_detection_confidence=config.pose_min_detection_confidence,
+        min_tracking_confidence=config.pose_min_tracking_confidence,
+        draw_landmarks=config.pose_draw_landmarks,
+    )
 
     try:
         camera_reader.open()
+        frame_index = 0
         while True:
             frame = camera_reader.read()
+
+            if config.pose_enabled and frame_index % config.pose_inference_interval == 0:
+                pose_result = pose_estimator.estimate(frame)
+                server_client.send_pose(pose_result)
+
             frame_bytes = frame_encoder.encode_to_jpeg(frame)
             server_client.send_frame(frame_bytes)
+            frame_index += 1
             time.sleep(sleep_seconds)
     except KeyboardInterrupt:
         logger.info("Stopping camera worker.")
     finally:
+        pose_estimator.close()
         camera_reader.close()
 
 
 if __name__ == "__main__":
     main()
-

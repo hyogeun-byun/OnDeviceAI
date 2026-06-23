@@ -15,6 +15,21 @@ class CameraWorkerConfig:
     frame_height: int
     jpeg_quality: int
     fps: float
+    pose_enabled: bool
+    pose_backend: str
+    pose_model_complexity: int
+    pose_inference_interval: int
+    pose_input_width: int
+    pose_min_detection_confidence: float
+    pose_min_tracking_confidence: float
+    pose_draw_landmarks: bool
+
+
+def read_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_config() -> CameraWorkerConfig:
@@ -28,4 +43,12 @@ def load_config() -> CameraWorkerConfig:
         frame_height=int(os.getenv("FRAME_HEIGHT", "480")),
         jpeg_quality=int(os.getenv("JPEG_QUALITY", "80")),
         fps=float(os.getenv("FPS", "10")),
+        pose_enabled=read_bool("POSE_ENABLED", True),
+        pose_backend=os.getenv("POSE_BACKEND", "mediapipe"),
+        pose_model_complexity=int(os.getenv("POSE_MODEL_COMPLEXITY", "0")),
+        pose_inference_interval=max(1, int(os.getenv("POSE_INFERENCE_INTERVAL", "3"))),
+        pose_input_width=max(128, int(os.getenv("POSE_INPUT_WIDTH", "256"))),
+        pose_min_detection_confidence=float(os.getenv("POSE_MIN_DETECTION_CONFIDENCE", "0.5")),
+        pose_min_tracking_confidence=float(os.getenv("POSE_MIN_TRACKING_CONFIDENCE", "0.5")),
+        pose_draw_landmarks=read_bool("POSE_DRAW_LANDMARKS", True),
     )

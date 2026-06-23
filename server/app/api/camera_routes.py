@@ -5,10 +5,29 @@ from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
+from pydantic import BaseModel, Field
 
 from app.services.stream_manager import StreamManager
 
 router = APIRouter(prefix="/api/cameras", tags=["cameras"])
+
+
+class Keypoint(BaseModel):
+    name: str
+    x: float
+    y: float
+    z: float | None = None
+    visibility: float | None = None
+
+
+class PoseResult(BaseModel):
+    camera_id: str
+    person_detected: bool
+    keypoints: list[Keypoint] = Field(default_factory=list)
+    inference_ms: float | None = None
+    frame_width: int | None = None
+    frame_height: int | None = None
+    backend: str = "unknown"
 
 
 def get_stream_manager(request: Request) -> StreamManager:
@@ -37,6 +56,33 @@ async def receive_frame(
     stream_manager = get_stream_manager(request)
     stream_manager.update_frame(camera_id=camera_id, frame_bytes=frame_bytes)
     return {"camera_id": camera_id, "received_bytes": len(frame_bytes)}
+
+
+@router.post("/{camera_id}/pose")
+async def receive_pose(
+    camera_id: str,
+    request: Request,
+    pose_result: PoseResult,
+) -> dict[str, object]:
+    if pose_result.camera_id != camera_id:
+        raise HTTPException(status_code=400, detail="Camera ID in path and body must match.")
+
+    stream_manager = get_stream_manager(request)
+    stream_manager.update_pose(camera_id=camera_id, pose_result=pose_result.model_dump())
+    return {
+        "camera_id": camera_id,
+        "keypoint_count": len(pose_result.keypoints),
+        "person_detected": pose_result.person_detected,
+    }
+
+
+@router.get("/{camera_id}/pose")
+async def pose(camera_id: str, request: Request) -> dict[str, object]:
+    stream_manager = get_stream_manager(request)
+    pose_result = stream_manager.get_pose(camera_id)
+    if pose_result is None:
+        raise HTTPException(status_code=404, detail="No pose result has been received yet.")
+    return pose_result
 
 
 @router.get("/{camera_id}/snapshot")
@@ -72,4 +118,3 @@ async def stream(camera_id: str, request: Request) -> StreamingResponse:
         generate_frames(),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
-

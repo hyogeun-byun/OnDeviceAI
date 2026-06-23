@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class ServerClient:
     def __init__(self, server_url: str, camera_id: str) -> None:
         self._upload_url = f"{server_url}/api/cameras/{camera_id}/frame"
+        self._pose_url = f"{server_url}/api/cameras/{camera_id}/pose"
 
     def send_frame(self, frame_bytes: bytes) -> None:
         try:
@@ -22,3 +23,13 @@ class ServerClient:
         except requests.RequestException as exc:
             logger.warning("Could not send frame to server: %s", exc)
 
+    def send_pose(self, pose_result: dict[str, object]) -> None:
+        try:
+            response = requests.post(
+                self._pose_url,
+                json=pose_result,
+                timeout=2.0,
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.warning("Could not send pose result to server: %s", exc)

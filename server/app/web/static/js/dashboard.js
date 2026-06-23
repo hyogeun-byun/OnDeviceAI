@@ -16,6 +16,17 @@ async function refreshCameraStatus() {
 
       state.textContent = camera.online ? "Online" : "Waiting";
       state.classList.toggle("online", camera.online);
+
+      const poseState = document.querySelector(`#${camera.camera_id}-pose-state`);
+      const keypointCount = document.querySelector(`#${camera.camera_id}-keypoint-count`);
+
+      if (poseState) {
+        poseState.textContent = camera.person_detected ? "Detected" : "Waiting";
+      }
+
+      if (keypointCount) {
+        keypointCount.textContent = String(camera.keypoint_count ?? 0);
+      }
     }
   } catch {
     serverStatus.textContent = "Server Offline";
@@ -25,4 +36,3 @@ async function refreshCameraStatus() {
 
 refreshCameraStatus();
 setInterval(refreshCameraStatus, 2000);
-
