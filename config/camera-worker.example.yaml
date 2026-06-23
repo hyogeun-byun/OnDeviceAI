@@ -1,0 +1,8 @@
+camera_id: camera_01
+server_url: http://192.168.0.10:8000
+camera_index: 0
+frame_width: 640
+frame_height: 480
+jpeg_quality: 80
+fps: 10
+

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OnDeviceAI Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">OnDeviceAI</p>
+          <h1>Camera Dashboard</h1>
+        </div>
+        <div class="server-status" id="server-status">Checking</div>
+      </header>
+
+      <section class="camera-grid" aria-label="Camera streams">
+        {% for camera_id in camera_ids %}
+        <article class="camera-panel">
+          <div class="camera-header">
+            <h2>{{ camera_id }}</h2>
+            <span class="camera-state" id="{{ camera_id }}-state">Waiting</span>
+          </div>
+          <div class="stream-box">
+            <img
+              src="/api/cameras/{{ camera_id }}/stream"
+              alt="{{ camera_id }} live stream"
+              class="stream-image"
+            />
+          </div>
+        </article>
+        {% endfor %}
+      </section>
+    </main>
+
+    <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>
+
