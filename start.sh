@@ -35,9 +35,23 @@ on_stop() {
 }
 trap on_stop INT TERM
 
-# 혹시 떠 있던 기존 서버 정리 (포트 충돌 방지)
+# 혹시 떠 있던 기존 인스턴스 정리 (포트 충돌 + 중복 감시 루프 방지)
+SELF_PID=$$
+# 1) 나(이 스크립트)와 부모 셸을 제외한 다른 start.sh 감시 프로세스 종료
+for pid in $(pgrep -f "[s]tart\.sh" 2>/dev/null || true); do
+  [ "$pid" = "$SELF_PID" ] && continue
+  [ "$pid" = "${PPID:-0}" ] && continue
+  kill "$pid" 2>/dev/null || true
+done
+# 2) 떠 있던 uvicorn 서버 종료
 pkill -f "uvicorn app.main:app" 2>/dev/null || true
-sleep 1
+# 3) 포트가 실제로 비워질 때까지 잠깐 대기 (address already in use 방지)
+for _ in $(seq 1 20); do
+  if ! ss -ltn 2>/dev/null | grep -q ":${PORT} "; then
+    break
+  fi
+  sleep 0.5
+done
 
 # 접속 주소 안내
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
