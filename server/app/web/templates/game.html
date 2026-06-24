@@ -26,6 +26,9 @@
           <span class="brand-name">이구동성 · 텔레파시</span>
         </div>
         <div class="round-pill" id="round-pill">READY</div>
+        <button class="tts-toggle" id="tts-toggle" type="button" title="음성 켜기/끄기" aria-label="음성 토글">
+          🔊
+        </button>
         <div class="conn" id="conn">연결 중…</div>
       </header>
 
@@ -38,8 +41,32 @@
           서로의 모습은 볼 수 없습니다. 오직 <strong>게이지</strong>만이 진실을 말합니다.
         </p>
         <div class="player-dots" id="idle-players"></div>
+        <div class="theme-picker" id="theme-picker">
+          <span class="theme-label">테마</span>
+          <div class="theme-options">
+            {% for theme in themes %}
+            <button
+              type="button"
+              class="theme-chip{% if loop.first %} is-active{% endif %}"
+              data-theme="{{ theme }}"
+            >
+              {{ theme }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
         <button class="cta" id="start-btn" type="button">게임 시작</button>
         <p class="idle-hint">총 5문제 · 라운드당 15초</p>
+      </section>
+
+      <!-- INTRO (MC greets; rounds start on a separate trigger) -->
+      <section class="screen screen-intro" id="screen-intro">
+        <p class="intro-eyebrow">🎤 AI MC 민수</p>
+        <h2 class="intro-title">곧 시작합니다!</h2>
+        <p class="intro-speech" id="intro-speech">민수가 인사 중…</p>
+        <div class="player-dots" id="intro-players"></div>
+        <button class="cta" id="begin-btn" type="button">시작하기 ▶</button>
+        <p class="idle-hint">준비되면 눌러주세요 · 민수가 카운트합니다</p>
       </section>
 
       <!-- COUNTDOWN -->
@@ -70,10 +97,18 @@
 
         <p class="play-tagline" id="play-tagline">동작을 맞춰보세요…</p>
 
+        <div class="skeleton-strip" id="play-skeletons">
+          {% for i in range(player_count) %}
+          <div class="skel-card" id="play-skel-card-{{ i }}">
+            <canvas class="skel-canvas" id="play-skel-{{ i }}"></canvas>
+            <span class="skel-label">P{{ i + 1 }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
         <div class="play-foot">
           <div class="timer-bar"><span id="timer-fill"></span></div>
           <div class="timer-text"><span id="timer-text">15.0</span>s</div>
-          <div class="player-dots compact" id="play-players"></div>
         </div>
       </section>
 
@@ -82,7 +117,18 @@
         <p class="result-round" id="result-round">ROUND 1</p>
         <p class="result-prompt" id="result-prompt">제시어</p>
         <div class="result-score" id="result-score">0</div>
-        <p class="result-comment" id="result-comment">결과 집계 중…</p>
+        <div class="mc-bubble" id="result-comment">
+          <span class="mc-icon">🎤</span>
+          <span class="mc-text" id="mc-text">결과 집계 중…</span>
+        </div>
+        <div class="skeleton-strip" id="result-skeletons">
+          {% for i in range(player_count) %}
+          <div class="skel-card" id="result-skel-card-{{ i }}">
+            <canvas class="skel-canvas" id="result-skel-{{ i }}"></canvas>
+            <span class="skel-label">P{{ i + 1 }}</span>
+          </div>
+          {% endfor %}
+        </div>
       </section>
 
       <!-- FINISHED -->
@@ -90,10 +136,41 @@
         <p class="final-eyebrow">FINAL TELEPATHY</p>
         <div class="final-score" id="final-score">0</div>
         <h2 class="final-title" id="final-title">—</h2>
+        <p class="final-report" id="final-report"></p>
+        <div class="report-cards" id="report-cards"></div>
         <ul class="final-breakdown" id="final-breakdown"></ul>
-        <button class="cta" id="restart-btn" type="button">다시 하기</button>
+        <div class="final-actions">
+          <button class="cta ghost" id="save-report-btn" type="button">📸 결과 이미지 저장</button>
+          <button class="cta" id="restart-btn" type="button">다시 하기</button>
+        </div>
       </section>
     </main>
+
+    <!-- AI MC 민수 (2D animated host) -->
+    <div class="mc-stage" id="mc-stage">
+      <div class="mc-live-bubble" id="mc-live-bubble"><span id="mc-live-text"></span></div>
+      <div class="mc-avatar" id="mc-avatar" aria-hidden="true">
+        <svg viewBox="0 0 200 220" class="mc-svg" role="img" aria-label="AI MC 민수">
+          <g class="mc-mic">
+            <rect x="150" y="118" width="10" height="56" rx="5" fill="#cfd8ff" />
+            <circle cx="155" cy="112" r="16" fill="#161f44" stroke="#6c8bff" stroke-width="3" />
+            <circle cx="155" cy="112" r="7" fill="#6c8bff" />
+          </g>
+          <path d="M132 150 Q162 150 155 128" stroke="#6c8bff" stroke-width="9" fill="none" stroke-linecap="round" />
+          <rect x="55" y="120" width="90" height="82" rx="26" fill="#2a3566" stroke="#6c8bff" stroke-width="3" />
+          <g class="mc-head">
+            <line x1="100" y1="40" x2="100" y2="22" stroke="#6c8bff" stroke-width="4" />
+            <circle cx="100" cy="16" r="7" fill="#00ffc6" class="mc-antenna" />
+            <rect x="48" y="38" width="104" height="86" rx="30" fill="#33407a" stroke="#6c8bff" stroke-width="3" />
+            <rect x="60" y="58" width="80" height="42" rx="21" fill="#0d1230" />
+            <circle class="mc-eye" cx="84" cy="79" r="8" fill="#00ffc6" />
+            <circle class="mc-eye" cx="116" cy="79" r="8" fill="#00ffc6" />
+            <ellipse class="mc-mouth" cx="100" cy="108" rx="13" ry="4" fill="#00ffc6" />
+          </g>
+        </svg>
+        <span class="mc-name">AI MC 민수</span>
+      </div>
+    </div>
 
     <script src="/static/js/game.js"></script>
   </body>

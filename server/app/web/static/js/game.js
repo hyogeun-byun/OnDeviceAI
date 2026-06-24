@@ -2,6 +2,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 104;
 
 const screens = {
   idle: document.getElementById("screen-idle"),
+  intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
   result: document.getElementById("screen-result"),
@@ -17,7 +18,6 @@ const el = {
   cdPrompt: document.getElementById("cd-prompt"),
   cdNumber: document.getElementById("cd-number"),
   playPrompt: document.getElementById("play-prompt"),
-  playPlayers: document.getElementById("play-players"),
   playTagline: document.getElementById("play-tagline"),
   gaugeFill: document.getElementById("gauge-fill"),
   gaugeValue: document.getElementById("gauge-value"),
@@ -27,13 +27,143 @@ const el = {
   resultPrompt: document.getElementById("result-prompt"),
   resultScore: document.getElementById("result-score"),
   resultComment: document.getElementById("result-comment"),
+  mcText: document.getElementById("mc-text"),
   finalScore: document.getElementById("final-score"),
   finalTitle: document.getElementById("final-title"),
+  finalReport: document.getElementById("final-report"),
   finalBreakdown: document.getElementById("final-breakdown"),
+  reportCards: document.getElementById("report-cards"),
+  saveReportBtn: document.getElementById("save-report-btn"),
+  beginBtn: document.getElementById("begin-btn"),
+  introSpeech: document.getElementById("intro-speech"),
+  introPlayers: document.getElementById("intro-players"),
+  themePicker: document.getElementById("theme-picker"),
+  ttsToggle: document.getElementById("tts-toggle"),
+  mcStage: document.getElementById("mc-stage"),
+  mcLiveBubble: document.getElementById("mc-live-bubble"),
+  mcLiveText: document.getElementById("mc-live-text"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
 let lastResultRound = 0;
+
+// --- AI MC voice: prefers natural server audio (edge-tts), falls back to the
+// browser's Web Speech voice. Also drives the avatar's talking animation. ---
+const tts = {
+  muted: false,
+  lastSpokenId: 0,
+  supported: "speechSynthesis" in window,
+  voice: null,
+};
+let currentAudio = null;
+
+function pickKoreanVoice() {
+  if (!tts.supported) return null;
+  const voices = window.speechSynthesis.getVoices();
+  return (
+    voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("ko")) || null
+  );
+}
+
+if (tts.supported) {
+  tts.voice = pickKoreanVoice();
+  window.speechSynthesis.onvoiceschanged = () => {
+    tts.voice = pickKoreanVoice();
+  };
+}
+
+function setMcTalking(on, text) {
+  if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
+  if (on && text && el.mcLiveText && el.mcLiveBubble) {
+    el.mcLiveText.textContent = text;
+    el.mcLiveBubble.classList.add("is-visible");
+  } else if (!on && el.mcLiveBubble) {
+    el.mcLiveBubble.classList.remove("is-visible");
+  }
+}
+
+function stopSpeaking() {
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+    } catch {
+      /* ignore */
+    }
+    currentAudio = null;
+  }
+  if (tts.supported) window.speechSynthesis.cancel();
+  setMcTalking(false);
+}
+
+function speakLine(text) {
+  if (!tts.supported || tts.muted || !text) return;
+  try {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ko-KR";
+    utter.rate = 1.05;
+    utter.pitch = 1.05;
+    if (tts.voice) utter.voice = tts.voice;
+    utter.onstart = () => setMcTalking(true, text);
+    utter.onend = () => setMcTalking(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  } catch {
+    setMcTalking(false);
+  }
+}
+
+function playServerAudio(id, text, attempt) {
+  // A newer line arrived (or muted) -> abandon this one.
+  if (tts.muted || id !== tts.lastSpokenId) return;
+  fetch(`/api/game/speech/${id}.mp3`, { cache: "no-store" })
+    .then((r) => {
+      if (r.ok) return r.blob();
+      throw new Error("not-ready");
+    })
+    .then((blob) => {
+      if (tts.muted || id !== tts.lastSpokenId) return;
+      const audio = new Audio(URL.createObjectURL(blob));
+      currentAudio = audio;
+      audio.onplay = () => setMcTalking(true, text);
+      audio.onended = () => {
+        setMcTalking(false);
+        if (currentAudio === audio) currentAudio = null;
+      };
+      audio.onerror = () => {
+        setMcTalking(false);
+        speakLine(text);
+      };
+      audio.play().catch(() => speakLine(text));
+    })
+    .catch(() => {
+      // edge-tts generation takes ~1s; retry a few times then fall back.
+      if (attempt < 10 && !tts.muted && id === tts.lastSpokenId) {
+        setTimeout(() => playServerAudio(id, text, attempt + 1), 400);
+      } else if (!tts.muted && id === tts.lastSpokenId) {
+        speakLine(text);
+      }
+    });
+}
+
+function maybeSpeak(state) {
+  const id = state.speech_id || 0;
+  if (id <= tts.lastSpokenId) return;
+  tts.lastSpokenId = id;
+  if (tts.muted) return;
+  stopSpeaking();
+  tts.lastSpokenId = id; // stopSpeaking doesn't touch this; keep explicit
+  if (state.speech_audio) playServerAudio(id, state.speech, 0);
+  else speakLine(state.speech);
+}
+
+if (el.ttsToggle) {
+  el.ttsToggle.addEventListener("click", () => {
+    tts.muted = !tts.muted;
+    el.ttsToggle.textContent = tts.muted ? "🔇" : "🔊";
+    el.ttsToggle.classList.toggle("is-muted", tts.muted);
+    if (tts.muted) stopSpeaking();
+  });
+}
 
 function gaugeColor(value) {
   if (value >= 75) return "#00ffc6";
@@ -65,7 +195,12 @@ function buildPlayerDots(container) {
 }
 
 const idleDots = buildPlayerDots(el.idlePlayers);
-const playDots = buildPlayerDots(el.playPlayers);
+const introDots = el.introPlayers ? buildPlayerDots(el.introPlayers) : [];
+
+// Per-round skeleton snapshots for the final report (round number -> data).
+const roundCaptures = {};
+let currentRoundMeta = null;
+let lastFinalState = null;
 
 function updatePlayerDots(dots, players) {
   dots.forEach((dot, index) => {
@@ -92,6 +227,7 @@ function setGauge(value) {
 
 function render(state) {
   showScreen(state.phase);
+  maybeSpeak(state);
 
   if (state.phase === "idle") {
     el.roundPill.textContent = "READY";
@@ -102,7 +238,15 @@ function render(state) {
   }
 
   updatePlayerDots(idleDots, state.players);
-  updatePlayerDots(playDots, state.players);
+  updatePlayerDots(introDots, state.players);
+  if (el.mcStage) el.mcStage.classList.toggle("is-hidden", state.phase === "idle");
+
+  latestPlayers = Array.isArray(state.players) ? state.players : [];
+  currentPhase = state.phase;
+
+  if (state.phase === "intro") {
+    el.introSpeech.textContent = state.speech || "민수가 인사 중…";
+  }
 
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";
@@ -133,12 +277,37 @@ function render(state) {
       el.resultScore.style.animation = "";
     }
     el.resultScore.textContent = String(Math.round(roundScore));
-    el.resultComment.textContent = taglineFor(roundScore, 2);
+    currentRoundMeta = {
+      round: scores.length,
+      prompt: state.prompt || (state.prompts || [])[scores.length - 1] || "",
+      score: Math.round(roundScore),
+    };
+    if (state.mc_status === "pending") {
+      el.mcText.textContent = "🎤 AI MC가 멘트를 준비 중…";
+      el.resultComment.classList.add("is-pending");
+    } else if (state.mc_comment) {
+      el.mcText.textContent = state.mc_comment;
+      el.resultComment.classList.remove("is-pending");
+    } else {
+      el.mcText.textContent = taglineFor(roundScore, 2);
+      el.resultComment.classList.remove("is-pending");
+    }
   }
 
   if (state.phase === "finished") {
+    lastFinalState = state;
     el.finalScore.textContent = String(Math.round(state.total_score || 0));
     el.finalTitle.textContent = state.final_title || "";
+    if (state.final_status === "pending") {
+      el.finalReport.textContent = "📜 AI가 텔레파시 궤합을 분석 중…";
+      el.finalReport.classList.add("is-pending");
+    } else if (state.final_report) {
+      el.finalReport.textContent = state.final_report;
+      el.finalReport.classList.remove("is-pending");
+    } else {
+      el.finalReport.textContent = "";
+      el.finalReport.classList.remove("is-pending");
+    }
     el.finalBreakdown.innerHTML = "";
     (state.round_scores || []).forEach((score, index) => {
       const li = document.createElement("li");
@@ -147,20 +316,390 @@ function render(state) {
       )}</span>`;
       el.finalBreakdown.appendChild(li);
     });
+    renderReport(state);
   }
+}
+
+// --- Final telepathy report (best / worst rounds) ---
+function bestWorstRounds(scores) {
+  if (!scores.length) return null;
+  let best = 0;
+  let worst = 0;
+  scores.forEach((s, i) => {
+    if (s > scores[best]) best = i;
+    if (s < scores[worst]) worst = i;
+  });
+  return { best: best + 1, worst: worst + 1 };
+}
+
+function reportCardEl(kind, roundNo, scores, prompts) {
+  const cap = roundCaptures[roundNo] || {};
+  const word = cap.prompt || prompts[roundNo - 1] || "—";
+  const score = Math.round(scores[roundNo - 1] || 0);
+  const div = document.createElement("div");
+  div.className = `report-card report-${kind}`;
+  const shots = (cap.images || [])
+    .filter(Boolean)
+    .map((src) => `<img src="${src}" alt="" />`)
+    .join("");
+  div.innerHTML =
+    `<div class="report-badge">${
+      kind === "best" ? "🏆 베스트 호흡" : "💥 텔레파시 대참사"
+    }</div>` +
+    `<div class="report-shots">${
+      shots || '<span class="report-noshot">스냅샷 없음</span>'
+    }</div>` +
+    `<div class="report-word">'${word}'</div>` +
+    `<div class="report-score">${score}점</div>` +
+    `<div class="report-caption">${
+      kind === "best"
+        ? "이 단어에서 모두 같은 동작! 환상의 호흡이었어요."
+        : "이 단어에선 제각각… 서로 다른 우주에 다녀왔네요 ㅋㅋ"
+    }</div>`;
+  return div;
+}
+
+function renderReport(state) {
+  if (!el.reportCards) return;
+  const scores = state.round_scores || [];
+  const prompts = state.prompts || [];
+  el.reportCards.innerHTML = "";
+  const bw = bestWorstRounds(scores);
+  if (!bw) return;
+  el.reportCards.appendChild(reportCardEl("best", bw.best, scores, prompts));
+  if (bw.worst !== bw.best) {
+    el.reportCards.appendChild(reportCardEl("worst", bw.worst, scores, prompts));
+  }
+}
+
+function loadImage(src) {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve(null);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function wrapText(ctx, text, cx, top, maxWidth, lineHeight) {
+  const words = (text || "").split(/\s+/);
+  let line = "";
+  let y = top;
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, cx, y);
+      line = word;
+      y += lineHeight;
+    } else {
+      line = test;
+    }
+  });
+  if (line) ctx.fillText(line, cx, y);
+  return y;
+}
+
+async function drawReportSection(ctx, top, accent, label, word, score, images) {
+  const W = 1080;
+  roundRect(ctx, 80, top, W - 160, 360, 28);
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.fill();
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = accent;
+  ctx.font = "bold 34px Inter, sans-serif";
+  ctx.fillText(label, 120, top + 56);
+
+  const shots = (images || []).filter(Boolean).slice(0, 3);
+  const loaded = await Promise.all(shots.map(loadImage));
+  const thumbW = 150;
+  const thumbH = 190;
+  const gap = 24;
+  const cards = loaded.length ? loaded : [null];
+  const totalW = cards.length * thumbW + (cards.length - 1) * gap;
+  let tx = (W - totalW) / 2;
+  const ty = top + 80;
+  cards.forEach((img) => {
+    ctx.save();
+    roundRect(ctx, tx, ty, thumbW, thumbH, 16);
+    ctx.clip();
+    ctx.fillStyle = "#0d1230";
+    ctx.fillRect(tx, ty, thumbW, thumbH);
+    if (img) ctx.drawImage(img, tx, ty, thumbW, thumbH);
+    ctx.restore();
+    ctx.strokeStyle = "rgba(108,139,255,0.5)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, tx, ty, thumbW, thumbH, 16);
+    ctx.stroke();
+    tx += thumbW + gap;
+  });
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 52px 'Black Han Sans', Inter, sans-serif";
+  ctx.fillText(`'${word}'`, W / 2 - 70, top + 330);
+  ctx.fillStyle = accent;
+  ctx.font = "bold 40px Inter, sans-serif";
+  ctx.fillText(`${score}점`, W / 2 + 130, top + 330);
+}
+
+async function buildReportImage() {
+  const state = lastFinalState;
+  if (!state) return;
+  const scores = state.round_scores || [];
+  const prompts = state.prompts || [];
+  const bw = bestWorstRounds(scores);
+  if (!bw) return;
+
+  const W = 1080;
+  const H = 1350;
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const ctx = cv.getContext("2d");
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#0b1030");
+  bg.addColorStop(1, "#1a1140");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#00ffc6";
+  ctx.font = "bold 38px Inter, sans-serif";
+  ctx.fillText("이구동성 · 텔레파시 결과", W / 2, 84);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 130px Inter, sans-serif";
+  ctx.fillText(String(Math.round(state.total_score || 0)), W / 2, 230);
+  ctx.fillStyle = "#cfd8ff";
+  ctx.font = "bold 44px Inter, sans-serif";
+  ctx.fillText(state.final_title || "", W / 2, 296);
+
+  ctx.fillStyle = "#aab4e0";
+  ctx.font = "26px Inter, sans-serif";
+  wrapText(ctx, state.final_report || "", W / 2, 356, W - 200, 36);
+
+  const bestCap = roundCaptures[bw.best] || {};
+  const worstCap = roundCaptures[bw.worst] || {};
+  await drawReportSection(
+    ctx,
+    450,
+    "#00ffc6",
+    "🏆 베스트 호흡",
+    bestCap.prompt || prompts[bw.best - 1] || "—",
+    Math.round(scores[bw.best - 1] || 0),
+    bestCap.images,
+  );
+  if (bw.worst !== bw.best) {
+    await drawReportSection(
+      ctx,
+      850,
+      "#ff6b6b",
+      "💥 텔레파시 대참사",
+      worstCap.prompt || prompts[bw.worst - 1] || "—",
+      Math.round(scores[bw.worst - 1] || 0),
+      worstCap.images,
+    );
+  }
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#6c8bff";
+  ctx.font = "24px Inter, sans-serif";
+  ctx.fillText("ON-DEVICE AI · AI MC 민수", W / 2, H - 40);
+
+  const link = document.createElement("a");
+  link.download = `telepathy_${Date.now()}.png`;
+  link.href = cv.toDataURL("image/png");
+  link.click();
 }
 
 async function startGame() {
   lastResultRound = 0;
+  currentRoundMeta = null;
+  Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
   try {
-    await fetch("/api/game/start", { method: "POST" });
+    await fetch("/api/game/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: selectedTheme }),
+    });
   } catch {
     /* the next websocket snapshot will reflect the state */
   }
 }
 
+async function beginGame() {
+  try {
+    await fetch("/api/game/begin", { method: "POST" });
+  } catch {
+    /* the next websocket snapshot will reflect the state */
+  }
+}
+
+let selectedTheme = "기본";
+if (el.themePicker) {
+  const chips = el.themePicker.querySelectorAll(".theme-chip");
+  const active = el.themePicker.querySelector(".theme-chip.is-active");
+  if (active) selectedTheme = active.dataset.theme || selectedTheme;
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      chips.forEach((c) => c.classList.remove("is-active"));
+      chip.classList.add("is-active");
+      selectedTheme = chip.dataset.theme || "기본";
+    });
+  });
+}
+
 el.startBtn.addEventListener("click", startGame);
 el.restartBtn.addEventListener("click", startGame);
+if (el.beginBtn) el.beginBtn.addEventListener("click", beginGame);
+if (el.saveReportBtn) el.saveReportBtn.addEventListener("click", buildReportImage);
+
+// --- Skeleton rendering on the game screen ---
+const POSE_CONNECTIONS = [
+  ["left_shoulder", "right_shoulder"],
+  ["left_shoulder", "left_elbow"],
+  ["left_elbow", "left_wrist"],
+  ["right_shoulder", "right_elbow"],
+  ["right_elbow", "right_wrist"],
+  ["left_shoulder", "left_hip"],
+  ["right_shoulder", "right_hip"],
+  ["left_hip", "right_hip"],
+  ["left_hip", "left_knee"],
+  ["left_knee", "left_ankle"],
+  ["right_hip", "right_knee"],
+  ["right_knee", "right_ankle"],
+  ["nose", "left_shoulder"],
+  ["nose", "right_shoulder"],
+];
+const SKELETON_VISIBILITY = 0.5;
+let latestPlayers = [];
+let currentPhase = "idle";
+let skeletonBusy = false;
+
+function drawSkeletonCard(canvas, pose) {
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, width, height);
+  if (!pose || !pose.person_detected || !Array.isArray(pose.keypoints)) return;
+
+  // Fit the camera frame (landscape) inside the portrait card without distortion.
+  const frameAspect = (pose.frame_width || 4) / (pose.frame_height || 3);
+  let drawW = width;
+  let drawH = width / frameAspect;
+  if (drawH > height) {
+    drawH = height;
+    drawW = height * frameAspect;
+  }
+  const offX = (width - drawW) / 2;
+  const offY = (height - drawH) / 2;
+  const px = (kp) => offX + kp.x * drawW;
+  const py = (kp) => offY + kp.y * drawH;
+
+  const points = {};
+  for (const keypoint of pose.keypoints) points[keypoint.name] = keypoint;
+  const visible = (kp) => kp && (kp.visibility == null || kp.visibility >= SKELETON_VISIBILITY);
+
+  ctx.lineWidth = Math.max(2, width * 0.03);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(0, 255, 198, 0.95)";
+  ctx.shadowColor = "rgba(0, 255, 198, 0.8)";
+  ctx.shadowBlur = 8;
+  for (const [a, b] of POSE_CONNECTIONS) {
+    const pa = points[a];
+    const pb = points[b];
+    if (!visible(pa) || !visible(pb)) continue;
+    ctx.beginPath();
+    ctx.moveTo(px(pa), py(pa));
+    ctx.lineTo(px(pb), py(pb));
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#ffffff";
+  const radius = Math.max(2, width * 0.025);
+  for (const keypoint of pose.keypoints) {
+    if (!visible(keypoint)) continue;
+    ctx.beginPath();
+    ctx.arc(px(keypoint), py(keypoint), radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function skeletonPrefix() {
+  if (currentPhase === "playing") return "play-skel";
+  if (currentPhase === "result") return "result-skel";
+  return null;
+}
+
+async function refreshSkeletons() {
+  const prefix = skeletonPrefix();
+  if (!prefix || skeletonBusy || latestPlayers.length === 0) return;
+  skeletonBusy = true;
+  try {
+    await Promise.all(
+      latestPlayers.map(async (player, index) => {
+        const canvas = document.getElementById(`${prefix}-${index}`);
+        const card = document.getElementById(`${prefix}-card-${index}`);
+        if (!canvas) return;
+        let pose = null;
+        try {
+          const response = await fetch(`/api/cameras/${player.camera_id}/pose`, { cache: "no-store" });
+          if (response.ok) pose = await response.json();
+        } catch {
+          pose = null;
+        }
+        drawSkeletonCard(canvas, pose);
+        if (card) card.classList.toggle("ready", Boolean(pose && pose.person_detected));
+      }),
+    );
+    captureRoundSnapshot(prefix);
+  } finally {
+    skeletonBusy = false;
+  }
+}
+
+// Save the result-screen skeletons once per round for the final report image.
+function captureRoundSnapshot(prefix) {
+  if (prefix !== "result-skel" || !currentRoundMeta) return;
+  const roundNo = currentRoundMeta.round;
+  if (roundCaptures[roundNo]) return;
+  const images = [];
+  for (let i = 0; i < playerCount; i += 1) {
+    const canvas = document.getElementById(`result-skel-${i}`);
+    if (!canvas) continue;
+    try {
+      images.push(canvas.toDataURL("image/png"));
+    } catch {
+      images.push(null);
+    }
+  }
+  roundCaptures[roundNo] = { ...currentRoundMeta, images };
+}
+
+setInterval(refreshSkeletons, 150);
 
 function connect() {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";

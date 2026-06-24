@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, Response, WebSocket, WebSocketDisconnect
 
 from app.services.game_hub import GameHub
 from app.services.game_manager import GameManager
@@ -24,8 +24,34 @@ async def game_state(request: Request) -> dict[str, object]:
 @router.post("/start")
 async def start_game(request: Request) -> dict[str, object]:
     game_manager = get_game_manager(request)
-    game_manager.start()
+    theme: str | None = None
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            value = body.get("theme")
+            if isinstance(value, str) and value.strip():
+                theme = value.strip()
+    except Exception:
+        theme = None
+    game_manager.start(theme)
     return game_manager.snapshot()
+
+
+@router.post("/begin")
+async def begin_game(request: Request) -> dict[str, object]:
+    game_manager = get_game_manager(request)
+    game_manager.begin()
+    return game_manager.snapshot()
+
+
+@router.get("/speech/{speech_id}.mp3")
+async def game_speech(speech_id: int, request: Request) -> Response:
+    cache = getattr(request.app.state, "speech_audio", None)
+    data = cache.get(speech_id) if cache is not None else None
+    if not data:
+        # Not generated yet (or unavailable): browser retries / falls back.
+        return Response(status_code=404)
+    return Response(content=data, media_type="audio/mpeg")
 
 
 @router.websocket("/ws")

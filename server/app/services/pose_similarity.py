@@ -15,7 +15,7 @@ JOINT_DEFINITIONS: dict[str, tuple[str, str, str]] = {
     "right_knee": ("right_hip", "right_knee", "right_ankle"),
 }
 
-VISIBILITY_THRESHOLD = 0.5
+VISIBILITY_THRESHOLD = 0.3
 # Standard deviation (degrees) of the similarity gaussian. Smaller -> stricter.
 SIMILARITY_SIGMA_DEG = 35.0
 

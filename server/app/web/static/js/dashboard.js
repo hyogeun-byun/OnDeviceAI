@@ -83,5 +83,102 @@ function formatNumber(value, digits) {
   return numberValue.toFixed(digits);
 }
 
+// --- Skeleton overlay ---
+const POSE_CONNECTIONS = [
+  ["left_shoulder", "right_shoulder"],
+  ["left_shoulder", "left_elbow"],
+  ["left_elbow", "left_wrist"],
+  ["right_shoulder", "right_elbow"],
+  ["right_elbow", "right_wrist"],
+  ["left_shoulder", "left_hip"],
+  ["right_shoulder", "right_hip"],
+  ["left_hip", "right_hip"],
+  ["left_hip", "left_knee"],
+  ["left_knee", "left_ankle"],
+  ["right_hip", "right_knee"],
+  ["right_knee", "right_ankle"],
+  ["nose", "left_shoulder"],
+  ["nose", "right_shoulder"],
+];
+
+const VISIBILITY_THRESHOLD = 0.5;
+
+function cameraIds() {
+  return Array.from(document.querySelectorAll(".pose-overlay")).map((canvas) =>
+    canvas.id.replace(/-overlay$/, ""),
+  );
+}
+
+function drawSkeleton(canvas, pose) {
+  const box = canvas.parentElement;
+  const width = box.clientWidth;
+  const height = box.clientHeight;
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, width, height);
+
+  if (!pose || !pose.person_detected || !Array.isArray(pose.keypoints)) {
+    return;
+  }
+
+  const points = {};
+  for (const keypoint of pose.keypoints) {
+    points[keypoint.name] = keypoint;
+  }
+
+  const visible = (keypoint) =>
+    keypoint && (keypoint.visibility == null || keypoint.visibility >= VISIBILITY_THRESHOLD);
+
+  ctx.lineWidth = Math.max(2, width * 0.006);
+  ctx.strokeStyle = "rgba(0, 255, 170, 0.9)";
+  ctx.lineCap = "round";
+
+  for (const [a, b] of POSE_CONNECTIONS) {
+    const pa = points[a];
+    const pb = points[b];
+    if (!visible(pa) || !visible(pb)) continue;
+    ctx.beginPath();
+    ctx.moveTo(pa.x * width, pa.y * height);
+    ctx.lineTo(pb.x * width, pb.y * height);
+    ctx.stroke();
+  }
+
+  const radius = Math.max(2.5, width * 0.008);
+  ctx.fillStyle = "#ffffff";
+  for (const keypoint of pose.keypoints) {
+    if (!visible(keypoint)) continue;
+    ctx.beginPath();
+    ctx.arc(keypoint.x * width, keypoint.y * height, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let drawingPoses = false;
+
+async function refreshSkeletons() {
+  if (drawingPoses) return;
+  drawingPoses = true;
+  try {
+    await Promise.all(
+      cameraIds().map(async (cameraId) => {
+        const canvas = document.getElementById(`${cameraId}-overlay`);
+        if (!canvas) return;
+        try {
+          const response = await fetch(`/api/cameras/${cameraId}/pose`, { cache: "no-store" });
+          drawSkeleton(canvas, response.ok ? await response.json() : null);
+        } catch {
+          drawSkeleton(canvas, null);
+        }
+      }),
+    );
+  } finally {
+    drawingPoses = false;
+  }
+}
+
 refreshCameraStatus();
 setInterval(refreshCameraStatus, 2000);
+refreshSkeletons();
+setInterval(refreshSkeletons, 150);
