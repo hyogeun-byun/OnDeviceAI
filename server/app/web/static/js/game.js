@@ -218,6 +218,7 @@ const introDots = el.introPlayers ? buildPlayerDots(el.introPlayers) : [];
 // Per-round skeleton snapshots for the final report (round number -> data).
 const roundCaptures = {};
 let currentRoundMeta = null;
+let lastResultPoseRound = 0;
 let lastFinalState = null;
 
 function updatePlayerDots(dots, players) {
@@ -312,6 +313,11 @@ function render(state) {
       prompt: state.prompt || (state.prompts || [])[scores.length - 1] || "",
       score: Math.round(roundScore),
     };
+    if (scores.length && scores.length !== lastResultPoseRound) {
+      lastResultPoseRound = scores.length;
+      drawResultSkeletons(state.result_poses || []);
+      captureRoundSnapshot("result-skel");
+    }
     if (state.mc_status === "pending") {
       el.mcText.textContent = "🎤 AI MC가 멘트를 준비 중…";
       el.resultComment.classList.add("is-pending");
@@ -563,6 +569,7 @@ async function buildReportImage() {
 
 async function startGame() {
   lastResultRound = 0;
+  lastResultPoseRound = 0;
   currentRoundMeta = null;
   Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
   try {
@@ -589,6 +596,10 @@ async function resetGame() {
   stopSpeaking();
   coachVoice.text = "";
   coachVoice.at = 0;
+  lastResultRound = 0;
+  lastResultPoseRound = 0;
+  currentRoundMeta = null;
+  Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
   try {
     await fetch("/api/game/reset", { method: "POST" });
   } catch {
@@ -625,7 +636,7 @@ if (el.difficultyPicker) {
 }
 
 el.startBtn.addEventListener("click", startGame);
-el.restartBtn.addEventListener("click", startGame);
+el.restartBtn.addEventListener("click", resetGame);
 if (el.beginBtn) el.beginBtn.addEventListener("click", beginGame);
 if (el.restartGameBtn) el.restartGameBtn.addEventListener("click", resetGame);
 if (el.saveReportBtn) el.saveReportBtn.addEventListener("click", buildReportImage);
@@ -706,9 +717,18 @@ function drawSkeletonCard(canvas, pose) {
 }
 
 function skeletonPrefix() {
-  // Participants must NOT see each other during play, only the result reveal.
-  if (currentPhase === "result") return "result-skel";
   return null;
+}
+
+function drawResultSkeletons(poses) {
+  for (let index = 0; index < playerCount; index += 1) {
+    const canvas = document.getElementById(`result-skel-${index}`);
+    const card = document.getElementById(`result-skel-card-${index}`);
+    if (!canvas) continue;
+    const pose = Array.isArray(poses) ? poses[index] : null;
+    drawSkeletonCard(canvas, pose);
+    if (card) card.classList.toggle("ready", Boolean(pose && pose.person_detected));
+  }
 }
 
 async function refreshSkeletons() {

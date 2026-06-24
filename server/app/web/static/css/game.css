@@ -90,6 +90,8 @@ body {
 }
 
 .stage-top {
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1362,4 +1364,3 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
