@@ -5,22 +5,28 @@ import time
 from dataclasses import dataclass, field
 
 from app.services import game_narrator as narrator
-from app.services.game_narrator import DEFAULT_PROMPTS
+from app.services.game_narrator import DEFAULT_PROMPTS, DIFFICULTY_EASY
 from app.services.llm_client import LLMClient
-from app.services.pose_similarity import group_telepathy_score
+from app.services.pose_similarity import analyze_group
 from app.services.speech_audio import SpeechAudioCache
 from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
 
 # --- Game timing (seconds) ---
 COUNTDOWN_SECONDS = 3.0
-PLAY_SECONDS = 15.0
-RESULT_SECONDS = 6.0
+PLAY_SECONDS = 10.0
+RESULT_SECONDS = 4.0
 
 TOTAL_ROUNDS = 5
 
-# Exponential moving average factor for smoothing the live gauge (0~1, higher = snappier).
-GAUGE_EMA_ALPHA = 0.25
+# Exponential moving average factor for smoothing the live gauge (0~1, higher =
+# snappier). Kept moderate so the *last-moment* pose still dominates the score
+# but the needle doesn't jitter every frame.
+GAUGE_EMA_ALPHA = 0.3
+
+# Minimum seconds a coaching line stays on screen before it may change, so the
+# AI MC doesn't rattle off a brand-new line every tick (calmer pacing).
+COACH_MIN_HOLD_SECONDS = 4.0
 
 PHASE_IDLE = "idle"
 PHASE_INTRO = "intro"
@@ -44,8 +50,14 @@ class GameState:
     gauge: float = 0.0
     raw_gauge: float = 0.0
     ready_count: int = 0
+    expressiveness: float = 0.0
+    coach: str = ""
+    coach_key: str = ""
+    coach_changed_at: float = 0.0
+    players_analysis: list[dict] = field(default_factory=list)
     round_scores: list[float] = field(default_factory=list)
     theme: str = "기본"
+    difficulty: str = DIFFICULTY_EASY
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
     mc_comment: str = ""
@@ -112,18 +124,20 @@ class GameManager:
         if self._speech_audio is not None and self._speech_audio.enabled:
             self._spawn(self._speech_audio.generate(self._speech_seq, text))
 
-    def start(self, theme: str | None = None) -> None:
+    def start(self, theme: str | None = None, difficulty: str | None = None) -> None:
         """Enter the MC intro screen. The actual rounds don't begin until
         :meth:`begin` is called (a separate user trigger), so the host can
         greet the players and build hype first."""
         self._generation += 1
         chosen = theme or self._default_theme
+        diff = difficulty if difficulty in narrator.DIFFICULTIES else DIFFICULTY_EASY
         self._state = GameState(
             phase=PHASE_INTRO,
             round_index=0,
             phase_started_at=time.monotonic(),
             theme=chosen,
-            prompts=list(DEFAULT_PROMPTS),
+            difficulty=diff,
+            prompts=list(narrator.default_prompts(diff)),
             prompt_source="default",
         )
         # Spoken intro greeting (non-real-time: nothing is being scored yet).
@@ -131,7 +145,7 @@ class GameManager:
         # B. Dynamic prompts — generated in the background; until ready the
         # default prompts are used so the game can start immediately.
         if self._llm.enabled and chosen != "기본":
-            self._spawn(self._build_prompts(self._generation, chosen))
+            self._spawn(self._build_prompts(self._generation, chosen, diff))
 
     def begin(self) -> None:
         """Trigger the first round after the intro screen (separate gesture)."""
@@ -142,7 +156,18 @@ class GameManager:
         self._state.phase_started_at = time.monotonic()
         self._state.gauge = 0.0
         self._state.raw_gauge = 0.0
+        self._state.coach = ""
+        self._state.coach_key = ""
+        self._state.coach_changed_at = 0.0
         self._speak(narrator.start_line(self._mc_name))
+
+    def reset(self) -> None:
+        """Abort whatever is happening and go all the way back to the idle
+        screen so the host can re-pick the theme/difficulty and start over."""
+        # Bump the generation so any in-flight background LLM/TTS work from the
+        # aborted game is discarded instead of bleeding into the fresh state.
+        self._generation += 1
+        self._state = GameState(theme=self._default_theme)
 
     # ------------------------------------------------------------------ #
     # Background LLM task helpers (never awaited from tick/playing)
@@ -158,8 +183,10 @@ class GameManager:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
-    async def _build_prompts(self, generation: int, theme: str) -> None:
-        prompts = await narrator.generate_prompts(self._llm, theme, self._total_rounds)
+    async def _build_prompts(self, generation: int, theme: str, difficulty: str) -> None:
+        prompts = await narrator.generate_prompts(
+            self._llm, theme, self._total_rounds, difficulty
+        )
         if generation != self._generation:
             return
         # Only apply while still on the intro screen, so the displayed prompt
@@ -214,7 +241,7 @@ class GameManager:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
-            self._update_gauge()
+            self._update_gauge(now)
             if elapsed >= PLAY_SECONDS:
                 self._finish_round(now)
         elif state.phase == PHASE_RESULT:
@@ -226,13 +253,36 @@ class GameManager:
         self._state.phase_started_at = now
         self._state.gauge = 0.0
         self._state.raw_gauge = 0.0
+        self._state.coach = ""
+        self._state.coach_key = ""
+        self._state.coach_changed_at = 0.0
 
-    def _update_gauge(self) -> None:
+    def _update_gauge(self, now: float) -> None:
         poses = [self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids]
-        raw, ready = group_telepathy_score(poses)
-        self._state.raw_gauge = raw
-        self._state.ready_count = ready
-        self._state.gauge += (raw - self._state.gauge) * GAUGE_EMA_ALPHA
+        analysis = analyze_group(poses)
+        self._state.raw_gauge = analysis["score"]
+        self._state.ready_count = analysis["ready_count"]
+        self._state.expressiveness = analysis["expressiveness"]
+        self._state.players_analysis = analysis["players"]
+        self._state.gauge += (analysis["score"] - self._state.gauge) * GAUGE_EMA_ALPHA
+        # Live, LLM-free coaching shown on the participants' screen and read out
+        # by the browser's instant voice. To keep the MC calm, a line stays put
+        # for at least COACH_MIN_HOLD_SECONDS before a different category may
+        # replace it (the very first line of a round shows immediately).
+        coaching = narrator.coach(
+            analysis["players"],
+            analysis["expressiveness"],
+            analysis["ready_count"],
+            self._state.gauge,
+            self._state.round_index,
+        )
+        first_line = not self._state.coach
+        category_changed = coaching["key"] != self._state.coach_key
+        held_long_enough = (now - self._state.coach_changed_at) >= COACH_MIN_HOLD_SECONDS
+        if first_line or (category_changed and held_long_enough):
+            self._state.coach = coaching["text"]
+            self._state.coach_key = coaching["key"]
+            self._state.coach_changed_at = now
 
     def _finish_round(self, now: float) -> None:
         self._state.round_scores.append(round(self._state.gauge, 1))
@@ -266,6 +316,9 @@ class GameManager:
         self._state.phase_started_at = now
         self._state.gauge = 0.0
         self._state.raw_gauge = 0.0
+        self._state.coach = ""
+        self._state.coach_key = ""
+        self._state.coach_changed_at = 0.0
         self._state.mc_comment = ""
         self._state.mc_status = "idle"
 
@@ -288,14 +341,18 @@ class GameManager:
         return max(0.0, duration - elapsed)
 
     def _player_status(self) -> list[dict[str, object]]:
+        analysis = {int(p["index"]): p for p in self._state.players_analysis}
         players: list[dict[str, object]] = []
         for index, camera_id in enumerate(self._camera_ids):
             pose = self._stream_manager.get_pose(camera_id)
+            info = analysis.get(index, {})
             players.append(
                 {
                     "camera_id": camera_id,
                     "label": f"Player {index + 1}",
                     "ready": bool(pose and pose.get("person_detected")),
+                    "sync": info.get("sync"),
+                    "expressiveness": info.get("expressiveness"),
                 }
             )
         return players
@@ -311,6 +368,8 @@ class GameManager:
             "prompt": self._current_prompt(),
             "gauge": round(state.gauge, 1),
             "ready_count": state.ready_count,
+            "expressiveness": round(state.expressiveness, 3),
+            "coach": state.coach,
             "player_count": len(self._camera_ids),
             "players": self._player_status(),
             "time_left": self._time_left(),
@@ -318,6 +377,7 @@ class GameManager:
             "round_scores": list(state.round_scores),
             "total_score": total_score,
             "theme": state.theme,
+            "difficulty": state.difficulty,
             "prompt_source": state.prompt_source,
             "prompts": list(state.prompts[: self._total_rounds]),
             "mc_comment": state.mc_comment,

@@ -26,6 +26,9 @@
           <span class="brand-name">이구동성 · 텔레파시</span>
         </div>
         <div class="round-pill" id="round-pill">READY</div>
+        <button class="restart-game-btn is-hidden" id="restart-game-btn" type="button" title="처음부터 다시 시작">
+          ↺ 처음부터
+        </button>
         <button class="tts-toggle" id="tts-toggle" type="button" title="음성 켜기/끄기" aria-label="음성 토글">
           🔊
         </button>
@@ -55,8 +58,19 @@
             {% endfor %}
           </div>
         </div>
+        <div class="theme-picker" id="difficulty-picker">
+          <span class="theme-label">난이도</span>
+          <div class="theme-options">
+            <button type="button" class="theme-chip is-active" data-difficulty="하">
+              하 · 시그니처 동작
+            </button>
+            <button type="button" class="theme-chip" data-difficulty="상">
+              상 · 상황 문장
+            </button>
+          </div>
+        </div>
         <button class="cta" id="start-btn" type="button">게임 시작</button>
-        <p class="idle-hint">총 5문제 · 라운드당 15초</p>
+        <p class="idle-hint">총 5문제 · 라운드당 10초</p>
       </section>
 
       <!-- INTRO (MC greets; rounds start on a separate trigger) -->
@@ -97,18 +111,16 @@
 
         <p class="play-tagline" id="play-tagline">동작을 맞춰보세요…</p>
 
-        <div class="skeleton-strip" id="play-skeletons">
-          {% for i in range(player_count) %}
-          <div class="skel-card" id="play-skel-card-{{ i }}">
-            <canvas class="skel-canvas" id="play-skel-{{ i }}"></canvas>
-            <span class="skel-label">P{{ i + 1 }}</span>
-          </div>
-          {% endfor %}
+        <div class="coach-panel" id="coach-panel">
+          <span class="coach-icon">🎤</span>
+          <span class="coach-text" id="coach-text">AI MC 민수가 코칭합니다…</span>
         </div>
+
+        <p class="play-secret">🙈 서로의 동작은 보이지 않아요 — 게이지와 민수의 코칭만 믿으세요!</p>
 
         <div class="play-foot">
           <div class="timer-bar"><span id="timer-fill"></span></div>
-          <div class="timer-text"><span id="timer-text">15.0</span>s</div>
+          <div class="timer-text"><span id="timer-text">10.0</span>s</div>
         </div>
       </section>
 

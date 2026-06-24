@@ -138,3 +138,15 @@ async def game(request: Request) -> HTMLResponse:
             "themes": list(game_narrator.THEMES),
         },
     )
+
+
+@app.get("/stage", response_class=HTMLResponse)
+async def stage(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "stage.html",
+        {
+            "request": request,
+            "camera_ids": config.camera_ids,
+            "player_count": len(config.camera_ids),
+        },
+    )

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>이구동성 텔레파시 · 무대</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Inter:wght@400;600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/game.css" />
+  </head>
+  <body data-player-count="{{ player_count }}">
+    <div class="aurora" aria-hidden="true">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+      <span class="orb orb-c"></span>
+    </div>
+
+    <main class="stagecast">
+      <header class="cast-top">
+        <div class="brand">
+          <span class="brand-mark">◈</span>
+          <span class="brand-name">이구동성 · 텔레파시</span>
+        </div>
+        <div class="cast-prompt" id="cast-prompt">곧 시작합니다</div>
+        <div class="round-pill" id="round-pill">READY</div>
+        <div class="conn" id="conn">연결 중…</div>
+      </header>
+
+      <section class="cast-cameras" id="cast-cameras">
+        {% for camera_id in camera_ids %}
+        <figure class="cast-cam">
+          <img
+            class="cast-cam-feed"
+            src="/api/cameras/{{ camera_id }}/stream"
+            alt="Player {{ loop.index }}"
+          />
+          <figcaption class="cast-cam-label">PLAYER {{ loop.index }}</figcaption>
+        </figure>
+        {% endfor %}
+      </section>
+
+      <section class="cast-hud">
+        <div class="cast-gauge-wrap">
+          <div class="cast-gauge-track">
+            <span class="cast-gauge-fill" id="gauge-fill"></span>
+          </div>
+          <div class="cast-gauge-value"><span id="gauge-value">0</span><small>%</small></div>
+        </div>
+
+        <div class="cast-coach" id="cast-coach">
+          <span class="coach-icon">🎤</span>
+          <span class="coach-text" id="coach-text">민수가 곧 등장합니다…</span>
+        </div>
+
+        <div class="cast-timer">
+          <div class="timer-bar"><span id="timer-fill"></span></div>
+          <span class="cast-timer-text"><span id="timer-text">0.0</span>s</span>
+        </div>
+      </section>
+
+      <section class="cast-scores" id="cast-scores"></section>
+
+      <div class="cast-overlay" id="cast-overlay" hidden>
+        <div class="cast-overlay-inner">
+          <p class="cast-overlay-kicker" id="overlay-kicker"></p>
+          <div class="cast-overlay-main" id="overlay-main"></div>
+          <p class="cast-overlay-sub" id="overlay-sub"></p>
+        </div>
+      </div>
+    </main>
+
+    <script src="/static/js/stage.js"></script>
+  </body>
+</html>

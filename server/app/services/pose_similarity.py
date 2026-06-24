@@ -19,6 +19,28 @@ VISIBILITY_THRESHOLD = 0.3
 # Standard deviation (degrees) of the similarity gaussian. Smaller -> stricter.
 SIMILARITY_SIGMA_DEG = 35.0
 
+# Approximate joint angles (degrees) of a neutral standing "rest" pose
+# (arms hanging down, legs straight). Poses far from this are "expressive";
+# poses close to it (everyone just standing identically) score low even when
+# similarity is high — this is the anti-"stand still and win" gate.
+REST_ANGLES: dict[str, float] = {
+    "left_elbow": 165.0,
+    "right_elbow": 165.0,
+    "left_shoulder": 12.0,
+    "right_shoulder": 12.0,
+    "left_hip": 172.0,
+    "right_hip": 172.0,
+    "left_knee": 175.0,
+    "right_knee": 175.0,
+}
+# Average deviation (degrees) from rest that counts as "fully expressive".
+EXPRESSIVENESS_FULL_DEG = 45.0
+# How much a still/neutral group is penalised. The activity factor maps
+# expressiveness 0..1 -> ACTIVITY_FLOOR..1, then multiplies the similarity.
+ACTIVITY_FLOOR = 0.12
+# Below this group expressiveness the coach yells "move more!".
+STILL_EXPRESSIVENESS = 0.18
+
 
 def _keypoint_map(pose_result: dict[str, object]) -> dict[str, dict[str, float]]:
     keypoints = pose_result.get("keypoints") or []
@@ -87,31 +109,101 @@ def pose_pair_similarity(
 
 
 def group_telepathy_score(pose_results: list[dict[str, object] | None]) -> tuple[float, int]:
-    """Compute the group telepathy score (0~100) and the number of ready players.
+    """Backward-compatible wrapper returning ``(score, ready_count)``.
 
-    A player is "ready" when a person is detected and enough joints are visible.
-    At least two ready players are required to produce a non-zero score.
+    ``score`` already includes the activity (anti-stillness) gate.
     """
-    angle_sets: list[dict[str, float]] = []
-    for pose_result in pose_results:
+    analysis = analyze_group(pose_results)
+    return analysis["score"], analysis["ready_count"]
+
+
+def pose_expressiveness(angles: dict[str, float]) -> float:
+    """0~1 measure of how far a pose is from the neutral standing rest pose."""
+    if not angles:
+        return 0.0
+    deviations = [
+        abs(angle - REST_ANGLES[joint])
+        for joint, angle in angles.items()
+        if joint in REST_ANGLES
+    ]
+    if not deviations:
+        return 0.0
+    mean_dev = sum(deviations) / len(deviations)
+    factor = mean_dev / EXPRESSIVENESS_FULL_DEG
+    return max(0.0, min(1.0, factor))
+
+
+def _activity_factor(expressiveness: float) -> float:
+    return ACTIVITY_FLOOR + (1.0 - ACTIVITY_FLOOR) * expressiveness
+
+
+def analyze_group(pose_results: list[dict[str, object] | None]) -> dict:
+    """Full per-tick analysis used by the game.
+
+    Returns a dict with:
+      - ``score``: 0~100 telepathy gauge (similarity gated by group activity)
+      - ``similarity``: 0~100 raw pairwise pose similarity (no activity gate)
+      - ``expressiveness``: 0~1 average how-much-they-moved-from-rest
+      - ``ready_count``: number of detected players
+      - ``players``: list aligned to ``pose_results`` with per-player
+        ``{index, present, sync, expressiveness}`` (sync = avg similarity to the
+        other present players, 0~100, or None).
+    """
+    n = len(pose_results)
+    angles_by_index: list[dict[str, float] | None] = [None] * n
+    expr_by_index: list[float] = [0.0] * n
+
+    for i, pose_result in enumerate(pose_results):
         if not pose_result or not pose_result.get("person_detected"):
             continue
         angles = compute_joint_angles(pose_result)
         if angles:
-            angle_sets.append(angles)
+            angles_by_index[i] = angles
+            expr_by_index[i] = pose_expressiveness(angles)
 
-    ready_count = len(angle_sets)
-    if ready_count < 2:
-        return 0.0, ready_count
+    present_indices = [i for i in range(n) if angles_by_index[i] is not None]
+    ready_count = len(present_indices)
 
+    # Pairwise similarities (and per-player sync accumulation).
+    sync_sum = [0.0] * n
+    sync_cnt = [0] * n
     similarities: list[float] = []
-    for i in range(len(angle_sets)):
-        for j in range(i + 1, len(angle_sets)):
-            similarity = pose_pair_similarity(angle_sets[i], angle_sets[j])
-            if similarity is not None:
-                similarities.append(similarity)
+    for a in range(len(present_indices)):
+        for b in range(a + 1, len(present_indices)):
+            ia, ib = present_indices[a], present_indices[b]
+            sim = pose_pair_similarity(angles_by_index[ia], angles_by_index[ib])  # type: ignore[arg-type]
+            if sim is None:
+                continue
+            similarities.append(sim)
+            sync_sum[ia] += sim
+            sync_cnt[ia] += 1
+            sync_sum[ib] += sim
+            sync_cnt[ib] += 1
 
-    if not similarities:
-        return 0.0, ready_count
+    similarity = sum(similarities) / len(similarities) if similarities else 0.0
+    expressiveness = (
+        sum(expr_by_index[i] for i in present_indices) / ready_count if ready_count else 0.0
+    )
+    score = similarity * _activity_factor(expressiveness) if ready_count >= 2 else 0.0
 
-    return sum(similarities) / len(similarities), ready_count
+    players = []
+    for i in range(n):
+        present = angles_by_index[i] is not None
+        sync = (sync_sum[i] / sync_cnt[i]) if sync_cnt[i] else None
+        players.append(
+            {
+                "index": i,
+                "present": present,
+                "sync": round(sync, 1) if sync is not None else None,
+                "expressiveness": round(expr_by_index[i], 3),
+            }
+        )
+
+    return {
+        "score": score,
+        "similarity": similarity,
+        "expressiveness": expressiveness,
+        "ready_count": ready_count,
+        "players": players,
+    }
+

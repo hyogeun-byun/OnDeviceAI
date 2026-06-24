@@ -21,17 +21,46 @@ def _strip_emoji(text: str) -> str:
     """Remove emoji/pictographs so the TTS engine doesn't read them oddly."""
     return _EMOJI_RE.sub("", text).strip()
 
-# Default / fallback prompts (also used when the LLM is off).
-# Abstract single words: each player interprets them with their own pose,
-# which produces far more variety (and funnier mismatches) than literal
-# "raise one leg" style instructions.
-DEFAULT_PROMPTS: tuple[str, ...] = (
-    "사랑",
-    "승리",
-    "공포",
-    "비밀",
-    "자유",
+# Difficulty levels.
+DIFFICULTY_EASY = "하"
+DIFFICULTY_HARD = "상"
+DIFFICULTIES: tuple[str, ...] = (DIFFICULTY_EASY, DIFFICULTY_HARD)
+
+# Easy (하) prompts: well-known *signature gestures* — almost everyone pictures
+# the same pose, so groups can actually sync up. Concrete enough to act, open
+# enough to be funny.
+EASY_PROMPTS: tuple[str, ...] = (
+    "손하트",
+    "슈퍼맨",
+    "거수경례",
+    "토끼귀",
+    "알통 자랑",
+    "권투 자세",
+    "셀카 포즈",
+    "발레 동작",
 )
+
+# Hard (상) prompts: situational one-liners. There's no single "right" pose, so
+# players must read each other and improvise the same vibe.
+HARD_PROMPTS: tuple[str, ...] = (
+    "퇴근 30분 전 야근 지시 받은 나",
+    "월요일 아침 알람 끄는 나",
+    "치킨 시켰는데 배달 늦을 때",
+    "엘리베이터 닫힘 버튼 연타",
+    "버스 놓치고 뛰는 사람",
+    "맛집 앞 1시간 웨이팅",
+    "시험 망친 걸 들켰을 때",
+    "사진 찍을 때 어색한 손",
+)
+
+# Default / fallback prompts (used when the LLM is off). Easy signature gestures.
+DEFAULT_PROMPTS: tuple[str, ...] = EASY_PROMPTS
+
+
+def default_prompts(difficulty: str = DIFFICULTY_EASY) -> tuple[str, ...]:
+    """Static prompt pool for the given difficulty (used with LLM off / 기본)."""
+    return HARD_PROMPTS if difficulty == DIFFICULTY_HARD else EASY_PROMPTS
+
 
 # Selectable themes shown on the idle screen. "기본" uses the default prompts.
 THEMES: tuple[str, ...] = ("기본", "좀비", "K-POP", "출근길", "동물원", "슈퍼히어로")
@@ -71,36 +100,47 @@ def start_line(mc_name: str = "민수") -> str:
 # --------------------------------------------------------------------------- #
 # B. Dynamic prompt generation
 # --------------------------------------------------------------------------- #
-async def generate_prompts(llm: LLMClient, theme: str, n: int) -> list[str]:
-    """Generate ``n`` short Korean pose prompts for the given theme.
+async def generate_prompts(
+    llm: LLMClient, theme: str, n: int, difficulty: str = DIFFICULTY_EASY
+) -> list[str]:
+    """Generate ``n`` short Korean prompts for the given theme and difficulty.
 
-    Falls back to the default prompts on any failure.
+    Falls back to the static prompt pool on any failure or when the LLM is off.
     """
+    pool = list(default_prompts(difficulty))
     if not llm.enabled or theme == "기본":
-        return list(DEFAULT_PROMPTS[:n])
+        return pool[:n]
 
-    system = (
-        "너는 몸으로 표현하는 텔레파시 파티 게임의 출제자야. "
-        "주어진 테마에 어울리는, 한 단어로 된 '추상적인 제시어'를 만든다. "
-        "구체적인 동작 설명(예: '한 다리 들기')이 아니라, "
-        "사람마다 자유롭게 다르게 해석해 몸짓을 만들 수 있는 단어여야 한다 "
-        "(예: 사랑, 승리, 공포, 자유). 각 제시어는 한국어 1~4자."
-    )
+    if difficulty == DIFFICULTY_HARD:
+        system = (
+            "너는 몸으로 표현하는 텔레파시 파티 게임의 출제자야. "
+            "주어진 테마에 어울리는, 공감되는 '상황을 묘사한 짧은 문장' 제시어를 만든다. "
+            "정답 포즈가 하나로 정해지지 않아, 사람마다 그 상황의 분위기를 몸으로 "
+            "표현하게 되는 문장이어야 한다 (예: '퇴근 30분 전 야근 지시 받은 나'). "
+            "각 제시어는 한국어 8~20자 문장."
+        )
+    else:
+        system = (
+            "너는 몸으로 표현하는 텔레파시 파티 게임의 출제자야. "
+            "주어진 테마에 어울리는, 누구나 같은 포즈를 떠올리는 '대표 동작' 제시어를 만든다. "
+            "추상적인 감정 단어가 아니라, 시그니처 포즈가 분명한 단어여야 한다 "
+            "(예: 손하트, 슈퍼맨, 거수경례, 토끼귀). 각 제시어는 한국어 1~6자."
+        )
     user = (
         f"테마: {theme}\n"
-        f"이 테마에 어울리는 한 단어 제시어 {n}개를 만들어줘.\n"
+        f"이 테마에 어울리는 제시어 {n}개를 만들어줘.\n"
         '반드시 JSON만 출력: {"prompts": ["제시어1", "제시어2", ...]}'
     )
     result = await llm.chat_json(
         [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        max_tokens=200,
+        max_tokens=256,
         temperature=0.9,
     )
     prompts = _coerce_prompt_list(result)
     if len(prompts) >= n:
         return prompts[:n]
-    # Pad with defaults if the model returned too few.
-    padded = prompts + [p for p in DEFAULT_PROMPTS if p not in prompts]
+    # Pad with the static pool if the model returned too few.
+    padded = prompts + [p for p in pool if p not in prompts]
     return padded[:n]
 
 
@@ -113,7 +153,7 @@ def _coerce_prompt_list(result: dict | None) -> list[str]:
     cleaned: list[str] = []
     for item in raw:
         if isinstance(item, str) and item.strip():
-            cleaned.append(item.strip()[:10])
+            cleaned.append(item.strip()[:24])
     return cleaned
 
 
@@ -144,6 +184,73 @@ def static_mc_comment(score: float, ready_count: int) -> str:
         return "플레이어를 기다리는 중… 다 같이 동작을 취해주세요!"
     bucket = "low" if score < 45 else "mid" if score < 75 else "high"
     return random.choice(_STATIC_MC[bucket])
+
+
+# --------------------------------------------------------------------------- #
+# A2. Live in-round coaching (no LLM — runs every tick during PLAYING).
+# Spoken by the browser's instant Web Speech voice so it never blocks the board.
+# --------------------------------------------------------------------------- #
+_COACH_WAIT = ("다 같이 카메라 앞에 서주세요!",)
+_COACH_STILL = (
+    "다들 너무 가만히 있어요! 동작을 더 크게!",
+    "차렷 자세 말고, 몸으로 표현해 봐요!",
+    "정지 화면인가요? 좀 더 과감하게!",
+)
+_COACH_GREAT = (
+    "완벽해요! 그대로 유지!",
+    "소름! 한 몸처럼 움직이네요!",
+    "이대로 가면 만점이에요!",
+)
+_COACH_GOOD = (
+    "좋아요! 조금만 더 맞춰봐요!",
+    "느낌 오죠? 거의 다 왔어요!",
+    "호흡이 살아나는데요?",
+)
+_COACH_KEEP = (
+    "음, 생각이 다른데요? 서로 맞춰봐요!",
+    "아직 제각각이에요. 대표 동작을 떠올려요!",
+    "텔레파시 신호가 약해요. 집중!",
+)
+
+
+def coach(
+    players: list[dict[str, object]],
+    expressiveness: float,
+    ready_count: int,
+    gauge: float,
+    round_index: int = 0,
+) -> dict[str, str]:
+    """Return ``{"key": ..., "text": ...}`` live coaching for the playing phase.
+
+    ``key`` is a stable category id so the caller can detect when the message
+    really changes (and only then re-speak it). The text is varied but stable
+    within a given ``(key, round)`` so it doesn't flicker every tick.
+    """
+    if ready_count < 2:
+        return _coach_pick("wait", _COACH_WAIT, round_index)
+    if expressiveness < 0.18:
+        return _coach_pick("still", _COACH_STILL, round_index)
+
+    # Single clear outlier? Nudge that player by number.
+    present = [p for p in players if p.get("present") and p.get("sync") is not None]
+    if len(present) >= 3:
+        ordered = sorted(present, key=lambda p: float(p["sync"]))  # type: ignore[arg-type]
+        low = ordered[0]
+        others_avg = sum(float(p["sync"]) for p in ordered[1:]) / (len(ordered) - 1)
+        if others_avg - float(low["sync"]) > 22.0:
+            n = int(low["index"]) + 1  # type: ignore[arg-type]
+            return {"key": f"outlier:{n}", "text": f"{n}번님! 다른 분들과 동작이 좀 달라요. 맞춰볼까요?"}
+
+    if gauge >= 80:
+        return _coach_pick("great", _COACH_GREAT, round_index)
+    if gauge >= 50:
+        return _coach_pick("good", _COACH_GOOD, round_index)
+    return _coach_pick("keep", _COACH_KEEP, round_index)
+
+
+def _coach_pick(key: str, options: tuple[str, ...], round_index: int) -> dict[str, str]:
+    rng = random.Random(f"{key}:{round_index}")
+    return {"key": key, "text": rng.choice(options)}
 
 
 async def generate_mc_comment(

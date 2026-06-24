@@ -38,7 +38,10 @@ const el = {
   introSpeech: document.getElementById("intro-speech"),
   introPlayers: document.getElementById("intro-players"),
   themePicker: document.getElementById("theme-picker"),
+  difficultyPicker: document.getElementById("difficulty-picker"),
+  coachText: document.getElementById("coach-text"),
   ttsToggle: document.getElementById("tts-toggle"),
+  restartGameBtn: document.getElementById("restart-game-btn"),
   mcStage: document.getElementById("mc-stage"),
   mcLiveBubble: document.getElementById("mc-live-bubble"),
   mcLiveText: document.getElementById("mc-live-text"),
@@ -156,6 +159,21 @@ function maybeSpeak(state) {
   else speakLine(state.speech);
 }
 
+// Live in-round coaching uses the browser's instant Web Speech voice (runs on
+// the laptop, never on the board) so MC 민수 can talk during play without
+// touching the LLM/edge-tts pipeline. Deterministic server text means it only
+// changes when the coaching category changes; throttle so it never stutters.
+const coachVoice = { text: "", at: 0 };
+function speakCoach(text) {
+  if (!text || tts.muted || !tts.supported) return;
+  if (text === coachVoice.text) return;
+  const now = Date.now();
+  if (now - coachVoice.at < 3500) return;
+  coachVoice.text = text;
+  coachVoice.at = now;
+  speakLine(text);
+}
+
 if (el.ttsToggle) {
   el.ttsToggle.addEventListener("click", () => {
     tts.muted = !tts.muted;
@@ -240,6 +258,8 @@ function render(state) {
   updatePlayerDots(idleDots, state.players);
   updatePlayerDots(introDots, state.players);
   if (el.mcStage) el.mcStage.classList.toggle("is-hidden", state.phase === "idle");
+  // The "start over" button only makes sense once a game is under way.
+  if (el.restartGameBtn) el.restartGameBtn.classList.toggle("is-hidden", state.phase === "idle");
 
   latestPlayers = Array.isArray(state.players) ? state.players : [];
   currentPhase = state.phase;
@@ -258,6 +278,8 @@ function render(state) {
     el.playPrompt.textContent = state.prompt || "";
     setGauge(state.gauge);
     el.playTagline.textContent = taglineFor(state.gauge, state.ready_count);
+    if (el.coachText && state.coach) el.coachText.textContent = state.coach;
+    speakCoach(state.coach);
 
     const duration = state.phase_duration || 1;
     const left = state.time_left == null ? 0 : state.time_left;
@@ -539,7 +561,7 @@ async function startGame() {
     await fetch("/api/game/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme: selectedTheme }),
+      body: JSON.stringify({ theme: selectedTheme, difficulty: selectedDifficulty }),
     });
   } catch {
     /* the next websocket snapshot will reflect the state */
@@ -549,6 +571,18 @@ async function startGame() {
 async function beginGame() {
   try {
     await fetch("/api/game/begin", { method: "POST" });
+  } catch {
+    /* the next websocket snapshot will reflect the state */
+  }
+}
+
+async function resetGame() {
+  if (!window.confirm("게임을 처음부터 다시 시작할까요?")) return;
+  stopSpeaking();
+  coachVoice.text = "";
+  coachVoice.at = 0;
+  try {
+    await fetch("/api/game/reset", { method: "POST" });
   } catch {
     /* the next websocket snapshot will reflect the state */
   }
@@ -568,9 +602,24 @@ if (el.themePicker) {
   });
 }
 
+let selectedDifficulty = "하";
+if (el.difficultyPicker) {
+  const chips = el.difficultyPicker.querySelectorAll(".theme-chip");
+  const active = el.difficultyPicker.querySelector(".theme-chip.is-active");
+  if (active) selectedDifficulty = active.dataset.difficulty || selectedDifficulty;
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      chips.forEach((c) => c.classList.remove("is-active"));
+      chip.classList.add("is-active");
+      selectedDifficulty = chip.dataset.difficulty || "하";
+    });
+  });
+}
+
 el.startBtn.addEventListener("click", startGame);
 el.restartBtn.addEventListener("click", startGame);
 if (el.beginBtn) el.beginBtn.addEventListener("click", beginGame);
+if (el.restartGameBtn) el.restartGameBtn.addEventListener("click", resetGame);
 if (el.saveReportBtn) el.saveReportBtn.addEventListener("click", buildReportImage);
 
 // --- Skeleton rendering on the game screen ---
@@ -649,7 +698,7 @@ function drawSkeletonCard(canvas, pose) {
 }
 
 function skeletonPrefix() {
-  if (currentPhase === "playing") return "play-skel";
+  // Participants must NOT see each other during play, only the result reveal.
   if (currentPhase === "result") return "result-skel";
   return null;
 }
