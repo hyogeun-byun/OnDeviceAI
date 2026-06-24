@@ -226,10 +226,11 @@ body {
 
 .idle-title {
   margin: 0;
-  font-family: "Black Han Sans", sans-serif;
-  font-size: clamp(48px, 9vw, 104px);
-  line-height: 0.98;
-  letter-spacing: 1px;
+  font-family: "Gothic A1", Inter, sans-serif;
+  font-weight: 800;
+  font-size: clamp(46px, 8.4vw, 96px);
+  line-height: 1.06;
+  letter-spacing: -0.5px;
 }
 
 .idle-title em {
