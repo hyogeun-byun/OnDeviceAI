@@ -927,12 +927,9 @@ body {
   left: 22px;
   bottom: 18px;
   z-index: 30;
-  width: 140px;
+  width: 132px;
   pointer-events: none;
-  transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    bottom 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-left 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 }
 
 .mc-stage.is-hidden {
@@ -940,19 +937,14 @@ body {
   visibility: hidden;
 }
 
-/* 멘트할 때(인트로·결산 발표): 무대 한가운데로 나와서 크게 */
+/* 멘트할 때(인트로·결산): 코너에 머문 채 살짝 커져 주목도만 올린다 (버튼은 절대 안 가림) */
 .mc-stage.is-center {
-  left: 50%;
-  margin-left: -115px;
-  bottom: 14%;
-  width: 230px;
+  width: 170px;
 }
 
-/* 게임 중: 옆으로 비켜서 작아지고, 귀신처럼 둥둥 떠다님 */
+/* 게임 중: 그대로 코너에서 귀신처럼 둥둥 떠다님 */
 .mc-stage.is-side {
-  left: 22px;
-  bottom: 18px;
-  width: 140px;
+  width: 132px;
 }
 
 .mc-avatar {
@@ -1020,37 +1012,33 @@ body {
   animation: mc-nod 0.5s ease-in-out infinite;
 }
 
+/* 말풍선: 캐릭터 위쪽으로 가로로 넓게 펼쳐져 세로로 길어지지 않게 한다 */
 .mc-live-bubble {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 6px);
-  max-width: 300px;
-  padding: 12px 16px;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: 260px;
+  min-width: 110px;
+  padding: 11px 15px;
   border-radius: 16px 16px 16px 4px;
-  background: rgba(20, 26, 56, 0.92);
+  background: rgba(20, 26, 56, 0.94);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(10px);
   color: var(--ink);
   font-size: 14px;
   line-height: 1.45;
+  white-space: normal;
+  word-break: keep-all;
   opacity: 0;
   transform: translateY(8px) scale(0.95);
+  transform-origin: left bottom;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .mc-live-bubble.is-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
-}
-
-.mc-stage.is-center .mc-live-bubble {
-  left: 50%;
-  transform: translateX(-50%) translateY(8px) scale(0.95);
-  border-radius: 16px;
-}
-
-.mc-stage.is-center .mc-live-bubble.is-visible {
-  transform: translateX(-50%) translateY(0) scale(1);
 }
 
 @keyframes mc-bob {
@@ -1134,9 +1122,12 @@ body {
     bottom: 12px;
   }
   .mc-stage.is-center {
-    width: 158px;
-    margin-left: -79px;
-    bottom: 15%;
+    width: 132px;
+    left: 12px;
+    bottom: 12px;
+  }
+  .mc-live-bubble {
+    max-width: 200px;
   }
 }
 

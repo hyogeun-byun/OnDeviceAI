@@ -135,7 +135,7 @@ async def dashboard(request: Request) -> HTMLResponse:
 
 @app.get("/game", response_class=HTMLResponse)
 async def game(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "game.html",
         {
             "request": request,
@@ -144,11 +144,15 @@ async def game(request: Request) -> HTMLResponse:
             "asset_version": ASSET_VERSION,
         },
     )
+    # Never cache the HTML page itself, otherwise the browser keeps loading an
+    # old page that points at stale ?v= assets and updates never show up.
+    response.headers["Cache-Control"] = "no-store, must-revalidate"
+    return response
 
 
 @app.get("/stage", response_class=HTMLResponse)
 async def stage(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "stage.html",
         {
             "request": request,
@@ -157,3 +161,5 @@ async def stage(request: Request) -> HTMLResponse:
             "asset_version": ASSET_VERSION,
         },
     )
+    response.headers["Cache-Control"] = "no-store, must-revalidate"
+    return response
