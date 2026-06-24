@@ -927,9 +927,12 @@ body {
   left: 22px;
   bottom: 18px;
   z-index: 30;
-  width: 150px;
+  width: 140px;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-left 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 }
 
 .mc-stage.is-hidden {
@@ -937,13 +940,42 @@ body {
   visibility: hidden;
 }
 
+/* 멘트할 때(인트로·결산 발표): 무대 한가운데로 나와서 크게 */
+.mc-stage.is-center {
+  left: 50%;
+  margin-left: -115px;
+  bottom: 14%;
+  width: 230px;
+}
+
+/* 게임 중: 옆으로 비켜서 작아지고, 귀신처럼 둥둥 떠다님 */
+.mc-stage.is-side {
+  left: 22px;
+  bottom: 18px;
+  width: 140px;
+}
+
 .mc-avatar {
-  width: 150px;
+  width: 100%;
   animation: mc-bob 3s ease-in-out infinite;
 }
 
+.mc-stage.is-center .mc-avatar {
+  animation: mc-bob 3.2s ease-in-out infinite;
+}
+
+/* 귀여운 유령처럼 이리저리 날아다니는 움직임 */
+.mc-stage.is-side .mc-avatar {
+  animation: mc-float 5s ease-in-out infinite;
+}
+
+.mc-stage.is-side .mc-svg {
+  filter: drop-shadow(0 0 14px rgba(108, 139, 255, 0.55))
+    drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
+}
+
 .mc-stage.is-talking .mc-avatar {
-  animation-duration: 1.2s;
+  animation-duration: 1.4s;
 }
 
 .mc-svg {
@@ -1011,6 +1043,16 @@ body {
   transform: translateY(0) scale(1);
 }
 
+.mc-stage.is-center .mc-live-bubble {
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.95);
+  border-radius: 16px;
+}
+
+.mc-stage.is-center .mc-live-bubble.is-visible {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
 @keyframes mc-bob {
   0%,
   100% {
@@ -1018,6 +1060,24 @@ body {
   }
   50% {
     transform: translateY(-7px);
+  }
+}
+
+@keyframes mc-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(13px, -14px) rotate(4deg);
+  }
+  45% {
+    transform: translate(-9px, -22px) rotate(-3deg);
+  }
+  70% {
+    transform: translate(-15px, -9px) rotate(3deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
   }
 }
 
@@ -1064,12 +1124,19 @@ body {
 
 @media (max-width: 640px) {
   .mc-stage {
-    width: 104px;
+    width: 108px;
     left: 12px;
     bottom: 12px;
   }
-  .mc-avatar {
-    width: 104px;
+  .mc-stage.is-side {
+    width: 108px;
+    left: 12px;
+    bottom: 12px;
+  }
+  .mc-stage.is-center {
+    width: 158px;
+    margin-left: -79px;
+    bottom: 15%;
   }
 }
 

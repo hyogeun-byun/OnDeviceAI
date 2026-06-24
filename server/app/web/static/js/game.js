@@ -257,7 +257,15 @@ function render(state) {
 
   updatePlayerDots(idleDots, state.players);
   updatePlayerDots(introDots, state.players);
-  if (el.mcStage) el.mcStage.classList.toggle("is-hidden", state.phase === "idle");
+  if (el.mcStage) {
+    // MC 민수: 멘트하는 인트로/결산 화면에선 무대 가운데로 크게 나오고,
+    // 게임이 도는 동안엔 옆으로 비켜서 귀신처럼 둥둥 떠다니게 한다.
+    const mcHidden = state.phase === "idle";
+    const mcCenter = state.phase === "intro" || state.phase === "finished";
+    el.mcStage.classList.toggle("is-hidden", mcHidden);
+    el.mcStage.classList.toggle("is-center", !mcHidden && mcCenter);
+    el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter);
+  }
   // The "start over" button only makes sense once a game is under way.
   if (el.restartGameBtn) el.restartGameBtn.classList.toggle("is-hidden", state.phase === "idle");
 
