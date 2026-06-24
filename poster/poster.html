@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>AI MC와 함께하는 이구동성 텔레파시</title>
+<style>
+  @page { size: A2 portrait; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ink: #eaf0ff;
+    --mint: #00ffc6;
+    --blue: #6c8bff;
+    --muted: #9fb0e6;
+  }
+  html, body {
+    width: 420mm; height: 594mm;
+    overflow: hidden;
+    font-family: "Noto Sans CJK KR", "Noto Sans KR", "Pretendard", sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .poster {
+    position: relative;
+    width: 420mm; height: 594mm;
+    overflow: hidden;
+    page-break-after: avoid; page-break-inside: avoid;
+    background:
+      radial-gradient(1200px 900px at 78% 8%, rgba(108,139,255,0.30), transparent 60%),
+      radial-gradient(1000px 800px at 12% 82%, rgba(0,255,198,0.18), transparent 60%),
+      linear-gradient(160deg, #070b1f 0%, #0d1230 45%, #131a40 100%);
+    padding: 24mm 24mm 22mm;
+    display: flex;
+    flex-direction: column;
+  }
+  /* decorative dotted grid */
+  .poster::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1.2px, transparent 1.3px);
+    background-size: 11mm 11mm;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .glow {
+    position: absolute; border-radius: 50%;
+    filter: blur(40px); pointer-events: none;
+  }
+  .glow.a { width: 220mm; height: 220mm; right: -60mm; top: -50mm;
+    background: radial-gradient(circle, rgba(108,139,255,0.45), transparent 65%); }
+  .glow.b { width: 180mm; height: 180mm; left: -50mm; bottom: -40mm;
+    background: radial-gradient(circle, rgba(0,255,198,0.30), transparent 65%); }
+
+  .top { position: relative; z-index: 2; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13pt; letter-spacing: 4px; font-weight: 700;
+    color: var(--mint); text-transform: uppercase;
+    padding: 7px 16px; border: 1.5px solid rgba(0,255,198,0.45);
+    border-radius: 999px; background: rgba(0,255,198,0.06);
+  }
+  .eyebrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mint);
+    box-shadow: 0 0 12px var(--mint); }
+
+  .with-mc { margin-top: 30mm; font-size: 34pt; font-weight: 800; color: var(--muted); }
+  .with-mc b { color: var(--ink); }
+  h1.title {
+    font-size: 116pt; line-height: 0.96; font-weight: 900;
+    letter-spacing: -2px; margin-top: 4mm;
+    background: linear-gradient(100deg, #ffffff 0%, var(--blue) 45%, var(--mint) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 60px rgba(108,139,255,0.25);
+  }
+  .lead { margin-top: 9mm; font-size: 24pt; font-weight: 600; color: var(--ink); line-height: 1.4; }
+  .lead .hl { color: var(--mint); }
+
+  /* hero row: character + speech */
+  .hero { position: relative; z-index: 2; flex: 1; display: flex; align-items: center; gap: 14mm; margin-top: 6mm; }
+  .badges { display: flex; flex-direction: column; gap: 11mm; flex: 1; }
+  .badge {
+    display: flex; align-items: center; gap: 14px;
+    padding: 11mm 12mm; border-radius: 22px;
+    background: linear-gradient(150deg, rgba(108,139,255,0.16), rgba(13,18,48,0.55));
+    border: 1.5px solid rgba(108,139,255,0.35);
+    box-shadow: 0 10mm 26mm rgba(0,0,0,0.35);
+  }
+  .badge .ic { width: 56px; height: 56px; flex: none; border-radius: 16px;
+    display: grid; place-items: center;
+    background: rgba(0,255,198,0.10); border: 1.5px solid rgba(0,255,198,0.4); }
+  .badge .ic svg { width: 30px; height: 30px; }
+  .badge .tx b { display: block; font-size: 19pt; font-weight: 800; color: var(--ink); }
+  .badge .tx span { font-size: 13.5pt; color: var(--muted); }
+
+  .stage { position: relative; width: 150mm; flex: none; display: flex; flex-direction: column; align-items: center; }
+  .bubble {
+    position: relative; align-self: flex-start; margin-left: 8mm; margin-bottom: 6mm;
+    padding: 9mm 12mm; border-radius: 26px 26px 26px 6px;
+    background: linear-gradient(140deg, #1a2356, #0d1230);
+    border: 1.5px solid var(--blue); color: var(--ink);
+    font-size: 19pt; font-weight: 700; box-shadow: 0 8mm 24mm rgba(0,0,0,0.4);
+  }
+  .bubble::after { content: ""; position: absolute; left: 14mm; bottom: -7mm;
+    border-width: 7mm 7mm 0 0; border-style: solid;
+    border-color: #0d1230 transparent transparent transparent; }
+  .mc-svg { width: 132mm; height: auto; filter: drop-shadow(0 14mm 30mm rgba(0,0,0,0.5)); }
+  .mc-eye, .mc-antenna { filter: drop-shadow(0 0 10px var(--mint)); }
+  .mc-name { margin-top: 4mm; font-size: 18pt; font-weight: 800; letter-spacing: 2px;
+    color: var(--mint); text-shadow: 0 0 14px rgba(0,255,198,0.4); }
+
+  /* how to play */
+  .how { position: relative; z-index: 2; margin-top: 8mm; }
+  .how h2 { font-size: 22pt; font-weight: 800; margin-bottom: 7mm; color: var(--ink); }
+  .how h2 span { color: var(--blue); }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9mm; }
+  .step { padding: 9mm 8mm; border-radius: 20px;
+    background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.10); }
+  .step .n { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 17pt; font-weight: 900; color: #061026; background: var(--mint);
+    box-shadow: 0 0 16px rgba(0,255,198,0.5); margin-bottom: 6mm; }
+  .step b { display: block; font-size: 16pt; color: var(--ink); margin-bottom: 3mm; }
+  .step span { font-size: 12.5pt; color: var(--muted); line-height: 1.45; }
+
+  /* footer */
+  .foot { position: relative; z-index: 2; margin-top: 11mm; display: flex; align-items: center; justify-content: space-between;
+    padding-top: 7mm; border-top: 1.5px solid rgba(255,255,255,0.12); }
+  .foot .url { font-size: 19pt; font-weight: 800; color: var(--ink); }
+  .foot .url .mint { color: var(--mint); }
+  .foot .meta { font-size: 12.5pt; color: var(--muted); text-align: right; line-height: 1.5; }
+  .chiprow { display: flex; gap: 7px; margin-top: 4mm; }
+  .chip { font-size: 11pt; font-weight: 700; color: var(--blue); padding: 4px 12px;
+    border: 1.2px solid rgba(108,139,255,0.4); border-radius: 999px; }
+</style>
+</head>
+<body>
+  <div class="poster">
+    <div class="glow a"></div>
+    <div class="glow b"></div>
+
+    <div class="top">
+      <span class="eyebrow"><span class="dot"></span>ON-DEVICE AI · 실시간 포즈 인식 파티게임</span>
+      <div class="with-mc">AI MC와 함께하는</div>
+      <h1 class="title">이구동성<br/>텔레파시</h1>
+      <p class="lead">제시어를 보고 <span class="hl">다 같이 같은 동작</span>을!<br/>
+      카메라가 읽은 자세로 <span class="hl">텔레파시 게이지</span>가 실시간으로 차오른다.</p>
+    </div>
+
+    <div class="hero">
+      <div class="badges">
+        <div class="badge">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#00ffc6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M12 6v7M12 9l-5 3M12 9l5 3M12 13l-3 7M12 13l3 7"/></svg></div>
+          <div class="tx"><b>MediaPipe Pose</b><span>33개 관절 실시간 추정 · 온디바이스</span></div>
+        </div>
+        <div class="badge">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#00ffc6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19h14M5 19L17 7"/><path d="M11.5 19a7 7 0 0 0-3-5.5" stroke-width="1.5"/></svg></div>
+          <div class="tx"><b>관절 각도 유사도</b><span>8개 관절 각도로 호흡을 0~100 점수화</span></div>
+        </div>
+        <div class="badge">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#00ffc6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg></div>
+          <div class="tx"><b>EXAONE 3.5 (2.4B)</b><span>AI MC 멘트 · 테마 제시어 · 궁합 리포트</span></div>
+        </div>
+        <div class="badge">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#00ffc6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6"/><path d="M19 6.5a7 7 0 0 1 0 11"/></svg></div>
+          <div class="tx"><b>edge-tts 한국어 보이스</b><span>자연스러운 음성으로 진행하는 2D AI MC</span></div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="bubble">준비됐나요?<br/>다 함께, 텔레파시 가즈아!</div>
+        <svg viewBox="0 0 200 220" class="mc-svg" role="img" aria-label="AI MC 민수">
+          <g class="mc-mic">
+            <rect x="150" y="118" width="10" height="56" rx="5" fill="#cfd8ff" />
+            <circle cx="155" cy="112" r="16" fill="#161f44" stroke="#6c8bff" stroke-width="3" />
+            <circle cx="155" cy="112" r="7" fill="#6c8bff" />
+          </g>
+          <path d="M132 150 Q162 150 155 128" stroke="#6c8bff" stroke-width="9" fill="none" stroke-linecap="round" />
+          <rect x="55" y="120" width="90" height="82" rx="26" fill="#2a3566" stroke="#6c8bff" stroke-width="3" />
+          <g class="mc-head">
+            <line x1="100" y1="40" x2="100" y2="22" stroke="#6c8bff" stroke-width="4" />
+            <circle cx="100" cy="16" r="7" fill="#00ffc6" class="mc-antenna" />
+            <rect x="48" y="38" width="104" height="86" rx="30" fill="#33407a" stroke="#6c8bff" stroke-width="3" />
+            <rect x="60" y="58" width="80" height="42" rx="21" fill="#0d1230" />
+            <circle class="mc-eye" cx="84" cy="79" r="8" fill="#00ffc6" />
+            <circle class="mc-eye" cx="116" cy="79" r="8" fill="#00ffc6" />
+            <ellipse class="mc-mouth" cx="100" cy="108" rx="13" ry="6" fill="#00ffc6" />
+          </g>
+        </svg>
+        <div class="mc-name">AI MC · 민수</div>
+      </div>
+    </div>
+
+    <div class="how">
+      <h2><span>HOW TO PLAY</span> · 이렇게 즐겨요</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><b>테마 고르기</b><span>좀비 · K-POP · 동물원 등 테마를 선택하면 AI가 제시어를 만든다.</span></div>
+        <div class="step"><div class="n">2</div><b>AI MC 인트로</b><span>민수가 인사하고 분위기를 띄운 뒤 ‘시작하기’로 라운드 시작.</span></div>
+        <div class="step"><div class="n">3</div><b>같은 동작!</b><span>15초 동안 제시어에 맞춰 다 같이 같은 포즈. 게이지가 차오른다.</span></div>
+        <div class="step"><div class="n">4</div><b>궁합 리포트</b><span>5라운드 후 베스트·대참사 장면과 점수를 PNG로 저장해 간다.</span></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>
+        <div class="url"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#00ffc6" stroke-width="2" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="13.5" r="3.2"/></svg>카메라 앞에 모여 → <span class="mint">http://&lt;SERVER_IP&gt;:8000/game</span></div>
+        <div class="chiprow">
+          <span class="chip">FastAPI</span>
+          <span class="chip">WebSocket 실시간</span>
+          <span class="chip">Raspberry Pi · aarch64</span>
+          <span class="chip">Ollama</span>
+        </div>
+      </div>
+      <div class="meta">
+        OnDeviceAI · 이구동성 텔레파시 게임<br/>
+        실시간 포즈 인식 + 경량 LLM + 신경망 음성<br/>
+        모든 추론은 보드 위에서 동작합니다
+      </div>
+    </div>
+  </div>
+</body>
+</html>
