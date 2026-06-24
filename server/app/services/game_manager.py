@@ -56,6 +56,7 @@ class GameState:
     coach_changed_at: float = 0.0
     players_analysis: list[dict] = field(default_factory=list)
     round_scores: list[float] = field(default_factory=list)
+    result_poses: list[dict[str, object] | None] = field(default_factory=list)
     theme: str = "기본"
     difficulty: str = DIFFICULTY_EASY
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
@@ -286,6 +287,9 @@ class GameManager:
 
     def _finish_round(self, now: float) -> None:
         self._state.round_scores.append(round(self._state.gauge, 1))
+        self._state.result_poses = [
+            self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids
+        ]
         self._state.phase = PHASE_RESULT
         self._state.phase_started_at = now
         # A. Show + speak a static reaction immediately so the result screen is
@@ -321,6 +325,7 @@ class GameManager:
         self._state.coach_changed_at = 0.0
         self._state.mc_comment = ""
         self._state.mc_status = "idle"
+        self._state.result_poses = []
 
     def _average_score(self) -> float:
         scores = self._state.round_scores
@@ -375,6 +380,7 @@ class GameManager:
             "time_left": self._time_left(),
             "phase_duration": _PHASE_DURATIONS.get(state.phase),
             "round_scores": list(state.round_scores),
+            "result_poses": list(state.result_poses) if state.phase == PHASE_RESULT else [],
             "total_score": total_score,
             "theme": state.theme,
             "difficulty": state.difficulty,
