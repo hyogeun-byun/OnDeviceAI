@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -115,6 +116,10 @@ app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 
 templates = Jinja2Templates(directory="app/web/templates")
 
+# Bust the browser cache for CSS/JS on every server (re)start so clients never
+# run a stale build after an update. Appended as ?v=... to static asset URLs.
+ASSET_VERSION = str(int(time.time()))
+
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request) -> HTMLResponse:
@@ -136,6 +141,7 @@ async def game(request: Request) -> HTMLResponse:
             "request": request,
             "player_count": len(config.camera_ids),
             "themes": list(game_narrator.THEMES),
+            "asset_version": ASSET_VERSION,
         },
     )
 
@@ -148,5 +154,6 @@ async def stage(request: Request) -> HTMLResponse:
             "request": request,
             "camera_ids": config.camera_ids,
             "player_count": len(config.camera_ids),
+            "asset_version": ASSET_VERSION,
         },
     )

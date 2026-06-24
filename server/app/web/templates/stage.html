@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Inter:wght@400;600;800;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/static/css/game.css" />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}" />
   </head>
   <body data-player-count="{{ player_count }}">
     <div class="aurora" aria-hidden="true">
@@ -73,6 +73,6 @@
       </div>
     </main>
 
-    <script src="/static/js/stage.js"></script>
+    <script src="/static/js/stage.js?v={{ asset_version }}"></script>
   </body>
 </html>
