@@ -28,6 +28,7 @@ class ServerConfig:
     edge_tts_enabled: bool
     edge_tts_voice: str
     edge_tts_rate: str
+    leaderboard_db: str
 
 
 def read_bool(name: str, default: bool) -> bool:
@@ -67,4 +68,5 @@ def load_config() -> ServerConfig:
         edge_tts_enabled=read_bool("EDGE_TTS_ENABLED", True),
         edge_tts_voice=os.getenv("EDGE_TTS_VOICE", "ko-KR-InJoonNeural"),
         edge_tts_rate=os.getenv("EDGE_TTS_RATE", "+8%"),
+        leaderboard_db=os.getenv("LEADERBOARD_DB", "data/leaderboard.db"),
     )

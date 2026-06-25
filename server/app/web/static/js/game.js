@@ -44,9 +44,16 @@ const el = {
   mcStage: document.getElementById("mc-stage"),
   mcLiveBubble: document.getElementById("mc-live-bubble"),
   mcLiveText: document.getElementById("mc-live-text"),
+  teamName: document.getElementById("team-name"),
+  leaderboardList: document.getElementById("leaderboard-list"),
+  leaderboardEmpty: document.getElementById("leaderboard-empty"),
+  leaderboardReset: document.getElementById("leaderboard-reset"),
+  finalTeam: document.getElementById("final-team"),
+  finalRank: document.getElementById("final-rank"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
+let lbLastPhase = null;
 let lastResultRound = 0;
 
 // --- AI MC voice: prefers natural server audio (edge-tts), falls back to the
@@ -247,6 +254,14 @@ function render(state) {
   showScreen(state.phase);
   maybeSpeak(state);
 
+  // Refresh the leaderboard only on phase transitions (not every snapshot):
+  // when returning to the idle board, and when a game has just finished.
+  if (state.phase !== lbLastPhase) {
+    lbLastPhase = state.phase;
+    if (state.phase === "idle") refreshLeaderboardIdle();
+    else if (state.phase === "finished") refreshLeaderboardFinal(state);
+  }
+
   if (state.phase === "idle") {
     el.roundPill.textContent = "READY";
   } else if (state.phase === "finished") {
@@ -333,6 +348,9 @@ function render(state) {
     lastFinalState = state;
     el.finalScore.textContent = String(Math.round(state.total_score || 0));
     el.finalTitle.textContent = state.final_title || "";
+    if (el.finalTeam) {
+      el.finalTeam.textContent = state.team_name ? `🏷 ${state.team_name}` : "";
+    }
     if (state.final_status === "pending") {
       el.finalReport.textContent = "📜 AI가 텔레파시 궤합을 분석 중…";
       el.finalReport.classList.add("is-pending");
@@ -575,7 +593,7 @@ async function startGame() {
     await fetch("/api/game/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme: selectedTheme }),
+      body: JSON.stringify({ theme: selectedTheme, team_name: getTeamName() }),
     });
   } catch {
     /* the next websocket snapshot will reflect the state */
@@ -625,6 +643,89 @@ el.restartBtn.addEventListener("click", resetGame);
 if (el.beginBtn) el.beginBtn.addEventListener("click", beginGame);
 if (el.restartGameBtn) el.restartGameBtn.addEventListener("click", resetGame);
 if (el.saveReportBtn) el.saveReportBtn.addEventListener("click", buildReportImage);
+if (el.leaderboardReset) el.leaderboardReset.addEventListener("click", resetLeaderboard);
+
+// --- Team leaderboard (accumulates across games, per team name) ---
+function getTeamName() {
+  return ((el.teamName && el.teamName.value) || "").trim().slice(0, 40);
+}
+
+async function fetchLeaderboard() {
+  try {
+    const res = await fetch("/api/leaderboard?limit=50");
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+const LB_MEDALS = ["🥇", "🥈", "🥉"];
+
+function renderLeaderboard(data, meId) {
+  if (!el.leaderboardList) return;
+  const entries = (data && data.entries) || [];
+  el.leaderboardList.innerHTML = "";
+  const hasAny = entries.length > 0;
+  el.leaderboardList.classList.toggle("is-hidden", !hasAny);
+  if (el.leaderboardEmpty) el.leaderboardEmpty.classList.toggle("is-hidden", hasAny);
+  entries.slice(0, 10).forEach((e) => {
+    const li = document.createElement("li");
+    li.className =
+      "leaderboard-row" +
+      (e.rank <= 3 ? " is-top" : "") +
+      (meId && e.id === meId ? " is-me" : "");
+    const rank = document.createElement("span");
+    rank.className = "lb-rank";
+    rank.textContent = e.rank <= 3 ? LB_MEDALS[e.rank - 1] : String(e.rank);
+    const team = document.createElement("span");
+    team.className = "lb-team";
+    team.textContent = e.team_name;
+    if (e.title) {
+      const sub = document.createElement("small");
+      sub.textContent = e.title;
+      team.appendChild(sub);
+    }
+    const score = document.createElement("span");
+    score.className = "lb-score";
+    score.textContent = String(Math.round(e.score));
+    li.append(rank, team, score);
+    el.leaderboardList.appendChild(li);
+  });
+}
+
+async function refreshLeaderboardIdle() {
+  renderLeaderboard(await fetchLeaderboard(), null);
+}
+
+async function refreshLeaderboardFinal(state) {
+  const meId = state.leaderboard_id || null;
+  const data = await fetchLeaderboard();
+  renderLeaderboard(data, meId);
+  if (el.finalRank) {
+    const me = data && (data.entries || []).find((e) => e.id === meId);
+    el.finalRank.textContent = me ? `전체 ${data.count}팀 중 ${me.rank}위` : "";
+  }
+}
+
+async function resetLeaderboard() {
+  const answer = window.prompt(
+    '리더보드를 정말 초기화할까요? 모든 팀 기록이 삭제됩니다.\n계속하려면 "초기화" 를 입력하세요.'
+  );
+  if (answer === null) return;
+  if (answer.trim() !== "초기화") {
+    window.alert("입력이 일치하지 않아 취소되었습니다.");
+    return;
+  }
+  try {
+    const res = await fetch("/api/leaderboard/reset", { method: "POST" });
+    const data = await res.json();
+    window.alert(`리더보드를 초기화했습니다. (기록 ${data.removed || 0}개 삭제)`);
+  } catch {
+    window.alert("초기화에 실패했습니다.");
+  }
+  refreshLeaderboardIdle();
+}
 
 // --- Skeleton rendering on the game screen ---
 const POSE_CONNECTIONS = [

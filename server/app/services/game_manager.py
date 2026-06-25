@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from app.services import game_narrator as narrator
 from app.services.game_narrator import DEFAULT_PROMPTS
+from app.services.leaderboard import Leaderboard
 from app.services.llm_client import LLMClient
 from app.services.pose_similarity import analyze_group
 from app.services.speech_audio import SpeechAudioCache
@@ -66,6 +67,9 @@ class GameState:
     final_status: str = "idle"  # idle | pending | ready
     speech: str = ""
     speech_id: int = 0
+    team_name: str = ""
+    leaderboard_id: int = 0
+    recorded: bool = False
 
 
 def telepathy_title(score: float) -> str:
@@ -93,6 +97,7 @@ class GameManager:
         mc_name: str = "민수",
         team_name: str = "",
         speech_audio: SpeechAudioCache | None = None,
+        leaderboard: Leaderboard | None = None,
     ) -> None:
         self._camera_ids = camera_ids
         self._stream_manager = stream_manager
@@ -102,6 +107,7 @@ class GameManager:
         self._mc_name = mc_name
         self._team_name = team_name
         self._speech_audio = speech_audio
+        self._leaderboard = leaderboard
         self._total_rounds = TOTAL_ROUNDS
         self._state = GameState(theme=self._default_theme)
         # Keep references to background LLM tasks so they are not garbage collected,
@@ -124,12 +130,13 @@ class GameManager:
         if self._speech_audio is not None and self._speech_audio.enabled:
             self._spawn(self._speech_audio.generate(self._speech_seq, text))
 
-    def start(self, theme: str | None = None) -> None:
+    def start(self, theme: str | None = None, team_name: str | None = None) -> None:
         """Enter the MC intro screen. The actual rounds don't begin until
         :meth:`begin` is called (a separate user trigger), so the host can
         greet the players and build hype first."""
         self._generation += 1
         chosen = theme if theme in narrator.THEMES else self._default_theme
+        team = (team_name or "").strip() or self._team_name
         selected_prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
         self._state = GameState(
             phase=PHASE_INTRO,
@@ -138,9 +145,10 @@ class GameManager:
             theme=chosen,
             prompts=selected_prompts,
             prompt_source="category_random_in_theme",
+            team_name=team,
         )
         # Spoken intro greeting (non-real-time: nothing is being scored yet).
-        self._speak(narrator.intro_line(self._mc_name, self._team_name))
+        self._speak(narrator.intro_line(self._mc_name, team))
         # B. Dynamic prompts — generated in the background; until ready the
         # default prompts are used so the game can start immediately.
         if self._llm.enabled and chosen != "기본":
@@ -305,6 +313,8 @@ class GameManager:
         if next_index >= self._total_rounds:
             self._state.phase = PHASE_FINISHED
             self._state.phase_started_at = now
+            # Persist the final team score to the leaderboard (once per game).
+            self._record_result()
             # C. Final telepathy report — generated in the background.
             self._state.final_report = ""
             self._state.final_status = "pending"
@@ -326,6 +336,23 @@ class GameManager:
     def _average_score(self) -> float:
         scores = self._state.round_scores
         return round(sum(scores) / len(scores), 1) if scores else 0.0
+
+    def _record_result(self) -> None:
+        """Save the finished game's team score to the leaderboard exactly once."""
+        if self._leaderboard is None or self._state.recorded:
+            return
+        self._state.recorded = True
+        total = self._average_score()
+        try:
+            self._state.leaderboard_id = self._leaderboard.add(
+                team_name=self._state.team_name,
+                score=total,
+                title=telepathy_title(total),
+                theme=self._state.theme,
+                round_scores=list(self._state.round_scores),
+            )
+        except Exception as exc:  # pragma: no cover - DB failure must not crash the game
+            print(f"[leaderboard] failed to record result: {exc}")
 
     def _current_prompt(self) -> str | None:
         if self._state.phase in {PHASE_COUNTDOWN, PHASE_PLAYING, PHASE_RESULT}:
@@ -389,4 +416,6 @@ class GameManager:
             "speech_id": state.speech_id,
             "speech_audio": bool(self._speech_audio and self._speech_audio.enabled),
             "final_title": telepathy_title(total_score) if state.phase == PHASE_FINISHED else None,
+            "team_name": state.team_name,
+            "leaderboard_id": state.leaderboard_id,
         }

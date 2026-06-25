@@ -12,10 +12,12 @@ from fastapi.templating import Jinja2Templates
 from app.api.camera_routes import router as camera_router
 from app.api.game_routes import router as game_router
 from app.api.health_routes import router as health_router
+from app.api.leaderboard_routes import router as leaderboard_router
 from app.config import load_config
 from app.services import game_narrator
 from app.services.game_hub import GameHub
 from app.services.game_manager import GameManager
+from app.services.leaderboard import Leaderboard
 from app.services.llm_client import LLMClient
 from app.services.speech_audio import SpeechAudioCache
 from app.services.stream_manager import StreamManager
@@ -46,6 +48,7 @@ speech_audio = SpeechAudioCache(
     voice=config.edge_tts_voice,
     rate=config.edge_tts_rate,
 )
+leaderboard = Leaderboard(config.leaderboard_db)
 game_manager = GameManager(
     camera_ids=config.camera_ids,
     stream_manager=stream_manager,
@@ -55,6 +58,7 @@ game_manager = GameManager(
     mc_name=config.tts_mc_name,
     team_name=config.tts_team_name,
     speech_audio=speech_audio,
+    leaderboard=leaderboard,
 )
 game_hub = GameHub()
 
@@ -108,10 +112,12 @@ app.state.traffic_metrics = traffic_metrics
 app.state.game_manager = game_manager
 app.state.game_hub = game_hub
 app.state.speech_audio = speech_audio
+app.state.leaderboard = leaderboard
 
 app.include_router(health_router)
 app.include_router(camera_router)
 app.include_router(game_router)
+app.include_router(leaderboard_router)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")
 
 templates = Jinja2Templates(directory="app/web/templates")

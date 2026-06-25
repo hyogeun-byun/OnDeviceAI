@@ -44,6 +44,17 @@
           서로의 모습은 볼 수 없습니다. 오직 <strong>게이지</strong>만이 진실을 말합니다.
         </p>
         <div class="player-dots" id="idle-players"></div>
+        <div class="team-input">
+          <label class="team-label" for="team-name">우리 팀 이름</label>
+          <input
+            id="team-name"
+            class="team-field"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            placeholder="예) 텔레파시 4인방"
+          />
+        </div>
         <div class="theme-picker" id="theme-picker">
           <span class="theme-label">카테고리</span>
           <div class="theme-options">
@@ -60,6 +71,19 @@
         </div>
         <button class="cta" id="start-btn" type="button">게임 시작</button>
         <p class="idle-hint">선택한 카테고리 안에서 랜덤 5문제 · 라운드당 10초</p>
+
+        <section class="leaderboard-panel" id="leaderboard-panel">
+          <div class="leaderboard-head">
+            <h2 class="leaderboard-title">🏆 팀 리더보드</h2>
+            <button class="leaderboard-reset" id="leaderboard-reset" type="button">
+              초기화
+            </button>
+          </div>
+          <ol class="leaderboard-list" id="leaderboard-list"></ol>
+          <p class="leaderboard-empty" id="leaderboard-empty">
+            아직 기록이 없습니다. 첫 팀이 되어보세요!
+          </p>
+        </section>
       </section>
 
       <!-- INTRO (MC greets; rounds start on a separate trigger) -->
@@ -135,8 +159,10 @@
       <!-- FINISHED -->
       <section class="screen screen-final" id="screen-final">
         <p class="final-eyebrow">FINAL TELEPATHY</p>
+        <p class="final-team" id="final-team"></p>
         <div class="final-score" id="final-score">0</div>
         <h2 class="final-title" id="final-title">—</h2>
+        <p class="final-rank" id="final-rank"></p>
         <p class="final-report" id="final-report"></p>
         <div class="report-cards" id="report-cards"></div>
         <ul class="final-breakdown" id="final-breakdown"></ul>

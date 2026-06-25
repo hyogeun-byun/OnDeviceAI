@@ -338,6 +338,177 @@ body {
   transform: translateY(0) scale(0.99);
 }
 
+/* ---------- Team name input ---------- */
+.team-input {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+
+.team-field {
+  width: min(360px, 86vw);
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.team-field::placeholder {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.team-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 255, 198, 0.22);
+}
+
+/* ---------- Leaderboard panel (idle) ---------- */
+.leaderboard-panel {
+  margin: 40px auto 0;
+  width: min(460px, 92vw);
+  padding: 22px 24px 24px;
+  border-radius: 22px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  text-align: left;
+}
+
+.leaderboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.leaderboard-title {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+}
+
+.leaderboard-reset {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  background: rgba(255, 80, 80, 0.12);
+  color: #ff9a9a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.leaderboard-reset:hover {
+  background: rgba(255, 80, 80, 0.24);
+  color: #ffd0d0;
+}
+
+.leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.leaderboard-row.is-top {
+  background: linear-gradient(120deg, rgba(0, 255, 198, 0.18), rgba(69, 255, 208, 0.08));
+  border: 1px solid rgba(0, 255, 198, 0.3);
+}
+
+.leaderboard-row.is-me {
+  outline: 2px solid var(--accent);
+}
+
+.lb-rank {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--accent);
+  text-align: center;
+}
+
+.lb-team {
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lb-team small {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.lb-score {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.leaderboard-empty {
+  margin: 6px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.leaderboard-empty.is-hidden,
+.leaderboard-list.is-hidden {
+  display: none;
+}
+
+/* ---------- Final screen team / rank ---------- */
+.final-team {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.final-rank {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 /* ---------- Player dots ---------- */
 .player-dots {
   display: flex;

@@ -25,15 +25,19 @@ async def game_state(request: Request) -> dict[str, object]:
 async def start_game(request: Request) -> dict[str, object]:
     game_manager = get_game_manager(request)
     theme: str | None = None
+    team_name: str | None = None
     try:
         body = await request.json()
         if isinstance(body, dict):
             value = body.get("theme")
             if isinstance(value, str) and value.strip():
                 theme = value.strip()
+            name = body.get("team_name")
+            if isinstance(name, str) and name.strip():
+                team_name = name.strip()[:40]
     except Exception:
         theme = None
-    game_manager.start(theme)
+    game_manager.start(theme, team_name)
     return game_manager.snapshot()
 
 

@@ -11,6 +11,13 @@ proj/
 .env.*
 !.env.example
 
+# Leaderboard SQLite database (per-machine demo data)
+data/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
