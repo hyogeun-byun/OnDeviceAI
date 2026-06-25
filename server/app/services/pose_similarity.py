@@ -58,14 +58,38 @@ def _is_visible(keypoint: dict[str, float]) -> bool:
     return float(visibility) >= VISIBILITY_THRESHOLD
 
 
+def _aspect_x_scale(pose_result: dict[str, object]) -> float:
+    """Return the x-axis scale (frame_width / frame_height) used to undo the
+    aspect-ratio distortion of normalised keypoint coordinates.
+
+    Keypoint ``x`` is normalised to the frame width and ``y`` to the frame
+    height. For a non-square frame (e.g. 640x480) one normalised unit of x and
+    one of y span different pixel distances, which warps every measured angle.
+    Scaling x by the frame aspect ratio puts both axes in the same units so the
+    angles are geometrically correct. Falls back to 1.0 when the frame size is
+    missing or invalid.
+    """
+    width = pose_result.get("frame_width")
+    height = pose_result.get("frame_height")
+    try:
+        w = float(width)  # type: ignore[arg-type]
+        h = float(height)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 1.0
+    if w > 0.0 and h > 0.0:
+        return w / h
+    return 1.0
+
+
 def _angle_degrees(
     point_a: dict[str, float],
     vertex: dict[str, float],
     point_c: dict[str, float],
+    x_scale: float = 1.0,
 ) -> float:
-    ax = float(point_a["x"]) - float(vertex["x"])
+    ax = (float(point_a["x"]) - float(vertex["x"])) * x_scale
     ay = float(point_a["y"]) - float(vertex["y"])
-    cx = float(point_c["x"]) - float(vertex["x"])
+    cx = (float(point_c["x"]) - float(vertex["x"])) * x_scale
     cy = float(point_c["y"]) - float(vertex["y"])
 
     dot = ax * cx + ay * cy
@@ -76,6 +100,7 @@ def _angle_degrees(
 def compute_joint_angles(pose_result: dict[str, object]) -> dict[str, float]:
     """Return a map of joint name -> angle (degrees) for visible joints only."""
     keypoints = _keypoint_map(pose_result)
+    x_scale = _aspect_x_scale(pose_result)
     angles: dict[str, float] = {}
 
     for joint_name, (a_name, vertex_name, c_name) in JOINT_DEFINITIONS.items():
@@ -86,7 +111,7 @@ def compute_joint_angles(pose_result: dict[str, object]) -> dict[str, float]:
             continue
         if not (_is_visible(a) and _is_visible(vertex) and _is_visible(c)):
             continue
-        angles[joint_name] = _angle_degrees(a, vertex, c)
+        angles[joint_name] = _angle_degrees(a, vertex, c, x_scale)
 
     return angles
 
@@ -205,5 +230,50 @@ def analyze_group(pose_results: list[dict[str, object] | None]) -> dict:
         "expressiveness": expressiveness,
         "ready_count": ready_count,
         "players": players,
+    }
+
+
+def analyze_group_debug(pose_results: list[dict[str, object] | None]) -> dict:
+    """Verbose variant of :func:`analyze_group` for the diagnostics overlay.
+
+    On top of the regular game analysis it exposes, per board, the visible
+    joint count and each measured joint angle, plus the pairwise similarity
+    matrix and the separated similarity / activity-factor / final-score values.
+    Used only by the ``/api/debug/analysis`` endpoint — never on the game loop.
+    """
+    base = analyze_group(pose_results)
+
+    boards: list[dict[str, object]] = []
+    angles_by_index: list[dict[str, float] | None] = []
+    for index, pose_result in enumerate(pose_results):
+        detected = bool(pose_result and pose_result.get("person_detected"))
+        angles = compute_joint_angles(pose_result) if detected and pose_result else {}
+        angles_by_index.append(angles or None)
+        boards.append(
+            {
+                "index": index,
+                "person_detected": detected,
+                "visible_joints": len(angles),
+                "angles": {name: round(value, 1) for name, value in angles.items()},
+                "missing_joints": [j for j in JOINT_DEFINITIONS if j not in angles],
+            }
+        )
+
+    present = [i for i in range(len(pose_results)) if angles_by_index[i] is not None]
+    pairs: list[dict[str, object]] = []
+    for a in range(len(present)):
+        for b in range(a + 1, len(present)):
+            ia, ib = present[a], present[b]
+            sim = pose_pair_similarity(angles_by_index[ia], angles_by_index[ib])  # type: ignore[arg-type]
+            pairs.append({"a": ia, "b": ib, "sim": round(sim, 1) if sim is not None else None})
+
+    return {
+        "ready_count": base["ready_count"],
+        "similarity": round(base["similarity"], 1),
+        "activity_factor": round(_activity_factor(base["expressiveness"]), 3),
+        "expressiveness": round(base["expressiveness"], 3),
+        "score": round(base["score"], 1),
+        "boards": boards,
+        "pairs": pairs,
     }
 

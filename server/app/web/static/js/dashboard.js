@@ -178,7 +178,76 @@ async function refreshSkeletons() {
   }
 }
 
+// --- Score-breakdown diagnostics ---
+const DIAG_JOINTS = [
+  ["left_shoulder", "L sh"],
+  ["right_shoulder", "R sh"],
+  ["left_elbow", "L elbow"],
+  ["right_elbow", "R elbow"],
+  ["left_hip", "L hip"],
+  ["right_hip", "R hip"],
+  ["left_knee", "L knee"],
+  ["right_knee", "R knee"],
+];
+
+function renderBoardAngles(board) {
+  setText(`${board.camera_id}-visible`, `${board.visible_joints}/8`);
+  const container = document.getElementById(`${board.camera_id}-angles`);
+  if (!container) {
+    return;
+  }
+  const angles = board.angles || {};
+  container.innerHTML = DIAG_JOINTS.map(([name, label]) => {
+    const has = Object.prototype.hasOwnProperty.call(angles, name);
+    const value = has ? `${Math.round(angles[name])}\u00b0` : "\u2014";
+    return `<span class="angle-chip${has ? "" : " missing"}">${label}<b>${value}</b></span>`;
+  }).join("");
+}
+
+function renderPairs(pairs) {
+  const element = document.getElementById("diag-pairs");
+  if (!element) {
+    return;
+  }
+  if (!pairs || pairs.length === 0) {
+    element.innerHTML = `<span class="pair-empty">2명 이상 감지되면 쌍별 유사도가 표시됩니다</span>`;
+    return;
+  }
+  element.innerHTML = pairs
+    .map((pair) => {
+      const sim = pair.sim == null ? "\u2014" : `${formatNumber(pair.sim, 0)}%`;
+      return `<span class="pair-chip">P${pair.a + 1}\u2194P${pair.b + 1}<b>${sim}</b></span>`;
+    })
+    .join("");
+}
+
+async function refreshDiagnostics() {
+  let data;
+  try {
+    const response = await fetch("/api/debug/analysis", { cache: "no-store" });
+    if (!response.ok) {
+      return;
+    }
+    data = await response.json();
+  } catch {
+    return;
+  }
+
+  setText("diag-score", formatNumber(data.score, 1));
+  setText("diag-similarity", formatNumber(data.similarity, 1));
+  setText("diag-activity", `\u00d7${formatNumber(data.activity_factor, 2)}`);
+  setText("diag-expressiveness", formatNumber(data.expressiveness, 2));
+  setText("diag-ready", String(data.ready_count ?? 0));
+
+  for (const board of data.boards || []) {
+    renderBoardAngles(board);
+  }
+  renderPairs(data.pairs);
+}
+
 refreshCameraStatus();
 setInterval(refreshCameraStatus, 2000);
 refreshSkeletons();
 setInterval(refreshSkeletons, 150);
+refreshDiagnostics();
+setInterval(refreshDiagnostics, 300);

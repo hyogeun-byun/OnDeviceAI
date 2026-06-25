@@ -239,3 +239,146 @@ h2 {
     font-size: 28px;
   }
 }
+
+/* --- Score-breakdown diagnostics --- */
+.diag-panel {
+  padding: 12px 16px 14px;
+  border-top: 1px solid #262d36;
+}
+
+.diag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.diag-head strong {
+  color: #7fd1ae;
+}
+
+.diag-angles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.angle-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 9px;
+  border: 1px solid #2c3440;
+  border-radius: 6px;
+  background: #11141a;
+  color: #aeb8c4;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.angle-chip b {
+  color: #f2f5f8;
+  font-variant-numeric: tabular-nums;
+}
+
+.angle-chip.missing {
+  border-color: #3a2c2c;
+  color: #6f7a86;
+}
+
+.angle-chip.missing b {
+  color: #c2756f;
+}
+
+.group-diagnostics {
+  margin-top: 16px;
+  padding: 18px 20px 20px;
+  border: 1px solid #262d36;
+  border-radius: 8px;
+  background: #171a20;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.diag-note {
+  padding: 3px 8px;
+  border: 1px solid #348f69;
+  border-radius: 999px;
+  color: #7fd1ae;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.group-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.gstat {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #2c3440;
+  border-radius: 8px;
+  background: #11141a;
+}
+
+.gstat span {
+  display: block;
+  margin-bottom: 6px;
+  color: #7f8996;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gstat strong {
+  color: #f2f5f8;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.group-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pair-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid #2c3440;
+  border-radius: 999px;
+  background: #11141a;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pair-chip b {
+  color: #7fd1ae;
+  font-variant-numeric: tabular-nums;
+}
+
+.pair-empty {
+  color: #6f7a86;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .group-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

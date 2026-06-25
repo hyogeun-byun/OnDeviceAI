@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.api.camera_routes import debug_router
 from app.api.camera_routes import router as camera_router
 from app.api.game_routes import router as game_router
 from app.api.health_routes import router as health_router
@@ -116,6 +117,7 @@ app.state.leaderboard = leaderboard
 
 app.include_router(health_router)
 app.include_router(camera_router)
+app.include_router(debug_router)
 app.include_router(game_router)
 app.include_router(leaderboard_router)
 app.mount("/static", StaticFiles(directory="app/web/static"), name="static")

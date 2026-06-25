@@ -41,6 +41,13 @@
               <dd id="{{ camera_id }}-keypoint-count">0</dd>
             </div>
           </dl>
+          <section class="diag-panel" aria-label="{{ camera_id }} joint angles">
+            <div class="diag-head">
+              <span>Joint angles</span>
+              <strong id="{{ camera_id }}-visible">0/8</strong>
+            </div>
+            <div class="diag-angles" id="{{ camera_id }}-angles"></div>
+          </section>
           {% if visualize_metrics %}
           <section class="metrics-panel" aria-label="{{ camera_id }} performance metrics">
             <div class="metrics-row">
@@ -87,6 +94,21 @@
           {% endif %}
         </article>
         {% endfor %}
+      </section>
+
+      <section class="group-diagnostics" aria-label="Telepathy score breakdown">
+        <div class="group-head">
+          <h2>Score breakdown</h2>
+          <span class="diag-note">live</span>
+        </div>
+        <div class="group-stats">
+          <div class="gstat"><span>Final score</span><strong id="diag-score">0.0</strong></div>
+          <div class="gstat"><span>Raw similarity</span><strong id="diag-similarity">0.0</strong></div>
+          <div class="gstat"><span>Activity gate</span><strong id="diag-activity">×0.00</strong></div>
+          <div class="gstat"><span>Expressiveness</span><strong id="diag-expressiveness">0.00</strong></div>
+          <div class="gstat"><span>Players ready</span><strong id="diag-ready">0</strong></div>
+        </div>
+        <div class="group-pairs" id="diag-pairs"></div>
       </section>
     </main>
 

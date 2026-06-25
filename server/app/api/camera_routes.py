@@ -8,10 +8,12 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile, WebSock
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
+from app.services.pose_similarity import analyze_group_debug
 from app.services.stream_manager import StreamManager
 from app.services.traffic_metrics import TrafficMetrics
 
 router = APIRouter(prefix="/api/cameras", tags=["cameras"])
+debug_router = APIRouter(prefix="/api/debug", tags=["debug"])
 
 
 class Keypoint(BaseModel):
@@ -243,3 +245,21 @@ async def stream(camera_id: str, request: Request) -> StreamingResponse:
         generate_frames(),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
+
+
+@debug_router.get("/analysis")
+async def analysis(request: Request) -> dict[str, object]:
+    """Live telepathy-score breakdown for the diagnostics overlay.
+
+    Runs the pose analysis on the latest pose from every camera regardless of
+    game phase, exposing the raw similarity, activity gate and per-board joint
+    angles so the cause of a low score can be inspected in real time.
+    """
+    stream_manager = get_stream_manager(request)
+    camera_ids = [str(camera["camera_id"]) for camera in stream_manager.list_camera_statuses()]
+    poses = [stream_manager.get_pose(camera_id) for camera_id in camera_ids]
+
+    result = analyze_group_debug(poses)
+    for board in result["boards"]:
+        board["camera_id"] = camera_ids[int(board["index"])]
+    return result
