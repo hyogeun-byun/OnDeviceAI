@@ -21,49 +21,67 @@ def _strip_emoji(text: str) -> str:
     """Remove emoji/pictographs so the TTS engine doesn't read them oddly."""
     return _EMOJI_RE.sub("", text).strip()
 
-# Difficulty levels.
-DIFFICULTY_EASY = "하"
-DIFFICULTY_HARD = "상"
-DIFFICULTIES: tuple[str, ...] = (DIFFICULTY_EASY, DIFFICULTY_HARD)
+# Fixed game categories and prompts (요청사항 반영).
+CATEGORY_PROMPTS: dict[str, tuple[str, ...]] = {
+    "상황": (
+        "팀장님하면 떠오르는 포즈",
+        "현 시점 LG 상황을 바라보는 나의 자세",
+        "벌레 발견했을 때 내 반응",
+        "사진 찍을 때 갑자기 예쁜 척 하는 나",
+        "무궁화꽃이 피었습니다",
+    ),
+    "운동": (
+        "수영",
+        "헬스",
+        "야구",
+        "미스코리아",
+        "무에타이",
+        "쿵후",
+        "스키점프",
+    ),
+    "감정": (
+        "아련",
+        "섹시",
+        "졸림",
+        "분노",
+        "야근",
+    ),
+    "인물": (
+        "페이커",
+        "손흥민",
+        "싸이",
+        "마이클잭슨",
+        "호날두",
+        "지드래곤",
+        "마동석",
+        "구광모",
+        "트와이스",
+        "민경훈",
+    ),
+    "영화 혹은 애니메이션": (
+        "아이언맨",
+        "원피스 루피",
+        "진격의거인",
+        "주술회전",
+        "귀멸의 칼날",
+        "드래곤볼",
+        "캡틴 아메리카",
+        "나선환",
+        "치도리",
+        "부산행",
+    ),
+}
 
-# Easy (하) prompts: well-known *signature gestures* — almost everyone pictures
-# the same pose, so groups can actually sync up. Concrete enough to act, open
-# enough to be funny.
-EASY_PROMPTS: tuple[str, ...] = (
-    "손하트",
-    "슈퍼맨",
-    "거수경례",
-    "토끼귀",
-    "알통 자랑",
-    "권투 자세",
-    "셀카 포즈",
-    "발레 동작",
-)
-
-# Hard (상) prompts: situational one-liners. There's no single "right" pose, so
-# players must read each other and improvise the same vibe.
-HARD_PROMPTS: tuple[str, ...] = (
-    "퇴근 30분 전 야근 지시 받은 나",
-    "월요일 아침 알람 끄는 나",
-    "치킨 시켰는데 배달 늦을 때",
-    "엘리베이터 닫힘 버튼 연타",
-    "버스 놓치고 뛰는 사람",
-    "맛집 앞 1시간 웨이팅",
-    "시험 망친 걸 들켰을 때",
-    "사진 찍을 때 어색한 손",
-)
-
-# Default / fallback prompts (used when the LLM is off). Easy signature gestures.
-DEFAULT_PROMPTS: tuple[str, ...] = EASY_PROMPTS
+THEMES: tuple[str, ...] = tuple(CATEGORY_PROMPTS.keys())
+DEFAULT_PROMPTS: tuple[str, ...] = tuple(CATEGORY_PROMPTS[THEMES[0]][:5])
 
 
-def default_prompts(difficulty: str = DIFFICULTY_EASY) -> tuple[str, ...]:
-    """Static prompt pool for the given difficulty (used with LLM off / 기본)."""
-    return HARD_PROMPTS if difficulty == DIFFICULTY_HARD else EASY_PROMPTS
-
-
-# Selectable themes shown on the idle screen. "기본" uses the default prompts.
-THEMES: tuple[str, ...] = ("기본", "좀비", "K-POP", "출근길", "동물원", "슈퍼히어로")
+def default_prompts(theme: str | None = None, n: int = 5) -> tuple[str, ...]:
+    """Return ``n`` random prompts from one selected category."""
+    selected_theme = theme if theme in CATEGORY_PROMPTS else THEMES[0]
+    pool = list(CATEGORY_PROMPTS[selected_theme])
+    random.shuffle(pool)
+    return tuple(pool[: min(n, len(pool))])
 
 
 _INTRO_BANTER = (
@@ -100,48 +118,9 @@ def start_line(mc_name: str = "민수") -> str:
 # --------------------------------------------------------------------------- #
 # B. Dynamic prompt generation
 # --------------------------------------------------------------------------- #
-async def generate_prompts(
-    llm: LLMClient, theme: str, n: int, difficulty: str = DIFFICULTY_EASY
-) -> list[str]:
-    """Generate ``n`` short Korean prompts for the given theme and difficulty.
-
-    Falls back to the static prompt pool on any failure or when the LLM is off.
-    """
-    pool = list(default_prompts(difficulty))
-    if not llm.enabled or theme == "기본":
-        return pool[:n]
-
-    if difficulty == DIFFICULTY_HARD:
-        system = (
-            "너는 몸으로 표현하는 텔레파시 파티 게임의 출제자야. "
-            "주어진 테마에 어울리는, 공감되는 '상황을 묘사한 짧은 문장' 제시어를 만든다. "
-            "정답 포즈가 하나로 정해지지 않아, 사람마다 그 상황의 분위기를 몸으로 "
-            "표현하게 되는 문장이어야 한다 (예: '퇴근 30분 전 야근 지시 받은 나'). "
-            "각 제시어는 한국어 8~20자 문장."
-        )
-    else:
-        system = (
-            "너는 몸으로 표현하는 텔레파시 파티 게임의 출제자야. "
-            "주어진 테마에 어울리는, 누구나 같은 포즈를 떠올리는 '대표 동작' 제시어를 만든다. "
-            "추상적인 감정 단어가 아니라, 시그니처 포즈가 분명한 단어여야 한다 "
-            "(예: 손하트, 슈퍼맨, 거수경례, 토끼귀). 각 제시어는 한국어 1~6자."
-        )
-    user = (
-        f"테마: {theme}\n"
-        f"이 테마에 어울리는 제시어 {n}개를 만들어줘.\n"
-        '반드시 JSON만 출력: {"prompts": ["제시어1", "제시어2", ...]}'
-    )
-    result = await llm.chat_json(
-        [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        max_tokens=256,
-        temperature=0.9,
-    )
-    prompts = _coerce_prompt_list(result)
-    if len(prompts) >= n:
-        return prompts[:n]
-    # Pad with the static pool if the model returned too few.
-    padded = prompts + [p for p in pool if p not in prompts]
-    return padded[:n]
+async def generate_prompts(llm: LLMClient, theme: str, n: int) -> list[str]:
+    """Generate prompts list from the selected category (LLM not used for this mode)."""
+    return list(default_prompts(theme=theme, n=n))
 
 
 def _coerce_prompt_list(result: dict | None) -> list[str]:

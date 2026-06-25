@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass, field
 
 from app.services import game_narrator as narrator
-from app.services.game_narrator import DEFAULT_PROMPTS, DIFFICULTY_EASY
+from app.services.game_narrator import DEFAULT_PROMPTS
 from app.services.llm_client import LLMClient
 from app.services.pose_similarity import analyze_group
 from app.services.speech_audio import SpeechAudioCache
@@ -57,8 +57,7 @@ class GameState:
     players_analysis: list[dict] = field(default_factory=list)
     round_scores: list[float] = field(default_factory=list)
     result_poses: list[dict[str, object] | None] = field(default_factory=list)
-    theme: str = "기본"
-    difficulty: str = DIFFICULTY_EASY
+    theme: str = narrator.THEMES[0]
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
     mc_comment: str = ""
@@ -89,7 +88,7 @@ class GameManager:
         camera_ids: tuple[str, ...],
         stream_manager: StreamManager,
         llm_client: LLMClient,
-        default_theme: str = "기본",
+        default_theme: str = narrator.THEMES[0],
         speaker: Speaker | None = None,
         mc_name: str = "민수",
         team_name: str = "",
@@ -98,13 +97,13 @@ class GameManager:
         self._camera_ids = camera_ids
         self._stream_manager = stream_manager
         self._llm = llm_client
-        self._default_theme = default_theme
+        self._default_theme = default_theme if default_theme in narrator.THEMES else narrator.THEMES[0]
         self._tts = speaker
         self._mc_name = mc_name
         self._team_name = team_name
         self._speech_audio = speech_audio
-        self._total_rounds = min(TOTAL_ROUNDS, len(DEFAULT_PROMPTS))
-        self._state = GameState(theme=default_theme)
+        self._total_rounds = TOTAL_ROUNDS
+        self._state = GameState(theme=self._default_theme)
         # Keep references to background LLM tasks so they are not garbage collected,
         # and a generation counter to discard stale results from a previous game.
         self._tasks: set[asyncio.Task] = set()
@@ -125,28 +124,27 @@ class GameManager:
         if self._speech_audio is not None and self._speech_audio.enabled:
             self._spawn(self._speech_audio.generate(self._speech_seq, text))
 
-    def start(self, theme: str | None = None, difficulty: str | None = None) -> None:
+    def start(self, theme: str | None = None) -> None:
         """Enter the MC intro screen. The actual rounds don't begin until
         :meth:`begin` is called (a separate user trigger), so the host can
         greet the players and build hype first."""
         self._generation += 1
-        chosen = theme or self._default_theme
-        diff = difficulty if difficulty in narrator.DIFFICULTIES else DIFFICULTY_EASY
+        chosen = theme if theme in narrator.THEMES else self._default_theme
+        selected_prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
         self._state = GameState(
             phase=PHASE_INTRO,
             round_index=0,
             phase_started_at=time.monotonic(),
             theme=chosen,
-            difficulty=diff,
-            prompts=list(narrator.default_prompts(diff)),
-            prompt_source="default",
+            prompts=selected_prompts,
+            prompt_source="category_random_in_theme",
         )
         # Spoken intro greeting (non-real-time: nothing is being scored yet).
         self._speak(narrator.intro_line(self._mc_name, self._team_name))
         # B. Dynamic prompts — generated in the background; until ready the
         # default prompts are used so the game can start immediately.
         if self._llm.enabled and chosen != "기본":
-            self._spawn(self._build_prompts(self._generation, chosen, diff))
+            self._spawn(self._build_prompts(self._generation, chosen))
 
     def begin(self) -> None:
         """Trigger the first round after the intro screen (separate gesture)."""
@@ -164,7 +162,7 @@ class GameManager:
 
     def reset(self) -> None:
         """Abort whatever is happening and go all the way back to the idle
-        screen so the host can re-pick the theme/difficulty and start over."""
+        screen so the host can re-pick the category and start over."""
         # Bump the generation so any in-flight background LLM/TTS work from the
         # aborted game is discarded instead of bleeding into the fresh state.
         self._generation += 1
@@ -184,10 +182,8 @@ class GameManager:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
-    async def _build_prompts(self, generation: int, theme: str, difficulty: str) -> None:
-        prompts = await narrator.generate_prompts(
-            self._llm, theme, self._total_rounds, difficulty
-        )
+    async def _build_prompts(self, generation: int, theme: str) -> None:
+        prompts = await narrator.generate_prompts(self._llm, theme, self._total_rounds)
         if generation != self._generation:
             return
         # Only apply while still on the intro screen, so the displayed prompt
@@ -383,7 +379,6 @@ class GameManager:
             "result_poses": list(state.result_poses) if state.phase == PHASE_RESULT else [],
             "total_score": total_score,
             "theme": state.theme,
-            "difficulty": state.difficulty,
             "prompt_source": state.prompt_source,
             "prompts": list(state.prompts[: self._total_rounds]),
             "mc_comment": state.mc_comment,

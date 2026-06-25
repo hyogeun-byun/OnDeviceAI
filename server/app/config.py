@@ -55,7 +55,7 @@ def load_config() -> ServerConfig:
         llm_base_url=os.getenv("LLM_BASE_URL", "http://127.0.0.1:11434/v1/chat/completions"),
         llm_model=os.getenv("LLM_MODEL", "exaone3.5:2.4b"),
         llm_timeout=float(os.getenv("LLM_TIMEOUT", "12")),
-        llm_default_theme=os.getenv("LLM_DEFAULT_THEME", "기본"),
+        llm_default_theme=os.getenv("LLM_DEFAULT_THEME", "상황"),
         tts_enabled=read_bool("TTS_ENABLED", False),
         tts_engine=os.getenv("TTS_ENGINE", "auto"),
         tts_voice=os.getenv("TTS_VOICE", "coral"),

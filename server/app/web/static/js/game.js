@@ -38,7 +38,6 @@ const el = {
   introSpeech: document.getElementById("intro-speech"),
   introPlayers: document.getElementById("intro-players"),
   themePicker: document.getElementById("theme-picker"),
-  difficultyPicker: document.getElementById("difficulty-picker"),
   coachText: document.getElementById("coach-text"),
   ttsToggle: document.getElementById("tts-toggle"),
   restartGameBtn: document.getElementById("restart-game-btn"),
@@ -576,7 +575,7 @@ async function startGame() {
     await fetch("/api/game/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme: selectedTheme, difficulty: selectedDifficulty }),
+      body: JSON.stringify({ theme: selectedTheme }),
     });
   } catch {
     /* the next websocket snapshot will reflect the state */
@@ -607,7 +606,7 @@ async function resetGame() {
   }
 }
 
-let selectedTheme = "기본";
+let selectedTheme = "상황";
 if (el.themePicker) {
   const chips = el.themePicker.querySelectorAll(".theme-chip");
   const active = el.themePicker.querySelector(".theme-chip.is-active");
@@ -616,21 +615,7 @@ if (el.themePicker) {
     chip.addEventListener("click", () => {
       chips.forEach((c) => c.classList.remove("is-active"));
       chip.classList.add("is-active");
-      selectedTheme = chip.dataset.theme || "기본";
-    });
-  });
-}
-
-let selectedDifficulty = "하";
-if (el.difficultyPicker) {
-  const chips = el.difficultyPicker.querySelectorAll(".theme-chip");
-  const active = el.difficultyPicker.querySelector(".theme-chip.is-active");
-  if (active) selectedDifficulty = active.dataset.difficulty || selectedDifficulty;
-  chips.forEach((chip) => {
-    chip.addEventListener("click", () => {
-      chips.forEach((c) => c.classList.remove("is-active"));
-      chip.classList.add("is-active");
-      selectedDifficulty = chip.dataset.difficulty || "하";
+      selectedTheme = chip.dataset.theme || "상황";
     });
   });
 }

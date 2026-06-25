@@ -25,19 +25,15 @@ async def game_state(request: Request) -> dict[str, object]:
 async def start_game(request: Request) -> dict[str, object]:
     game_manager = get_game_manager(request)
     theme: str | None = None
-    difficulty: str | None = None
     try:
         body = await request.json()
         if isinstance(body, dict):
             value = body.get("theme")
             if isinstance(value, str) and value.strip():
                 theme = value.strip()
-            diff = body.get("difficulty")
-            if isinstance(diff, str) and diff.strip():
-                difficulty = diff.strip()
     except Exception:
         theme = None
-    game_manager.start(theme, difficulty)
+    game_manager.start(theme)
     return game_manager.snapshot()
 
 
