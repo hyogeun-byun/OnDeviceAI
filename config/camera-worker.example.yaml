@@ -6,9 +6,9 @@ frame_height: 480
 jpeg_quality: 80
 fps: 10
 pose_enabled: true
-pose_backend: mediapipe
-pose_model_complexity: 0
-pose_input_width: 256
-pose_min_detection_confidence: 0.5
-pose_min_tracking_confidence: 0.5
+# Path to the MoveNet SinglePose Lightning int8 TFLite model.
+# Defaults to camera-worker/models/movenet-singlepose-lightning-tflite-int8.tflite
+pose_model_path: models/movenet-singlepose-lightning-tflite-int8.tflite
+# Number of CPU threads for TFLite inference. 4 is a good default for Pi 4/5.
+pose_num_threads: 4
 pose_draw_landmarks: true
