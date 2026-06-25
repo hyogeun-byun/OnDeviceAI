@@ -1,0 +1,40 @@
+  log    : /home/willtek/OnDeviceAI/scratch/output/benchmark_20260625_164643.log
+=================================================================
+  Pose Model Comparison
+  input  : scratch/test.mp4
+  output : /home/willtek/OnDeviceAI/scratch/output
+  threads: 4
+=================================================================
+
+Initialising models...
+  [OK]   movenet_lightning: input [1, 192, 192, 3] uint8
+  [OK]   movenet_thunder: input [1, 256, 256, 3] uint8
+  [OK]   mediapipe_lite: MediaPipe model_complexity=0
+  [OK]   mediapipe_full: MediaPipe model_complexity=1
+
+Running 4 model(s) on test.mp4...
+
+[movenet_lightning]
+    movenet_lightning     30/132  avg 22.0ms    movenet_lightning     60/132  avg 19.7ms    movenet_lightning     90/132  avg 19.4ms    movenet_lightning    120/132  avg 18.9ms    movenet_lightning    132/132  avg 18.8ms    movenet_lightning    132/132  avg 18.8ms  ✓        
+    → scratch/output/movenet_lightning_19ms.mp4
+[movenet_thunder]
+    movenet_thunder     30/132  avg 49.2ms    movenet_thunder     60/132  avg 48.2ms    movenet_thunder     90/132  avg 47.8ms    movenet_thunder    120/132  avg 47.8ms    movenet_thunder    132/132  avg 47.8ms    movenet_thunder    132/132  avg 47.8ms  ✓        
+    → scratch/output/movenet_thunder_48ms.mp4
+[mediapipe_lite]
+    mediapipe_lite     30/132  avg 30.9ms    mediapipe_lite     60/132  avg 30.3ms    mediapipe_lite     90/132  avg 30.1ms    mediapipe_lite    120/132  avg 30.1ms    mediapipe_lite    132/132  avg 30.1ms    mediapipe_lite    132/132  avg 30.1ms  ✓        
+    → scratch/output/mediapipe_lite_30ms.mp4
+[mediapipe_full]
+    mediapipe_full     30/132  avg 45.1ms    mediapipe_full     60/132  avg 44.5ms    mediapipe_full     90/132  avg 44.7ms    mediapipe_full    120/132  avg 44.5ms    mediapipe_full    132/132  avg 44.5ms    mediapipe_full    132/132  avg 44.5ms  ✓        
+    → scratch/output/mediapipe_full_44ms.mp4
+
+=================================================================
+  Model                        Avg ms  Equiv FPS   Frames
+  ------------------------------------------------------------
+  movenet_lightning             18.8ms      53.3       132 ◀ fastest
+  movenet_thunder               47.8ms      20.9       132
+  mediapipe_lite                30.1ms      33.2       132
+  mediapipe_full                44.5ms      22.5       132
+=================================================================
+
+Output videos: /home/willtek/OnDeviceAI/scratch/output/
+Log saved to : /home/willtek/OnDeviceAI/scratch/output/benchmark_20260625_164643.log
