@@ -53,6 +53,7 @@ const el = {
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
+const PLAYER_INDICES = Array.from({ length: playerCount }, (_, i) => i);
 let lbLastPhase = null;
 let lastResultRound = 0;
 
@@ -329,8 +330,7 @@ function render(state) {
     };
     if (scores.length && scores.length !== lastResultPoseRound) {
       lastResultPoseRound = scores.length;
-      drawResultSkeletons(state.result_poses || []);
-      captureRoundSnapshot("result-skel");
+      revealResultFrames(scores.length, state.result_poses || []);
     }
     if (state.mc_status === "pending") {
       el.mcText.textContent = "🎤 AI MC가 멘트를 준비 중…";
@@ -750,33 +750,46 @@ let currentPhase = "idle";
 let skeletonBusy = false;
 
 function drawSkeletonCard(canvas, pose) {
+  const fit = fitFrame(canvas, pose && pose.frame_width, pose && pose.frame_height);
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, fit.width, fit.height);
+  if (!pose || !pose.person_detected || !Array.isArray(pose.keypoints)) return;
+  strokeSkeleton(ctx, pose, fit);
+}
+
+// Letterbox the source camera frame (landscape) inside a portrait card and
+// return the placement rect, so the real photo and the pose skeleton can be
+// drawn with one shared transform — guaranteeing they line up pixel-for-pixel.
+function fitFrame(canvas, frameWidth, frameHeight) {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
-
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, width, height);
-  if (!pose || !pose.person_detected || !Array.isArray(pose.keypoints)) return;
-
-  // Fit the camera frame (landscape) inside the portrait card without distortion.
-  const frameAspect = (pose.frame_width || 4) / (pose.frame_height || 3);
+  const aspect = (frameWidth || 4) / (frameHeight || 3);
   let drawW = width;
-  let drawH = width / frameAspect;
+  let drawH = width / aspect;
   if (drawH > height) {
     drawH = height;
-    drawW = height * frameAspect;
+    drawW = height * aspect;
   }
-  const offX = (width - drawW) / 2;
-  const offY = (height - drawH) / 2;
-  const px = (kp) => offX + kp.x * drawW;
-  const py = (kp) => offY + kp.y * drawH;
+  return {
+    width,
+    height,
+    offX: (width - drawW) / 2,
+    offY: (height - drawH) / 2,
+    drawW,
+    drawH,
+  };
+}
 
+function strokeSkeleton(ctx, pose, fit) {
+  const px = (kp) => fit.offX + kp.x * fit.drawW;
+  const py = (kp) => fit.offY + kp.y * fit.drawH;
   const points = {};
   for (const keypoint of pose.keypoints) points[keypoint.name] = keypoint;
   const visible = (kp) => kp && (kp.visibility == null || kp.visibility >= SKELETON_VISIBILITY);
 
-  ctx.lineWidth = Math.max(2, width * 0.03);
+  ctx.lineWidth = Math.max(2, fit.width * 0.03);
   ctx.lineCap = "round";
   ctx.strokeStyle = "rgba(0, 255, 198, 0.95)";
   ctx.shadowColor = "rgba(0, 255, 198, 0.8)";
@@ -793,7 +806,7 @@ function drawSkeletonCard(canvas, pose) {
 
   ctx.shadowBlur = 0;
   ctx.fillStyle = "#ffffff";
-  const radius = Math.max(2, width * 0.025);
+  const radius = Math.max(2, fit.width * 0.025);
   for (const keypoint of pose.keypoints) {
     if (!visible(keypoint)) continue;
     ctx.beginPath();
@@ -802,19 +815,54 @@ function drawSkeletonCard(canvas, pose) {
   }
 }
 
-function skeletonPrefix() {
-  return null;
+// "AI Vision" reveal: paint the real photo from the scored moment, then overlay
+// the on-device pose skeleton in the exact same frame transform. Falls back to a
+// dark card (skeleton only) when no photo was captured.
+function drawVisionCard(canvas, image, pose) {
+  const frameWidth = (pose && pose.frame_width) || (image && image.naturalWidth);
+  const frameHeight = (pose && pose.frame_height) || (image && image.naturalHeight);
+  const fit = fitFrame(canvas, frameWidth, frameHeight);
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, fit.width, fit.height);
+
+  if (image) {
+    ctx.drawImage(image, fit.offX, fit.offY, fit.drawW, fit.drawH);
+    // Dim the photo so the neon skeleton reads clearly as an AI overlay.
+    ctx.fillStyle = "rgba(7, 11, 32, 0.28)";
+    ctx.fillRect(fit.offX, fit.offY, fit.drawW, fit.drawH);
+  } else {
+    ctx.fillStyle = "#0d1230";
+    ctx.fillRect(0, 0, fit.width, fit.height);
+  }
+
+  if (pose && pose.person_detected && Array.isArray(pose.keypoints)) {
+    strokeSkeleton(ctx, pose, fit);
+  }
 }
 
-function drawResultSkeletons(poses) {
-  for (let index = 0; index < playerCount; index += 1) {
-    const canvas = document.getElementById(`result-skel-${index}`);
-    const card = document.getElementById(`result-skel-card-${index}`);
-    if (!canvas) continue;
-    const pose = Array.isArray(poses) ? poses[index] : null;
-    drawSkeletonCard(canvas, pose);
-    if (card) card.classList.toggle("ready", Boolean(pose && pose.person_detected));
-  }
+// Reveal every player's real photo + skeleton for the just-scored round, then
+// snapshot the composited cards for the final report. Runs once per round.
+async function revealResultFrames(round, poses) {
+  await Promise.all(
+    PLAYER_INDICES.map(async (index) => {
+      const canvas = document.getElementById(`result-skel-${index}`);
+      const card = document.getElementById(`result-skel-card-${index}`);
+      if (!canvas) return;
+      const pose = Array.isArray(poses) ? poses[index] : null;
+      const image = await loadImage(`/api/game/result-frame/${round}/${index}.jpg`);
+      drawVisionCard(canvas, image, pose);
+      if (card) {
+        const live = Boolean(image) || Boolean(pose && pose.person_detected);
+        card.classList.toggle("ready", live);
+      }
+    }),
+  );
+  // Canvases now hold the photo+skeleton composite; save it for the report.
+  captureRoundSnapshot("result-skel");
+}
+
+function skeletonPrefix() {
+  return null;
 }
 
 async function refreshSkeletons() {

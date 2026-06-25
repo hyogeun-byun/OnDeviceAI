@@ -65,6 +65,23 @@ async def game_speech(speech_id: int, request: Request) -> Response:
     return Response(content=data, media_type="audio/mpeg")
 
 
+@router.get("/result-frame/{round_number}/{player_index}.jpg")
+async def result_frame(
+    round_number: int, player_index: int, request: Request
+) -> Response:
+    """Real camera photo captured at the moment the round was scored, used for
+    the "AI Vision" reveal. 404 until a frame exists (browser falls back)."""
+    data = get_game_manager(request).get_result_frame(round_number, player_index)
+    if not data:
+        return Response(status_code=404)
+    # Never cache: the same round/player slot holds a different photo next game.
+    return Response(
+        content=data,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 @router.websocket("/ws")
 async def game_websocket(websocket: WebSocket) -> None:
     hub: GameHub = websocket.app.state.game_hub

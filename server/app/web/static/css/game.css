@@ -727,6 +727,16 @@ body {
 }
 
 /* ---------- Skeleton strip ---------- */
+.vision-caption {
+  margin: 14px 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
 .skeleton-strip {
   display: flex;
   gap: 14px;

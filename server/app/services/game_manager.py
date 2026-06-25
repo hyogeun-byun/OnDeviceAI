@@ -110,6 +110,10 @@ class GameManager:
         self._leaderboard = leaderboard
         self._total_rounds = TOTAL_ROUNDS
         self._state = GameState(theme=self._default_theme)
+        # JPEG frame captured at the exact moment each round was scored, keyed by
+        # round number (1-based) -> one frame per camera. Used to reveal the real
+        # photo (with the on-device pose overlaid) on the result/report screens.
+        self._result_frames: dict[int, list[bytes | None]] = {}
         # Keep references to background LLM tasks so they are not garbage collected,
         # and a generation counter to discard stale results from a previous game.
         self._tasks: set[asyncio.Task] = set()
@@ -138,6 +142,7 @@ class GameManager:
         chosen = theme if theme in narrator.THEMES else self._default_theme
         team = (team_name or "").strip() or self._team_name
         selected_prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
+        self._result_frames = {}
         self._state = GameState(
             phase=PHASE_INTRO,
             round_index=0,
@@ -174,6 +179,7 @@ class GameManager:
         # Bump the generation so any in-flight background LLM/TTS work from the
         # aborted game is discarded instead of bleeding into the fresh state.
         self._generation += 1
+        self._result_frames = {}
         self._state = GameState(theme=self._default_theme)
 
     # ------------------------------------------------------------------ #
@@ -294,6 +300,13 @@ class GameManager:
         self._state.result_poses = [
             self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids
         ]
+        # Freeze the live camera frame at the scored instant so the result screen
+        # can reveal the real photo (the pose snapshot above was taken from the
+        # same frame, so the overlaid skeleton lines up exactly).
+        round_number = self._state.round_index + 1
+        self._result_frames[round_number] = [
+            self._stream_manager.get_frame(camera_id) for camera_id in self._camera_ids
+        ]
         self._state.phase = PHASE_RESULT
         self._state.phase_started_at = now
         # A. Show + speak a static reaction immediately so the result screen is
@@ -336,6 +349,14 @@ class GameManager:
     def _average_score(self) -> float:
         scores = self._state.round_scores
         return round(sum(scores) / len(scores), 1) if scores else 0.0
+
+    def get_result_frame(self, round_number: int, player_index: int) -> bytes | None:
+        """Return the JPEG frame captured when ``round_number`` (1-based) was
+        scored for the given player, or ``None`` if it is unavailable."""
+        frames = self._result_frames.get(round_number)
+        if not frames or not 0 <= player_index < len(frames):
+            return None
+        return frames[player_index]
 
     def _record_result(self) -> None:
         """Save the finished game's team score to the leaderboard exactly once."""
