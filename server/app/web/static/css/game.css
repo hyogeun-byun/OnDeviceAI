@@ -1119,17 +1119,21 @@ body {
 /* ---------- AI MC 민수 (2D animated host) ---------- */
 .mc-stage {
   position: fixed;
-  /* Lifted off the very corner: higher (toward mid-screen) and nudged further
-     in toward the centre, while staying clear of the centred text/buttons. */
-  left: clamp(20px, 7vw, 150px);
-  bottom: clamp(150px, 34vh, 420px);
+  /* Anchored to the centred content column (= screen centre) with `right`
+     instead of viewport `vw` units, so the host keeps a CONSTANT gap to the
+     left of the centred text on every screen width and never drifts into or
+     overlaps it. Narrower screens (no room beside the text) fall back to a
+     fixed bottom-left corner in the media queries below. */
+  left: auto;
+  right: calc(50% + 260px);
+  bottom: clamp(150px, 30vh, 380px);
   z-index: 30;
   width: 172px;
   pointer-events: none;
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    left 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    right 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    bottom 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    right 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 }
 
 .mc-stage.is-hidden {
@@ -1138,17 +1142,19 @@ body {
 }
 
 /* 인트로·결산: 화면 중앙의 멘트("곧 시작합니다")·최종 리포트 바로 왼쪽에
-   같은 크기·같은 자리로 등장시켜 그 문구를 읽어주는 듯한 연출을 준다. */
+   같은 크기·같은 자리로 등장시켜 그 문구를 읽어주는 듯한 연출을 준다.
+   콘텐츠 중앙 기준으로 고정되므로 화면 크기가 변해도 같은 위치를 유지한다. */
 .mc-stage.is-center,
 .mc-stage.is-final {
-  left: clamp(20px, 26vw, 430px);
-  right: auto;
-  bottom: clamp(150px, 34vh, 420px);
+  left: auto;
+  right: calc(50% + 300px);
+  bottom: clamp(150px, 30vh, 380px);
   width: 236px;
 }
 
-/* 게임 중: 그대로 코너에서 귀신처럼 둥둥 떠다님 */
+/* 게임 중: 게이지 왼쪽에서 귀신처럼 둥둥 떠다님 (콘텐츠 기준 고정) */
 .mc-stage.is-side {
+  right: calc(50% + 280px);
   width: 192px;
 }
 
@@ -1324,24 +1330,33 @@ body {
   }
 }
 
-@media (max-width: 640px) {
-  .mc-stage {
-    width: 138px;
-    left: clamp(16px, 6vw, 60px);
-    bottom: clamp(80px, 18vh, 180px);
-  }
-  .mc-stage.is-side {
-    width: 138px;
-  }
+/* 약 1100px 미만에서는 중앙 텍스트 컬럼 옆에 호스트를 둘 공간이 없어,
+   세로 중앙의 콘텐츠가 닿지 않는 화면 왼쪽 아래 '고정' 코너로 보낸다.
+   (vw가 아닌 고정 px이라 화면 크기와 무관하게 항상 같은 자리) */
+@media (max-width: 1100px) {
+  .mc-stage,
+  .mc-stage.is-side,
   .mc-stage.is-center,
   .mc-stage.is-final {
-    width: 168px;
-    left: clamp(16px, 30vw, 220px);
+    left: 22px;
     right: auto;
-    bottom: clamp(120px, 30vh, 260px);
+    bottom: 22px;
+    width: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mc-stage,
+  .mc-stage.is-side,
+  .mc-stage.is-center,
+  .mc-stage.is-final {
+    left: 12px;
+    right: auto;
+    bottom: 14px;
+    width: 116px;
   }
   .mc-live-bubble {
-    max-width: 200px;
+    max-width: 180px;
   }
 }
 
