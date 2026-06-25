@@ -2,13 +2,8 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
 from dotenv import load_dotenv
-
-_DEFAULT_MODEL_PATH = str(
-    Path(__file__).resolve().parents[1] / "models" / "movenet-singlepose-lightning-tflite-int8.tflite"
-)
 
 
 @dataclass(frozen=True)
@@ -22,8 +17,10 @@ class CameraWorkerConfig:
     fps: float
     log_interval_seconds: float
     pose_enabled: bool
-    pose_model_path: str
-    pose_num_threads: int
+    pose_model_complexity: int
+    pose_input_width: int
+    pose_min_detection_confidence: float
+    pose_min_tracking_confidence: float
     pose_draw_landmarks: bool
 
 
@@ -47,7 +44,9 @@ def load_config() -> CameraWorkerConfig:
         fps=float(os.getenv("FPS", "10")),
         log_interval_seconds=max(1.0, float(os.getenv("LOG_INTERVAL_SECONDS", "5"))),
         pose_enabled=read_bool("POSE_ENABLED", True),
-        pose_model_path=os.getenv("POSE_MODEL_PATH", _DEFAULT_MODEL_PATH),
-        pose_num_threads=int(os.getenv("POSE_NUM_THREADS", "4")),
+        pose_model_complexity=int(os.getenv("POSE_MODEL_COMPLEXITY", "0")),
+        pose_input_width=max(128, int(os.getenv("POSE_INPUT_WIDTH", "256"))),
+        pose_min_detection_confidence=float(os.getenv("POSE_MIN_DETECTION_CONFIDENCE", "0.5")),
+        pose_min_tracking_confidence=float(os.getenv("POSE_MIN_TRACKING_CONFIDENCE", "0.5")),
         pose_draw_landmarks=read_bool("POSE_DRAW_LANDMARKS", True),
     )

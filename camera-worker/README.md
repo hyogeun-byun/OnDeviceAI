@@ -39,33 +39,17 @@ POSE_DRAW_LANDMARKS=true
 
 ## 포즈 추정 모델
 
-**MoveNet SinglePose Lightning TFLite int8** (`models/movenet-singlepose-lightning-tflite-int8.tflite`)을 사용한다.
+**MediaPipe Pose Lite** (`model_complexity=0`)을 사용한다.
 
-- 입력: `[1, 192, 192, 3]`, int8 (quantized)
-- 출력: `[1, 1, 17, 3]` → 각 키포인트 `[y, x, score]`, 값 범위 `[0, 1]`
-- 키포인트 17개 (COCO 포맷):
-
-| 인덱스 | 이름 | 인덱스 | 이름 |
-|--------|------|--------|------|
-| 0 | nose | 9 | left_wrist |
-| 1 | left_eye | 10 | right_wrist |
-| 2 | right_eye | 11 | left_hip |
-| 3 | left_ear | 12 | right_hip |
-| 4 | right_ear | 13 | left_knee |
-| 5 | left_shoulder | 14 | right_knee |
-| 6 | right_shoulder | 15 | left_ankle |
-| 7 | left_elbow | 16 | right_ankle |
-| 8 | right_elbow | | |
-
-MediaPipe의 33개 키포인트와 달리 17개이며, 얼굴 세부 랜드마크(입술·눈썹 등)와 발끝·손가락이 없다. 서버 점수 계산(`pose_similarity.py`)에서 사용하는 8개 관절(양쪽 팔꿈치·어깨·고관절·무릎)은 모두 포함되어 있어 게임 동작에 영향이 없다.
-
-모델 경로는 `.env`의 `POSE_MODEL_PATH`로 변경할 수 있으며, 기본값은 `models/movenet-singlepose-lightning-tflite-int8.tflite`다.
+- 키포인트 33개 (얼굴·상체·하체·발끝 포함)
+- 라즈베리파이 4/5 기준 평균 추론 시간: **~30ms**
+- `KEYPOINT_INFERENCE_FPS = 10.0` (100ms 주기, 추론 여유 3배)
 
 라즈베리파이 부담을 줄이기 위해 영상 전송 FPS와 포즈 추정 FPS를 분리했다.
 
 - `FPS`: 서버로 보내는 카메라 프레임 FPS
-- `POSE_NUM_THREADS`: TFLite 추론에 사용할 CPU 스레드 수 (기본 4)
-- `POSE_DRAW_LANDMARKS`: 전송 영상에 스켈레톤을 오버레이할지 여부
+- `POSE_INPUT_WIDTH`: 포즈 추정에 넣을 축소 이미지 너비 (기본 256px)
+- `POSE_MODEL_COMPLEXITY=0`: Lite 버전 (0=Lite, 1=Full)
 - `LOG_INTERVAL_SECONDS`: FPS와 전송량 로그를 몇 초마다 찍을지 설정
 
 keypoint 추론은 코드 상수 `KEYPOINT_INFERENCE_FPS = 5.0` 기준으로 초당 5회 실행한다. 워커 내부는 카메라 캡처, 프레임 전송, 포즈 추정 스레드로 분리되어 포즈 추정이 영상 전송을 최대한 막지 않도록 구성한다.

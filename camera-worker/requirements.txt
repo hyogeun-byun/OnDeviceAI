@@ -1,11 +1,5 @@
-# tflite-runtime is the lightweight TFLite inference package for Raspberry Pi.
-# Install the correct wheel for your platform:
-#   pip install tflite-runtime
-# If tflite-runtime is unavailable for your Python version, fall back to:
-#   pip install tensorflow
-tflite-runtime>=2.14.0
+mediapipe>=0.10.14
 opencv-python==4.10.0.84
-numpy>=1.26.0
 python-dotenv==1.0.1
 requests==2.32.3
 websocket-client==1.8.0

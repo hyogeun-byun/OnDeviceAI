@@ -122,14 +122,15 @@ def main() -> None:
     logger.info(
         (
             "Starting camera worker: camera_id=%s server=%s target_fps=%.2f "
-            "pose_enabled=%s keypoint_inference_fps=%.2f pose_model=%s"
+            "pose_enabled=%s keypoint_inference_fps=%.2f pose_input_width=%s jpeg_quality=%s"
         ),
         config.camera_id,
         config.server_url,
         config.fps,
         config.pose_enabled,
         KEYPOINT_INFERENCE_FPS,
-        config.pose_model_path,
+        config.pose_input_width,
+        config.jpeg_quality,
     )
 
     camera_reader = CameraReader(
@@ -146,9 +147,11 @@ def main() -> None:
     pose_estimator = PoseEstimator(
         camera_id=config.camera_id,
         enabled=config.pose_enabled,
-        model_path=config.pose_model_path,
+        model_complexity=config.pose_model_complexity,
+        input_width=config.pose_input_width,
+        min_detection_confidence=config.pose_min_detection_confidence,
+        min_tracking_confidence=config.pose_min_tracking_confidence,
         draw_landmarks=config.pose_draw_landmarks,
-        num_threads=config.pose_num_threads,
     )
 
     frame_queue: Queue[FramePacket] = Queue(maxsize=1)
