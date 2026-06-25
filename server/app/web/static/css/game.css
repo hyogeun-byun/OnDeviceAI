@@ -25,7 +25,11 @@ body {
   min-height: 100vh;
   background: radial-gradient(140% 120% at 50% -10%, #131634 0%, var(--bg) 55%);
   color: var(--ink);
-  overflow: hidden;
+  /* Let the page grow and scroll vertically when a screen's content (long MC
+     comments, the final report + photo cards, the leaderboard) overflows the
+     viewport. Horizontal scroll stays locked so the aurora orbs can't widen it. */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ---------- Aurora background ---------- */
@@ -83,7 +87,9 @@ body {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* min-height (not a fixed height) so the column can grow past one screenful
+     and hand the overflow to the document for scrolling. */
+  min-height: 100vh;
   width: min(1100px, 100%);
   margin: 0 auto;
   padding: 24px clamp(16px, 4vw, 48px) 36px;
@@ -189,8 +195,13 @@ body {
 
 /* ---------- Screens ---------- */
 .screen {
-  position: absolute;
-  inset: 0;
+  /* Only the active screen is `display: flex` (the rest are `display: none`),
+     so a single screen lives in the stage's flex column at a time. `flex: 1`
+     makes it fill the viewport and vertically centre short content, while its
+     natural min-height lets tall content push the stage taller so the page can
+     scroll instead of clipping. */
+  flex: 1 1 auto;
+  width: 100%;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -1108,12 +1119,17 @@ body {
 /* ---------- AI MC 민수 (2D animated host) ---------- */
 .mc-stage {
   position: fixed;
-  left: 22px;
-  bottom: 18px;
+  /* Lifted off the very corner: higher (toward mid-screen) and nudged further
+     in toward the centre, while staying clear of the centred text/buttons. */
+  left: clamp(20px, 7vw, 150px);
+  bottom: clamp(150px, 34vh, 420px);
   z-index: 30;
-  width: 132px;
+  width: 172px;
   pointer-events: none;
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    right 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    bottom 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 }
 
 .mc-stage.is-hidden {
@@ -1121,14 +1137,28 @@ body {
   visibility: hidden;
 }
 
-/* 멘트할 때(인트로·결산): 코너에 머문 채 살짝 커져 주목도만 올린다 (버튼은 절대 안 가림) */
-.mc-stage.is-center {
-  width: 170px;
+/* 인트로·결산: 화면 중앙의 멘트("곧 시작합니다")·최종 리포트 바로 왼쪽에
+   같은 크기·같은 자리로 등장시켜 그 문구를 읽어주는 듯한 연출을 준다. */
+.mc-stage.is-center,
+.mc-stage.is-final {
+  left: clamp(20px, 26vw, 430px);
+  right: auto;
+  bottom: clamp(150px, 34vh, 420px);
+  width: 236px;
 }
 
 /* 게임 중: 그대로 코너에서 귀신처럼 둥둥 떠다님 */
 .mc-stage.is-side {
-  width: 132px;
+  width: 192px;
+}
+
+.mc-stage.is-final .mc-avatar {
+  animation: mc-float 5s ease-in-out infinite;
+}
+
+.mc-stage.is-final .mc-svg {
+  filter: drop-shadow(0 0 14px rgba(0, 255, 198, 0.5))
+    drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
 }
 
 .mc-avatar {
@@ -1202,16 +1232,16 @@ body {
   left: 0;
   bottom: calc(100% + 8px);
   width: max-content;
-  max-width: 260px;
-  min-width: 110px;
-  padding: 11px 15px;
+  max-width: 288px;
+  min-width: 120px;
+  padding: 12px 17px;
   border-radius: 16px 16px 16px 4px;
   background: rgba(20, 26, 56, 0.94);
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(10px);
   color: var(--ink);
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 15.5px;
+  line-height: 1.5;
   white-space: normal;
   word-break: keep-all;
   opacity: 0;
@@ -1296,19 +1326,19 @@ body {
 
 @media (max-width: 640px) {
   .mc-stage {
-    width: 108px;
-    left: 12px;
-    bottom: 12px;
+    width: 138px;
+    left: clamp(16px, 6vw, 60px);
+    bottom: clamp(80px, 18vh, 180px);
   }
   .mc-stage.is-side {
-    width: 108px;
-    left: 12px;
-    bottom: 12px;
+    width: 138px;
   }
-  .mc-stage.is-center {
-    width: 132px;
-    left: 12px;
-    bottom: 12px;
+  .mc-stage.is-center,
+  .mc-stage.is-final {
+    width: 168px;
+    left: clamp(16px, 30vw, 220px);
+    right: auto;
+    bottom: clamp(120px, 30vh, 260px);
   }
   .mc-live-bubble {
     max-width: 200px;

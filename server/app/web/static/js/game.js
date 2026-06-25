@@ -84,10 +84,13 @@ if (tts.supported) {
 
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
-  if (on && text && el.mcLiveText && el.mcLiveBubble) {
+  // 인트로·결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
+  // (민수는 입만 움직이며 읽어주는 듯한 연출)
+  const suppressBubble = currentPhase === "intro" || currentPhase === "finished";
+  if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
-  } else if (!on && el.mcLiveBubble) {
+  } else if ((!on || suppressBubble) && el.mcLiveBubble) {
     el.mcLiveBubble.classList.remove("is-visible");
   }
 }
@@ -274,13 +277,17 @@ function render(state) {
   updatePlayerDots(idleDots, state.players);
   updatePlayerDots(introDots, state.players);
   if (el.mcStage) {
-    // MC 민수: 멘트하는 인트로/결산 화면에선 무대 가운데로 크게 나오고,
-    // 게임이 도는 동안엔 옆으로 비켜서 귀신처럼 둥둥 떠다니게 한다.
+    // MC 민수 무대 위치를 단계별로 정한다:
+    //  - intro: 코너에 머문 채 살짝 커져 인사 멘트를 한다 (is-center)
+    //  - finished: 중앙의 최종 리포트 옆으로 날아가 그 문구를 읽어주는 자리 (is-final)
+    //  - 그 외 진행 중: 옆에서 귀신처럼 둥둥 떠다닌다 (is-side)
     const mcHidden = state.phase === "idle";
-    const mcCenter = state.phase === "intro" || state.phase === "finished";
+    const mcCenter = state.phase === "intro";
+    const mcFinal = state.phase === "finished";
     el.mcStage.classList.toggle("is-hidden", mcHidden);
     el.mcStage.classList.toggle("is-center", !mcHidden && mcCenter);
-    el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter);
+    el.mcStage.classList.toggle("is-final", !mcHidden && mcFinal);
+    el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter && !mcFinal);
   }
   // The "start over" button only makes sense once a game is under way.
   if (el.restartGameBtn) el.restartGameBtn.classList.toggle("is-hidden", state.phase === "idle");
@@ -438,6 +445,32 @@ function loadImage(src) {
   });
 }
 
+// Rasterise the on-screen MC 민수 SVG so it can be drawn onto the report canvas.
+// Colours are inline attributes on the SVG, so a static (non-animated) snapshot
+// renders correctly; resolves to null if anything goes wrong.
+function svgToImage(svgEl, width) {
+  return new Promise((resolve) => {
+    if (!svgEl) {
+      resolve(null);
+      return;
+    }
+    try {
+      const clone = svgEl.cloneNode(true);
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(Math.round(width * 1.1))); // viewBox 200×220
+      const xml = new XMLSerializer().serializeToString(clone);
+      const src =
+        "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -578,6 +611,33 @@ async function buildReportImage() {
   ctx.font = "24px Inter, sans-serif";
   ctx.fillText("ON-DEVICE AI · AI MC 민수", W / 2, H - 40);
 
+  // MC 민수도 결과 사진에 귀엽게 같이 찍히도록 우측 하단에 살짝 얹는다.
+  const mcImg = await svgToImage(
+    document.querySelector("#mc-avatar svg"),
+    400,
+  );
+  if (mcImg) {
+    const mw = 190;
+    const mh = mw * 1.1;
+    const mx = W - mw - 46;
+    const my = H - mh - 64;
+    // 말풍선처럼 짧은 한마디를 머리 위에 띄워 함께 등장한 느낌을 준다.
+    ctx.save();
+    ctx.textAlign = "center";
+    const tag = "수고했어요! 🎤";
+    ctx.font = "bold 22px Inter, sans-serif";
+    const tagW = ctx.measureText(tag).width + 28;
+    const tagX = mx + mw / 2 - tagW / 2;
+    const tagY = my - 44;
+    ctx.fillStyle = "rgba(20, 26, 56, 0.94)";
+    roundRect(ctx, tagX, tagY, tagW, 36, 14);
+    ctx.fill();
+    ctx.fillStyle = "#cfd8ff";
+    ctx.fillText(tag, mx + mw / 2, tagY + 24);
+    ctx.restore();
+    ctx.drawImage(mcImg, mx, my, mw, mh);
+  }
+
   const link = document.createElement("a");
   link.download = `telepathy_${Date.now()}.png`;
   link.href = cv.toDataURL("image/png");
@@ -617,6 +677,8 @@ async function resetGame() {
   lastResultPoseRound = 0;
   currentRoundMeta = null;
   Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
+  // 처음으로 돌아가면 이전 팀 이름은 비워 placeholder가 다시 보이게 한다.
+  if (el.teamName) el.teamName.value = "";
   try {
     await fetch("/api/game/reset", { method: "POST" });
   } catch {
