@@ -19,6 +19,30 @@ VISIBILITY_THRESHOLD = 0.3
 # Standard deviation (degrees) of the similarity gaussian. Smaller -> stricter.
 SIMILARITY_SIGMA_DEG = 35.0
 
+# ---------------------------------------------------------------------------
+# Torso normalisation
+# ---------------------------------------------------------------------------
+_TORSO_ANCHORS = ("left_shoulder", "right_shoulder", "left_hip", "right_hip")
+_MIN_TORSO_HEIGHT = 0.05  # normalised units; skip if person is too small
+
+
+# ---------------------------------------------------------------------------
+# Ready-pose detection  ("양팔 T자" — both arms horizontal, elbows extended)
+# ---------------------------------------------------------------------------
+# Players hold both arms out sideways (like the letter T) to trigger game start.
+# Shoulder angle (elbow-shoulder-hip) ≈ 85~95° means arm is horizontal.
+# Elbow angle (shoulder-elbow-wrist) ≈ 155~180° means arm is straight.
+READY_POSE_SHOULDER_MIN = 70.0   # degrees — shoulder joint
+READY_POSE_SHOULDER_MAX = 110.0
+READY_POSE_ELBOW_MIN    = 140.0  # degrees — elbow joint (arm straight)
+# A player counts as "holding the T pose" when these four joints are in range.
+_READY_JOINTS = {
+    "left_shoulder":  (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
+    "right_shoulder": (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
+    "left_elbow":     (READY_POSE_ELBOW_MIN,    180.0),
+    "right_elbow":    (READY_POSE_ELBOW_MIN,    180.0),
+}
+
 # Approximate joint angles (degrees) of a neutral standing "rest" pose
 # (arms hanging down, legs straight). Poses far from this are "expressive";
 # poses close to it (everyone just standing identically) score low even when
@@ -97,22 +121,106 @@ def _angle_degrees(
     return math.degrees(math.atan2(abs(cross), dot))
 
 
+def _normalize_keypoints_to_torso(
+    keypoints: dict[str, dict[str, float]],
+    x_scale: float,
+) -> dict[str, dict[str, float]] | None:
+    """Project keypoints into the torso coordinate frame.
+
+    Frame definition
+    ----------------
+    * Origin  — midpoint of the four torso anchors (torso centre).
+    * Y-axis  — hip-midpoint → shoulder-midpoint (spine direction, upward).
+    * X-axis  — 90° CCW from Y (rightward in image).
+    * Scale   — torso height (shoulder-mid to hip-mid distance) == 1.0.
+
+    Removes camera tilt, player position, and body-size differences.
+    Returns None when any anchor is invisible or the torso is too small.
+    """
+    for name in _TORSO_ANCHORS:
+        kp = keypoints.get(name)
+        if kp is None or not _is_visible(kp):
+            return None
+
+    def _px(kp: dict[str, float]) -> tuple[float, float]:
+        return float(kp["x"]) * x_scale, float(kp["y"])
+
+    lsx, lsy = _px(keypoints["left_shoulder"])
+    rsx, rsy = _px(keypoints["right_shoulder"])
+    lhx, lhy = _px(keypoints["left_hip"])
+    rhx, rhy = _px(keypoints["right_hip"])
+
+    smx, smy = (lsx + rsx) / 2.0, (lsy + rsy) / 2.0  # shoulder midpoint
+    hmx, hmy = (lhx + rhx) / 2.0, (lhy + rhy) / 2.0  # hip midpoint
+
+    spine_x, spine_y = smx - hmx, smy - hmy
+    torso_h = math.hypot(spine_x, spine_y)
+    if torso_h < _MIN_TORSO_HEIGHT:
+        return None
+
+    # Unit Y-axis (upward along spine) and X-axis (90° CCW from Y).
+    uy_x, uy_y = spine_x / torso_h, spine_y / torso_h
+    ux_x, ux_y = -uy_y, uy_x
+
+    cx = (lsx + rsx + lhx + rhx) / 4.0
+    cy = (lsy + rsy + lhy + rhy) / 4.0
+
+    normalised: dict[str, dict[str, float]] = {}
+    for name, kp in keypoints.items():
+        dx = float(kp["x"]) * x_scale - cx
+        dy = float(kp["y"]) - cy
+        new_kp = dict(kp)
+        new_kp["x"] = (dx * ux_x + dy * ux_y) / torso_h
+        new_kp["y"] = (dx * uy_x + dy * uy_y) / torso_h
+        normalised[name] = new_kp  # type: ignore[assignment]
+    return normalised
+
+
+def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
+    """Return True when the player is holding the T-pose (양팔 T자).
+
+    Both arms must be stretched horizontally (shoulder ~90°, elbow ~straight).
+    Used on the intro screen so players can trigger game start by gesture.
+    """
+    if not pose_result or not pose_result.get("person_detected"):
+        return False
+    angles = compute_joint_angles(pose_result)
+    for joint, (lo, hi) in _READY_JOINTS.items():
+        angle = angles.get(joint)
+        if angle is None or not (lo <= angle <= hi):
+            return False
+    return True
+
+
 def compute_joint_angles(pose_result: dict[str, object]) -> dict[str, float]:
-    """Return a map of joint name -> angle (degrees) for visible joints only."""
+    """Return joint-name → angle (degrees) for all visible joints.
+
+    Keypoints are first projected into the torso coordinate frame so that
+    camera tilt, player position, and body-size differences are cancelled out.
+    Falls back to raw aspect-ratio-corrected coords when torso anchors are
+    missing or the person is too small in frame.
+    """
     keypoints = _keypoint_map(pose_result)
     x_scale = _aspect_x_scale(pose_result)
-    angles: dict[str, float] = {}
 
+    normalised = _normalize_keypoints_to_torso(keypoints, x_scale)
+    if normalised is not None:
+        work_kps = normalised
+        angle_x_scale = 1.0  # torso frame already has isotropic units
+    else:
+        work_kps = keypoints
+        angle_x_scale = x_scale
+
+    angles: dict[str, float] = {}
     for joint_name, (a_name, vertex_name, c_name) in JOINT_DEFINITIONS.items():
-        a = keypoints.get(a_name)
-        vertex = keypoints.get(vertex_name)
-        c = keypoints.get(c_name)
+        a = work_kps.get(a_name)
+        vertex = work_kps.get(vertex_name)
+        c = work_kps.get(c_name)
         if a is None or vertex is None or c is None:
             continue
         if not (_is_visible(a) and _is_visible(vertex) and _is_visible(c)):
             continue
-        angles[joint_name] = _angle_degrees(a, vertex, c, x_scale)
-
+        angles[joint_name] = _angle_degrees(a, vertex, c, angle_x_scale)
     return angles
 
 

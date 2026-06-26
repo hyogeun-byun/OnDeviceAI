@@ -8,7 +8,7 @@ from app.services import game_narrator as narrator
 from app.services.game_narrator import DEFAULT_PROMPTS
 from app.services.leaderboard import Leaderboard
 from app.services.llm_client import LLMClient
-from app.services.pose_similarity import analyze_group
+from app.services.pose_similarity import analyze_group, detect_ready_pose
 from app.services.speech_audio import SpeechAudioCache
 from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
@@ -19,6 +19,21 @@ PLAY_SECONDS = 10.0
 RESULT_SECONDS = 4.0
 
 TOTAL_ROUNDS = 5
+
+# How long (seconds) a player must *continuously* hold the T pose before the
+# game auto-starts (prevents accidental triggers).
+READY_POSE_HOLD_SECONDS = 1.5
+
+# Hint thresholds
+# Low-score hint: shown once at the START of a round when gauge <= this value
+# after HINT_EARLY_AFTER_SECONDS have elapsed.
+HINT_EARLY_THRESHOLD = 50.0
+HINT_EARLY_AFTER_SECONDS = 3.0   # wait a bit before judging
+# Late hint: shown when time_left <= this value AND gauge <= threshold.
+HINT_LATE_THRESHOLD = 70.0
+HINT_LATE_TIME_LEFT = 5.0
+# Minimum gap (seconds) between consecutive hints so they don't spam.
+HINT_MIN_GAP_SECONDS = 4.0
 
 # Exponential moving average factor for smoothing the live gauge (0~1, higher =
 # snappier). Kept moderate so the *last-moment* pose still dominates the score
@@ -31,6 +46,7 @@ COACH_MIN_HOLD_SECONDS = 4.0
 
 PHASE_IDLE = "idle"
 PHASE_INTRO = "intro"
+PHASE_WAITING_POSE = "waiting_pose"   # new: wait for T-pose gesture
 PHASE_COUNTDOWN = "countdown"
 PHASE_PLAYING = "playing"
 PHASE_RESULT = "result"
@@ -40,6 +56,7 @@ _PHASE_DURATIONS = {
     PHASE_COUNTDOWN: COUNTDOWN_SECONDS,
     PHASE_PLAYING: PLAY_SECONDS,
     PHASE_RESULT: RESULT_SECONDS,
+    PHASE_WAITING_POSE: None,   # open-ended; no fixed duration
 }
 
 
@@ -70,6 +87,14 @@ class GameState:
     team_name: str = ""
     leaderboard_id: int = 0
     recorded: bool = False
+    # Ready-pose detection state (used in PHASE_WAITING_POSE)
+    ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
+    ready_pose_instruction: str = narrator.READY_POSE_INSTRUCTION
+    # Hint state
+    hint: str = ""              # current hint text (empty = no active hint)
+    hint_given_early: bool = False   # early hint already fired this round
+    hint_given_late: bool = False    # late hint already fired this round
+    hint_changed_at: float = 0.0     # monotonic time of last hint update
 
 
 def telepathy_title(score: float) -> str:
@@ -135,9 +160,7 @@ class GameManager:
             self._spawn(self._speech_audio.generate(self._speech_seq, text))
 
     def start(self, theme: str | None = None, team_name: str | None = None) -> None:
-        """Enter the MC intro screen. The actual rounds don't begin until
-        :meth:`begin` is called (a separate user trigger), so the host can
-        greet the players and build hype first."""
+        """Enter the MC intro screen, then transition to waiting-for-T-pose."""
         self._generation += 1
         chosen = theme if theme in narrator.THEMES else self._default_theme
         team = (team_name or "").strip() or self._team_name
@@ -152,26 +175,32 @@ class GameManager:
             prompt_source="category_random_in_theme",
             team_name=team,
         )
-        # Spoken intro greeting (non-real-time: nothing is being scored yet).
         self._speak(narrator.intro_line(self._mc_name, team))
-        # B. Dynamic prompts — generated in the background; until ready the
-        # default prompts are used so the game can start immediately.
         if self._llm.enabled and chosen != "기본":
             self._spawn(self._build_prompts(self._generation, chosen))
 
     def begin(self) -> None:
-        """Trigger the first round after the intro screen (separate gesture)."""
-        if self._state.phase != PHASE_INTRO:
+        """Manually trigger game start (fallback for when gesture is unavailable)."""
+        if self._state.phase not in (PHASE_INTRO, PHASE_WAITING_POSE):
             return
+        self._enter_countdown(time.monotonic())
+
+    def _enter_waiting_pose(self, now: float) -> None:
+        self._state.phase = PHASE_WAITING_POSE
+        self._state.phase_started_at = now
+        self._state.ready_pose_hold_since = 0.0
+        self._speak(narrator.ready_pose_wait_line())
+
+    def _enter_countdown(self, now: float) -> None:
         self._state.phase = PHASE_COUNTDOWN
         self._state.round_index = 0
-        self._state.phase_started_at = time.monotonic()
+        self._state.phase_started_at = now
         self._state.gauge = 0.0
         self._state.raw_gauge = 0.0
         self._state.coach = ""
         self._state.coach_key = ""
         self._state.coach_changed_at = 0.0
-        self._speak(narrator.start_line(self._mc_name))
+        self._speak(narrator.ready_pose_detected_line())
 
     def reset(self) -> None:
         """Abort whatever is happening and go all the way back to the idle
@@ -248,7 +277,13 @@ class GameManager:
         now = time.monotonic()
         elapsed = now - state.phase_started_at
 
-        if state.phase == PHASE_COUNTDOWN:
+        if state.phase == PHASE_INTRO:
+            # After a short greeting window, move to waiting-for-T-pose.
+            if elapsed >= 2.0:
+                self._enter_waiting_pose(now)
+        elif state.phase == PHASE_WAITING_POSE:
+            self._check_ready_pose(now)
+        elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
@@ -258,6 +293,23 @@ class GameManager:
         elif state.phase == PHASE_RESULT:
             if elapsed >= RESULT_SECONDS:
                 self._advance_round(now)
+
+    def _check_ready_pose(self, now: float) -> None:
+        """Detect T-pose from all present players; start when all hold it."""
+        poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
+        present = [p for p in poses if p and p.get("person_detected")]
+        if not present:
+            self._state.ready_pose_hold_since = 0.0
+            return
+
+        all_ready = all(detect_ready_pose(p) for p in present)
+        if all_ready:
+            if self._state.ready_pose_hold_since == 0.0:
+                self._state.ready_pose_hold_since = now
+            elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
+                self._enter_countdown(now)
+        else:
+            self._state.ready_pose_hold_since = 0.0
 
     def _enter_playing(self, now: float) -> None:
         self._state.phase = PHASE_PLAYING
@@ -276,10 +328,7 @@ class GameManager:
         self._state.expressiveness = analysis["expressiveness"]
         self._state.players_analysis = analysis["players"]
         self._state.gauge += (analysis["score"] - self._state.gauge) * GAUGE_EMA_ALPHA
-        # Live, LLM-free coaching shown on the participants' screen and read out
-        # by the browser's instant voice. To keep the MC calm, a line stays put
-        # for at least COACH_MIN_HOLD_SECONDS before a different category may
-        # replace it (the very first line of a round shows immediately).
+        # Live coaching
         coaching = narrator.coach(
             analysis["players"],
             analysis["expressiveness"],
@@ -294,6 +343,91 @@ class GameManager:
             self._state.coach = coaching["text"]
             self._state.coach_key = coaching["key"]
             self._state.coach_changed_at = now
+
+        # Hints
+        self._update_hint(now, analysis)
+
+    def _update_hint(self, now: float, analysis: dict) -> None:
+        """Fire early/late hints based on gauge and time remaining."""
+        elapsed = now - self._state.phase_started_at
+        time_left = max(0.0, PLAY_SECONDS - elapsed)
+        gauge = self._state.gauge
+        players = analysis.get("players", [])
+        hint_gap_ok = (now - self._state.hint_changed_at) >= HINT_MIN_GAP_SECONDS
+
+        # Early hint: score still ≤50 after 3 seconds
+        if (
+            not self._state.hint_given_early
+            and elapsed >= HINT_EARLY_AFTER_SECONDS
+            and gauge <= HINT_EARLY_THRESHOLD
+            and hint_gap_ok
+        ):
+            self._state.hint_given_early = True
+            hint_text = self._build_hint_text(players) or narrator.hint_group_low()
+            self._set_hint(hint_text, now)
+            return
+
+        # Late hint: 5s remaining and score still ≤70
+        if (
+            not self._state.hint_given_late
+            and time_left <= HINT_LATE_TIME_LEFT
+            and gauge <= HINT_LATE_THRESHOLD
+            and hint_gap_ok
+        ):
+            self._state.hint_given_late = True
+            hint_text = self._build_hint_text(players)
+            if hint_text:
+                self._set_hint(hint_text, now)
+
+    def _build_hint_text(self, players: list[dict]) -> str:
+        """Find the player with the lowest sync score and the most-deviant joint."""
+        # Pick the outlier player (lowest sync vs the rest)
+        present = [p for p in players if p.get("present") and p.get("sync") is not None]
+        if len(present) < 2:
+            return ""
+        outlier = min(present, key=lambda p: float(p["sync"]))
+        others_avg = sum(float(p["sync"]) for p in present if p is not outlier) / (len(present) - 1)
+        if others_avg - float(outlier["sync"]) < 10.0:
+            return ""  # everyone is close enough, no specific hint
+
+        player_number = int(outlier["index"]) + 1
+
+        # Find which joint contributes most to the outlier's deviation.
+        # We compare the outlier's pose angles to the others' average angles.
+        outlier_idx = int(outlier["index"])
+        outlier_pose = self._stream_manager.get_pose(self._camera_ids[outlier_idx])
+        other_poses = [
+            self._stream_manager.get_pose(self._camera_ids[int(p["index"])])
+            for p in present if p is not outlier
+        ]
+
+        from app.services.pose_similarity import compute_joint_angles
+        if not outlier_pose:
+            return narrator.hint_for_player(player_number, "팔 동작")
+
+        outlier_angles = compute_joint_angles(outlier_pose)
+        other_angles_list = [compute_joint_angles(p) for p in other_poses if p]
+        if not other_angles_list:
+            return narrator.hint_for_player(player_number, "팔 동작")
+
+        # Average the other players' angles per joint
+        joint_diffs: dict[str, float] = {}
+        for joint, angle in outlier_angles.items():
+            others = [a[joint] for a in other_angles_list if joint in a]
+            if others:
+                avg_other = sum(others) / len(others)
+                joint_diffs[joint] = abs(angle - avg_other)
+
+        if not joint_diffs:
+            return narrator.hint_for_player(player_number, "자세")
+
+        worst_joint = max(joint_diffs, key=lambda j: joint_diffs[j])
+        return narrator.hint_for_player(player_number, worst_joint)
+
+    def _set_hint(self, text: str, now: float) -> None:
+        self._state.hint = text
+        self._state.hint_changed_at = now
+        self._speak(text)
 
     def _finish_round(self, now: float) -> None:
         self._state.round_scores.append(round(self._state.gauge, 1))
@@ -345,6 +479,10 @@ class GameManager:
         self._state.mc_comment = ""
         self._state.mc_status = "idle"
         self._state.result_poses = []
+        self._state.hint = ""
+        self._state.hint_given_early = False
+        self._state.hint_given_late = False
+        self._state.hint_changed_at = 0.0
 
     def _average_score(self) -> float:
         scores = self._state.round_scores
@@ -419,6 +557,7 @@ class GameManager:
             "ready_count": state.ready_count,
             "expressiveness": round(state.expressiveness, 3),
             "coach": state.coach,
+            "hint": state.hint,
             "player_count": len(self._camera_ids),
             "players": self._player_status(),
             "time_left": self._time_left(),
@@ -439,4 +578,10 @@ class GameManager:
             "final_title": telepathy_title(total_score) if state.phase == PHASE_FINISHED else None,
             "team_name": state.team_name,
             "leaderboard_id": state.leaderboard_id,
+            "ready_pose_instruction": state.ready_pose_instruction,
+            "ready_pose_hold_progress": (
+                min(1.0, (time.monotonic() - state.ready_pose_hold_since) / READY_POSE_HOLD_SECONDS)
+                if state.phase == PHASE_WAITING_POSE and state.ready_pose_hold_since > 0
+                else 0.0
+            ),
         }

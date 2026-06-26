@@ -88,8 +88,33 @@ _INTRO_BANTER = (
     "자, 다들 손가락 풀고 어깨도 한번 돌려볼까요? 텔레파시는 몸이 먼저 기억하거든요!",
     "오늘 누가 가장 찰떡 호흡일지, 제가 두 눈 크게 뜨고 지켜보겠습니다!",
     "긴장되시죠? 괜찮아요, 어차피 서로 못 보니까 마음껏 망가져도 됩니다!",
-    "준비되면 아래 버튼을 눌러주세요. 제가 카운트 들어갑니다!",
 )
+
+# Instruction shown on the intro screen while waiting for the ready pose.
+READY_POSE_INSTRUCTION = "양팔을 옆으로 쭉 펴서 T자를 만들어주세요!"
+READY_POSE_DESCRIPTION = "T자 포즈"
+
+_READY_POSE_WAIT = (
+    "다들 양팔을 옆으로 뻗어 T자를 만들어주세요!",
+    "팔을 수평으로 쭉 펴면 게임이 시작됩니다!",
+    "T자 포즈! 어깨 높이로 양팔을 벌려주세요!",
+)
+
+_READY_POSE_DETECTED = (
+    "좋아요! T자 확인! 게임 시작합니다!",
+    "완벽한 T자! 바로 시작할게요!",
+    "포즈 감지! 지금 바로 갑니다!",
+)
+
+
+def ready_pose_wait_line() -> str:
+    """Shown/spoken while waiting for all players to hold the T pose."""
+    return random.choice(_READY_POSE_WAIT)
+
+
+def ready_pose_detected_line() -> str:
+    """Spoken the moment the ready pose is confirmed and the game begins."""
+    return random.choice(_READY_POSE_DETECTED)
 
 
 def intro_line(mc_name: str = "민수", team_name: str = "") -> str:
@@ -230,6 +255,47 @@ def coach(
 def _coach_pick(key: str, options: tuple[str, ...], round_index: int) -> dict[str, str]:
     rng = random.Random(f"{key}:{round_index}")
     return {"key": key, "text": rng.choice(options)}
+
+
+# --------------------------------------------------------------------------- #
+# A3. Hint lines — shown when score is too low
+# --------------------------------------------------------------------------- #
+# hint_for_player(n, joint) returns a hint targeting player n (1-based) about
+# a specific joint area. Called from game_manager when the hint conditions are
+# met (score ≤ 50 at start, or score ≤ 70 with 5s left).
+
+_HINT_JOINT_LABEL: dict[str, str] = {
+    "left_shoulder":  "왼팔 각도",
+    "right_shoulder": "오른팔 각도",
+    "left_elbow":     "왼쪽 팔꿈치",
+    "right_elbow":    "오른쪽 팔꿈치",
+    "left_hip":       "왼쪽 허리",
+    "right_hip":      "오른쪽 허리",
+    "left_knee":      "왼쪽 무릎",
+    "right_knee":     "오른쪽 무릎",
+}
+
+_HINT_TEMPLATES = (
+    "{n}번님, {joint} 부분이 다른 분들과 조금 달라요!",
+    "{n}번님! {joint}를 살짝 맞춰보세요!",
+    "{n}번 선수, {joint} 확인해봐요!",
+)
+
+
+def hint_for_player(player_number: int, joint_name: str) -> str:
+    """Return a hint line targeting a specific player and joint."""
+    label = _HINT_JOINT_LABEL.get(joint_name, joint_name)
+    template = random.choice(_HINT_TEMPLATES)
+    return template.format(n=player_number, joint=label)
+
+
+def hint_group_low() -> str:
+    """Generic hint when overall score is very low (≤50) right after start."""
+    return random.choice((
+        "모두 동작이 많이 달라요! 제시어를 다시 생각해봐요!",
+        "텔레파시 신호 미약! 대표 동작을 떠올려 보세요!",
+        "다들 다른 동작이에요. 서로 맞춰봐요!",
+    ))
 
 
 async def generate_mc_comment(
