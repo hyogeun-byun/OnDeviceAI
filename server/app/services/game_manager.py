@@ -277,12 +277,11 @@ class GameManager:
         now = time.monotonic()
         elapsed = now - state.phase_started_at
 
-        if state.phase == PHASE_INTRO:
-            # After a short greeting window, move to waiting-for-T-pose.
-            if elapsed >= 2.0:
-                self._enter_waiting_pose(now)
-        elif state.phase == PHASE_WAITING_POSE:
-            self._check_ready_pose(now)
+        if state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
+            # T-pose (when team name is set) OR the start button both trigger
+            # the countdown immediately — no forced waiting step.
+            if state.team_name:
+                self._check_ready_pose(now)
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
@@ -295,7 +294,11 @@ class GameManager:
                 self._advance_round(now)
 
     def _check_ready_pose(self, now: float) -> None:
-        """Detect T-pose from all present players; start when all hold it."""
+        """Detect T-pose from all present players; start when all hold it.
+
+        Only called when a team name is already set.  The start button
+        (begin()) is always an alternative — this is the gesture path.
+        """
         poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
         present = [p for p in poses if p and p.get("person_detected")]
         if not present:
