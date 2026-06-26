@@ -1,0 +1,106 @@
+{
+  "benchmark": "llm_speed_quality",
+  "server": "http://127.0.0.1:11434",
+  "warmup_runs": 2,
+  "runs": 5,
+  "timestamp": "20260626_095913",
+  "model": {
+    "model": "gemma:2b",
+    "size_mb_q4": 1500,
+    "available": true,
+    "tasks": [
+      {
+        "task": "mc_comment_high",
+        "description": "MC 1줄 멘트 – 고득점 라운드",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 6090.8,
+        "min_total_ms": 4225.7,
+        "max_total_ms": 7962.4,
+        "p50_total_ms": 5839.5,
+        "avg_ttft_ms": 601.1,
+        "avg_tokens_per_sec": 1.6,
+        "last_response": "손흥민이 반가워! 몸이 탈출하셨나요! 혹시 몸으로 텔레파시 맞추기 전문가가 되는 거예요!",
+        "quality": {
+          "score": 80,
+          "nonempty": true,
+          "char_count": 49,
+          "char_limit_ok": false,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.923,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "mc_comment_low",
+        "description": "MC 1줄 멘트 – 저득점 라운드",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 8188.8,
+        "min_total_ms": 4070.7,
+        "max_total_ms": 10619.2,
+        "p50_total_ms": 10144.1,
+        "avg_ttft_ms": 592.5,
+        "avg_tokens_per_sec": 1.9,
+        "last_response": "무에타이네요! '몸으로 텔레파시 맞추기' 결과는 나에게 매우 재치 있어요. 😁 \n\n그럼 시기와 공간에 힘써 뛰어나서 밤하늘에 어떻게 떨어지는지 궁금",
+        "quality": {
+          "score": 40,
+          "nonempty": true,
+          "char_count": 82,
+          "char_limit_ok": false,
+          "single_line_ok": false,
+          "no_emoji_ok": false,
+          "korean_ratio": 0.919,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "final_report",
+        "description": "최종 텔레파시 궁합 분석 (2~3문장)",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 12799.7,
+        "min_total_ms": 11210.6,
+        "max_total_ms": 15742.5,
+        "p50_total_ms": 12258.5,
+        "avg_ttft_ms": 600.3,
+        "avg_tokens_per_sec": 1.9,
+        "last_response": "- 손흥민이 87점으로 가장 높은 점수를 받았다. 🤯\n\n- 무에타이가 23점으로 가장 낮은 점수를 받았다. 😭\n\n- 아이언맨이 68점으로 가장 높은 점수를 받았다. 🤩",
+        "quality": {
+          "score": 80,
+          "nonempty": true,
+          "char_count": 93,
+          "char_limit_ok": true,
+          "single_line_ok": true,
+          "no_emoji_ok": false,
+          "korean_ratio": 0.779,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "today_weather",
+        "description": "오늘 날씨 질문 – 자유응답",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 7805.5,
+        "min_total_ms": 4569.9,
+        "max_total_ms": 12215.4,
+        "p50_total_ms": 6939.4,
+        "avg_ttft_ms": 607.7,
+        "avg_tokens_per_sec": 1.9,
+        "last_response": "안녕하세요. 오늘 날씨는 어떻게 보이신가요? 온도가 얼마나 낮나요? \n\n아무리 기억에 남을 만한 것도 없지만, 저는 밤 8시 30분 정도 온도가 추운 것 같다는 정보를 알려드리겠습니다.",
+        "quality": {
+          "score": 100,
+          "nonempty": true,
+          "char_count": 103,
+          "char_limit_ok": true,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.896,
+          "korean_ratio_ok": true
+        }
+      }
+    ]
+  }
+}

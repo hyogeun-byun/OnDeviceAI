@@ -1,0 +1,106 @@
+{
+  "benchmark": "llm_speed_quality",
+  "server": "http://127.0.0.1:11434",
+  "warmup_runs": 2,
+  "runs": 5,
+  "timestamp": "20260626_095913",
+  "model": {
+    "model": "llama3.2:3b",
+    "size_mb_q4": 2020,
+    "available": true,
+    "tasks": [
+      {
+        "task": "mc_comment_high",
+        "description": "MC 1줄 멘트 – 고득점 라운드",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 4354.9,
+        "min_total_ms": 3745.4,
+        "max_total_ms": 5332.7,
+        "p50_total_ms": 4040.5,
+        "avg_ttft_ms": 629.8,
+        "avg_tokens_per_sec": 1.3,
+        "last_response": "손흥민이 무적의 전설이자 텔레파시 챗린지에 승리했다!",
+        "quality": {
+          "score": 100,
+          "nonempty": true,
+          "char_count": 29,
+          "char_limit_ok": true,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.958,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "mc_comment_low",
+        "description": "MC 1줄 멘트 – 저득점 라운드",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 3742.2,
+        "min_total_ms": 3229.7,
+        "max_total_ms": 4062.8,
+        "p50_total_ms": 3864.9,
+        "avg_ttft_ms": 624.2,
+        "avg_tokens_per_sec": 1.6,
+        "last_response": "무에 타이 결과, 무적권 정승은 없Sad...",
+        "quality": {
+          "score": 100,
+          "nonempty": true,
+          "char_count": 25,
+          "char_limit_ok": true,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.65,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "final_report",
+        "description": "최종 텔레파시 궁합 분석 (2~3문장)",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 19518.5,
+        "min_total_ms": 13549.4,
+        "max_total_ms": 27185.0,
+        "p50_total_ms": 18336.1,
+        "avg_ttft_ms": 633.6,
+        "avg_tokens_per_sec": 1.7,
+        "last_response": "손흥민은 포용력 있는 공을挥洒하며 주اء의 보통으로 가溜한 분이네. 무에타이, 아이언맨도 그 же 방식으로 연습하고 또 연습했었지만 그들보다 손흥님의 재능이 훨씬 많다니.\n\n손흥민은 전형적인 코너 đá를 감수하지 않고 주의를 끊어 자신의 스타일로 공을挥洈했다. 하지만 이 방식은 무에타이, 아이언맨과는 매우 다르며 그들보다 더 신체적 수고를 가졌ে도 그대로의 성과를 내지 못해 한 라운드에 87",
+        "quality": {
+          "score": 80,
+          "nonempty": true,
+          "char_count": 220,
+          "char_limit_ok": false,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.888,
+          "korean_ratio_ok": true
+        }
+      },
+      {
+        "task": "today_weather",
+        "description": "오늘 날씨 질문 – 자유응답",
+        "runs_ok": 5,
+        "errors": 0,
+        "avg_total_ms": 12320.4,
+        "min_total_ms": 7591.2,
+        "max_total_ms": 21580.8,
+        "p50_total_ms": 9658.8,
+        "avg_ttft_ms": 660.7,
+        "avg_tokens_per_sec": 2.2,
+        "last_response": "오늘 날씨는 생각보다 나을 것으로 보인다. 현재 기상 예보에 따르면 일점은 22도, 강수량은 가벼운 하우시와 같이 will be sunny today.",
+        "quality": {
+          "score": 100,
+          "nonempty": true,
+          "char_count": 84,
+          "char_limit_ok": true,
+          "single_line_ok": true,
+          "no_emoji_ok": true,
+          "korean_ratio": 0.677,
+          "korean_ratio_ok": true
+        }
+      }
+    ]
+  }
+}

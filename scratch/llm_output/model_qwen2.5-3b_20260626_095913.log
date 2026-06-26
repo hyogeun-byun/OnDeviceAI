@@ -1,0 +1,42 @@
+  log    : /home/willtek/OnDeviceAI/scratch/llm_output/model_qwen2.5-3b_20260626_095913.log
+========================================================================
+  LLM Benchmark  –  qwen2.5:3b  (~1900 MB)
+  server  : http://127.0.0.1:11434
+  tasks   : mc_comment_high, mc_comment_low, final_report, today_weather
+  warmup  : 2  |  runs : 5
+========================================================================
+
+[MC 1줄 멘트 – 고득점 라운드]
+  runs=5/5  avg=4881ms  min=4335ms  max=5576ms  ttft=537ms  1.3tok/s
+  └─ 응답:
+     손흥민의 텔레파스는 우주의 속도로 보였다! 정확도 100%!
+  └─ quality=100%  chars=33  korean=78%  emoji_free=True
+
+[MC 1줄 멘트 – 저득점 라운드]
+  runs=5/5  avg=6928ms  min=3754ms  max=8472ms  ttft=549ms  1.3tok/s
+  └─ 응답:
+     웃기儿太強了，參賽者默契18/100。
+  └─ quality=80%  chars=19  korean=10%  emoji_free=True
+
+[최종 텔레파시 궁합 분석 (2~3문장)]
+  runs=5/5  avg=17199ms  min=14964ms  max=18962ms  ttft=535ms  1.7tok/s
+  └─ 응답:
+     손흥민이 이어진 1라운드에서 높은 점수를 받았고, 그의 호흡이 두 상대한 팀들과 비교했을 때는 좀 더 낙후된 모습을 보였습니다. 하지만 2라운드에서는 갑자기 주도권을 잡아 3라운드까지 이어가며 뛰어난 재치와 궁합을 선보였습니다.
+  └─ quality=100%  chars=127  korean=94%  emoji_free=True
+
+[오늘 날씨 질문 – 자유응답]
+  runs=5/5  avg=9734ms  min=5154ms  max=14500ms  ttft=538ms  2.2tok/s
+  └─ 응답:
+     지금 실시간 위치의 날씨 정보를 알고 싶으신가요? 또는 특정 지역의 날씨 정보를 원하시는 건가요?
+  └─ quality=100%  chars=54  korean=95%  emoji_free=True
+
+========================================================================
+  Task                             Avg(ms)   Min(ms)   TTFT(ms)   Tok/s
+------------------------------------------------------------------------
+  MC 1줄 멘트 – 고득점 라운드                 4881ms     4335ms       537ms    1.3
+  MC 1줄 멘트 – 저득점 라운드                 6928ms     3754ms       549ms    1.3
+  최종 텔레파시 궁합 분석 (2~3문장)             17199ms    14964ms       535ms    1.7
+  오늘 날씨 질문 – 자유응답                    9734ms     5154ms       538ms    2.2
+========================================================================
+
+Log saved to : /home/willtek/OnDeviceAI/scratch/llm_output/model_qwen2.5-3b_20260626_095913.log

@@ -1,0 +1,44 @@
+  log    : /home/willtek/OnDeviceAI/scratch/llm_output/model_llama3.2-3b_20260626_095913.log
+========================================================================
+  LLM Benchmark  –  llama3.2:3b  (~2020 MB)
+  server  : http://127.0.0.1:11434
+  tasks   : mc_comment_high, mc_comment_low, final_report, today_weather
+  warmup  : 2  |  runs : 5
+========================================================================
+
+[MC 1줄 멘트 – 고득점 라운드]
+  runs=5/5  avg=4355ms  min=3745ms  max=5333ms  ttft=630ms  1.3tok/s
+  └─ 응답:
+     손흥민이 무적의 전설이자 텔레파시 챗린지에 승리했다!
+  └─ quality=100%  chars=29  korean=96%  emoji_free=True
+
+[MC 1줄 멘트 – 저득점 라운드]
+  runs=5/5  avg=3742ms  min=3230ms  max=4063ms  ttft=624ms  1.6tok/s
+  └─ 응답:
+     무에 타이 결과, 무적권 정승은 없Sad...
+  └─ quality=100%  chars=25  korean=65%  emoji_free=True
+
+[최종 텔레파시 궁합 분석 (2~3문장)]
+  runs=5/5  avg=19518ms  min=13549ms  max=27185ms  ttft=634ms  1.7tok/s
+  └─ 응답:
+     손흥민은 포용력 있는 공을挥洒하며 주اء의 보통으로 가溜한 분이네. 무에타이, 아이언맨도 그 же 방식으로 연습하고 또 연습했었지만 그들보다 손흥님의 재능이 훨씬 많다니.
+     
+     손흥민은 전형적인 코너 đá를 감수하지 않고 주의를 끊어 자신의 스타일로 공을挥洈했다. 하지만 이 방식은 무에타이, 아이언맨과는 매우 다르며 그들보다 더 신체적 수고를 가졌ে도 그대로의 성과를 내지 못해 한 라운드에 87
+  └─ quality=80%  chars=220  korean=89%  emoji_free=True
+
+[오늘 날씨 질문 – 자유응답]
+  runs=5/5  avg=12320ms  min=7591ms  max=21581ms  ttft=661ms  2.2tok/s
+  └─ 응답:
+     오늘 날씨는 생각보다 나을 것으로 보인다. 현재 기상 예보에 따르면 일점은 22도, 강수량은 가벼운 하우시와 같이 will be sunny today.
+  └─ quality=100%  chars=84  korean=68%  emoji_free=True
+
+========================================================================
+  Task                             Avg(ms)   Min(ms)   TTFT(ms)   Tok/s
+------------------------------------------------------------------------
+  MC 1줄 멘트 – 고득점 라운드                 4355ms     3745ms       630ms    1.3
+  MC 1줄 멘트 – 저득점 라운드                 3742ms     3230ms       624ms    1.6
+  최종 텔레파시 궁합 분석 (2~3문장)             19518ms    13549ms       634ms    1.7
+  오늘 날씨 질문 – 자유응답                   12320ms     7591ms       661ms    2.2
+========================================================================
+
+Log saved to : /home/willtek/OnDeviceAI/scratch/llm_output/model_llama3.2-3b_20260626_095913.log
