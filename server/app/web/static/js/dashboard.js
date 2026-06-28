@@ -179,27 +179,28 @@ async function refreshSkeletons() {
 }
 
 // --- Score-breakdown diagnostics ---
-const DIAG_JOINTS = [
-  ["left_shoulder", "L sh"],
-  ["right_shoulder", "R sh"],
-  ["left_elbow", "L elbow"],
-  ["right_elbow", "R elbow"],
-  ["left_hip", "L hip"],
-  ["right_hip", "R hip"],
-  ["left_knee", "L knee"],
-  ["right_knee", "R knee"],
+const DIAG_BONES = [
+  ["left_upper_arm", "L upper"],
+  ["left_forearm", "L fore"],
+  ["right_upper_arm", "R upper"],
+  ["right_forearm", "R fore"],
+  ["left_thigh", "L thigh"],
+  ["left_shin", "L shin"],
+  ["right_thigh", "R thigh"],
+  ["right_shin", "R shin"],
 ];
 
-function renderBoardAngles(board) {
-  setText(`${board.camera_id}-visible`, `${board.visible_joints}/8`);
+function renderBoardVectors(board) {
+  setText(`${board.camera_id}-visible`, `${board.visible_bones}/8`);
   const container = document.getElementById(`${board.camera_id}-angles`);
   if (!container) {
     return;
   }
-  const angles = board.angles || {};
-  container.innerHTML = DIAG_JOINTS.map(([name, label]) => {
-    const has = Object.prototype.hasOwnProperty.call(angles, name);
-    const value = has ? `${Math.round(angles[name])}\u00b0` : "\u2014";
+  const vectors = board.vectors || {};
+  container.innerHTML = DIAG_BONES.map(([name, label]) => {
+    const has = Object.prototype.hasOwnProperty.call(vectors, name);
+    const vector = vectors[name] || {};
+    const value = has ? `${formatNumber(vector.x, 2)}, ${formatNumber(vector.y, 2)}` : "\u2014";
     return `<span class="angle-chip${has ? "" : " missing"}">${label}<b>${value}</b></span>`;
   }).join("");
 }
@@ -240,7 +241,7 @@ async function refreshDiagnostics() {
   setText("diag-ready", String(data.ready_count ?? 0));
 
   for (const board of data.boards || []) {
-    renderBoardAngles(board);
+    renderBoardVectors(board);
   }
   renderPairs(data.pairs);
 }

@@ -435,8 +435,8 @@ class GameManager:
 
         player_number = int(outlier["index"]) + 1
 
-        # Find which joint contributes most to the outlier's deviation.
-        # We compare the outlier's pose angles to the others' average angles.
+        # Find which bone contributes most to the outlier's deviation.
+        # We compare the outlier's bone directions to the others' bone directions.
         outlier_idx = int(outlier["index"])
         outlier_pose = self._stream_manager.get_pose(self._camera_ids[outlier_idx])
         other_poses = [
@@ -444,28 +444,33 @@ class GameManager:
             for p in present if p is not outlier
         ]
 
-        from app.services.pose_similarity import compute_joint_angles
+        from app.services.pose_similarity import (
+            bone_vector_angle_difference_degrees,
+            compute_bone_vectors,
+        )
         if not outlier_pose:
             return narrator.hint_for_player(player_number, "팔 동작")
 
-        outlier_angles = compute_joint_angles(outlier_pose)
-        other_angles_list = [compute_joint_angles(p) for p in other_poses if p]
-        if not other_angles_list:
+        outlier_vectors = compute_bone_vectors(outlier_pose)
+        other_vectors_list = [compute_bone_vectors(p) for p in other_poses if p]
+        if not other_vectors_list:
             return narrator.hint_for_player(player_number, "팔 동작")
 
-        # Average the other players' angles per joint
-        joint_diffs: dict[str, float] = {}
-        for joint, angle in outlier_angles.items():
-            others = [a[joint] for a in other_angles_list if joint in a]
+        bone_diffs: dict[str, float] = {}
+        for bone, vector in outlier_vectors.items():
+            others = [v[bone] for v in other_vectors_list if bone in v]
             if others:
-                avg_other = sum(others) / len(others)
-                joint_diffs[joint] = abs(angle - avg_other)
+                diffs = [
+                    bone_vector_angle_difference_degrees(vector, other)
+                    for other in others
+                ]
+                bone_diffs[bone] = sum(diffs) / len(diffs)
 
-        if not joint_diffs:
+        if not bone_diffs:
             return narrator.hint_for_player(player_number, "자세")
 
-        worst_joint = max(joint_diffs, key=lambda j: joint_diffs[j])
-        return narrator.hint_for_player(player_number, worst_joint)
+        worst_bone = max(bone_diffs, key=lambda bone: bone_diffs[bone])
+        return narrator.hint_for_player(player_number, worst_bone)
 
     def _set_hint(self, text: str, now: float) -> None:
         self._state.hint = text

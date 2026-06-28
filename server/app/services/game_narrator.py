@@ -265,6 +265,14 @@ def _coach_pick(key: str, options: tuple[str, ...], round_index: int) -> dict[st
 # met (score ≤ 50 at start, or score ≤ 70 with 5s left).
 
 _HINT_JOINT_LABEL: dict[str, str] = {
+    "left_upper_arm": "왼쪽 윗팔",
+    "left_forearm": "왼쪽 아래팔",
+    "right_upper_arm": "오른쪽 윗팔",
+    "right_forearm": "오른쪽 아래팔",
+    "left_thigh": "왼쪽 허벅지",
+    "left_shin": "왼쪽 정강이",
+    "right_thigh": "오른쪽 허벅지",
+    "right_shin": "오른쪽 정강이",
     "left_shoulder":  "왼팔 각도",
     "right_shoulder": "오른팔 각도",
     "left_elbow":     "왼쪽 팔꿈치",
