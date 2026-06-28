@@ -18,6 +18,9 @@ COUNTDOWN_SECONDS = 3.0
 PLAY_SECONDS = 10.0
 RESULT_SECONDS = 4.0
 
+# How long the MC opening (intro) screen shows before the countdown auto-starts.
+INTRO_SECONDS = 6.0
+
 TOTAL_ROUNDS = 5
 
 # How long (seconds) a player must *continuously* hold the T pose before the
@@ -131,6 +134,10 @@ class GameManager:
         self._tts = speaker
         self._mc_name = mc_name
         self._team_name = team_name
+        # Team name / theme staged from the idle screen so the T-pose gesture can
+        # auto-start the game without a button press.
+        self._pending_team_name = team_name
+        self._pending_theme = self._default_theme
         self._speech_audio = speech_audio
         self._leaderboard = leaderboard
         self._total_rounds = TOTAL_ROUNDS
@@ -178,6 +185,14 @@ class GameManager:
         self._speak(narrator.intro_line(self._mc_name, team))
         if self._llm.enabled and chosen != "기본":
             self._spawn(self._build_prompts(self._generation, chosen))
+
+    def stage(self, team_name: str | None = None, theme: str | None = None) -> None:
+        """Remember the team name / theme entered on the idle screen so the
+        T-pose gesture can auto-start the game without any button."""
+        if team_name is not None:
+            self._pending_team_name = team_name.strip()[:40]
+        if theme is not None and theme in narrator.THEMES:
+            self._pending_theme = theme
 
     def begin(self) -> None:
         """Manually trigger game start (fallback for when gesture is unavailable)."""
@@ -277,11 +292,14 @@ class GameManager:
         now = time.monotonic()
         elapsed = now - state.phase_started_at
 
-        if state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
-            # T-pose (when team name is set) OR the start button both trigger
-            # the countdown immediately — no forced waiting step.
-            if state.team_name:
-                self._check_ready_pose(now)
+        if state.phase == PHASE_IDLE:
+            # On the idle screen, holding the T-pose (after a team name is
+            # entered) auto-starts the game — no button needed.
+            self._check_idle_ready_pose(now)
+        elif state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
+            # The MC plays the opening, then the countdown starts automatically.
+            if elapsed >= INTRO_SECONDS:
+                self._enter_countdown(now)
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
@@ -292,6 +310,28 @@ class GameManager:
         elif state.phase == PHASE_RESULT:
             if elapsed >= RESULT_SECONDS:
                 self._advance_round(now)
+
+    def _check_idle_ready_pose(self, now: float) -> None:
+        """On the idle screen, detect the T-pose and auto-start the game.
+
+        Requires a staged (entered) team name so the game never starts by
+        accident before the players have set themselves up.
+        """
+        if not self._pending_team_name:
+            self._state.ready_pose_hold_since = 0.0
+            return
+        poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
+        present = [p for p in poses if p and p.get("person_detected")]
+        if not present:
+            self._state.ready_pose_hold_since = 0.0
+            return
+        if all(detect_ready_pose(p) for p in present):
+            if self._state.ready_pose_hold_since == 0.0:
+                self._state.ready_pose_hold_since = now
+            elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
+                self.start(self._pending_theme, self._pending_team_name)
+        else:
+            self._state.ready_pose_hold_since = 0.0
 
     def _check_ready_pose(self, now: float) -> None:
         """Detect T-pose from all present players; start when all hold it.
@@ -584,7 +624,7 @@ class GameManager:
             "ready_pose_instruction": state.ready_pose_instruction,
             "ready_pose_hold_progress": (
                 min(1.0, (time.monotonic() - state.ready_pose_hold_since) / READY_POSE_HOLD_SECONDS)
-                if state.phase == PHASE_WAITING_POSE and state.ready_pose_hold_since > 0
+                if state.phase in (PHASE_IDLE, PHASE_WAITING_POSE) and state.ready_pose_hold_since > 0
                 else 0.0
             ),
         }

@@ -69,7 +69,12 @@
             {% endfor %}
           </div>
         </div>
-        <button class="cta" id="start-btn" type="button">게임 시작</button>
+        <div class="tpose-cue" id="tpose-cue">
+          <div class="tpose-icon">🙆</div>
+          <p class="tpose-headline">팀 이름을 적고 <em>T자 포즈</em>로 시작!</p>
+          <p class="tpose-sub">양팔을 옆으로 쭉 펴면 게임이 시작됩니다.</p>
+          <div class="tpose-progress"><span id="tpose-progress-fill"></span></div>
+        </div>
         <p class="idle-hint">선택한 카테고리 안에서 랜덤 5문제 · 라운드당 10초</p>
 
         <section class="leaderboard-panel" id="leaderboard-panel">
@@ -86,14 +91,13 @@
         </section>
       </section>
 
-      <!-- INTRO (MC greets; rounds start on a separate trigger) -->
+      <!-- INTRO (MC greets; countdown starts automatically) -->
       <section class="screen screen-intro" id="screen-intro">
         <p class="intro-eyebrow">🎤 AI MC 민수</p>
         <h2 class="intro-title">곧 시작합니다!</h2>
         <p class="intro-speech" id="intro-speech">민수가 인사 중…</p>
         <div class="player-dots" id="intro-players"></div>
-        <button class="cta" id="begin-btn" type="button">시작하기 ▶</button>
-        <p class="idle-hint">준비되면 눌러주세요 · 민수가 카운트합니다</p>
+        <p class="idle-hint">민수의 오프닝이 끝나면 바로 카운트다운이 시작됩니다!</p>
       </section>
 
       <!-- COUNTDOWN -->

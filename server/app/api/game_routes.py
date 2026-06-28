@@ -41,6 +41,28 @@ async def start_game(request: Request) -> dict[str, object]:
     return game_manager.snapshot()
 
 
+@router.post("/stage")
+async def stage_game(request: Request) -> dict[str, object]:
+    """Remember the team name / theme entered on the idle screen so the T-pose
+    gesture can auto-start the game without any button."""
+    game_manager = get_game_manager(request)
+    team_name: str | None = None
+    theme: str | None = None
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            name = body.get("team_name")
+            if isinstance(name, str):
+                team_name = name.strip()[:40]
+            value = body.get("theme")
+            if isinstance(value, str) and value.strip():
+                theme = value.strip()
+    except Exception:
+        pass
+    game_manager.stage(team_name, theme)
+    return {"ok": True}
+
+
 @router.post("/begin")
 async def begin_game(request: Request) -> dict[str, object]:
     game_manager = get_game_manager(request)

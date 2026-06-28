@@ -12,7 +12,6 @@ const screens = {
 const el = {
   conn: document.getElementById("conn"),
   roundPill: document.getElementById("round-pill"),
-  startBtn: document.getElementById("start-btn"),
   restartBtn: document.getElementById("restart-btn"),
   idlePlayers: document.getElementById("idle-players"),
   cdPrompt: document.getElementById("cd-prompt"),
@@ -34,7 +33,6 @@ const el = {
   finalBreakdown: document.getElementById("final-breakdown"),
   reportCards: document.getElementById("report-cards"),
   saveReportBtn: document.getElementById("save-report-btn"),
-  beginBtn: document.getElementById("begin-btn"),
   introSpeech: document.getElementById("intro-speech"),
   introPlayers: document.getElementById("intro-players"),
   themePicker: document.getElementById("theme-picker"),
@@ -50,6 +48,8 @@ const el = {
   leaderboardReset: document.getElementById("leaderboard-reset"),
   finalTeam: document.getElementById("final-team"),
   finalRank: document.getElementById("final-rank"),
+  tposeCue: document.getElementById("tpose-cue"),
+  tposeProgressFill: document.getElementById("tpose-progress-fill"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
@@ -255,8 +255,18 @@ function setGauge(value) {
 }
 
 function render(state) {
+  const prevPhase = currentPhase;
   showScreen(state.phase);
   maybeSpeak(state);
+
+  // A fresh game just began (idle/finished -> intro): clear the per-round
+  // capture state that startGame() used to reset before the button was removed.
+  if (state.phase === "intro" && prevPhase !== "intro") {
+    lastResultRound = 0;
+    lastResultPoseRound = 0;
+    currentRoundMeta = null;
+    Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
+  }
 
   // Refresh the leaderboard only on phase transitions (not every snapshot):
   // when returning to the idle board, and when a game has just finished.
@@ -268,6 +278,11 @@ function render(state) {
 
   if (state.phase === "idle") {
     el.roundPill.textContent = "READY";
+    if (el.tposeProgressFill) {
+      const pct = Math.round((state.ready_pose_hold_progress || 0) * 100);
+      el.tposeProgressFill.style.width = `${pct}%`;
+    }
+    if (el.tposeCue) el.tposeCue.classList.toggle("is-holding", (state.ready_pose_hold_progress || 0) > 0);
   } else if (state.phase === "finished") {
     el.roundPill.textContent = "FINAL";
   } else {
@@ -644,28 +659,24 @@ async function buildReportImage() {
   link.click();
 }
 
-async function startGame() {
-  lastResultRound = 0;
-  lastResultPoseRound = 0;
-  currentRoundMeta = null;
-  Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
+// Push the entered team name / category to the server so the T-pose gesture on
+// the idle screen can auto-start the game (no button).
+let stageTimer = null;
+async function stageGame() {
   try {
-    await fetch("/api/game/start", {
+    await fetch("/api/game/stage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ theme: selectedTheme, team_name: getTeamName() }),
     });
   } catch {
-    /* the next websocket snapshot will reflect the state */
+    /* best effort; will retry on the next edit */
   }
 }
 
-async function beginGame() {
-  try {
-    await fetch("/api/game/begin", { method: "POST" });
-  } catch {
-    /* the next websocket snapshot will reflect the state */
-  }
+function scheduleStage() {
+  if (stageTimer) clearTimeout(stageTimer);
+  stageTimer = setTimeout(stageGame, 250);
 }
 
 async function resetGame() {
@@ -684,6 +695,8 @@ async function resetGame() {
   } catch {
     /* the next websocket snapshot will reflect the state */
   }
+  // Clear the staged team name so a stale name can't auto-start the next game.
+  stageGame();
 }
 
 let selectedTheme = "상황";
@@ -696,16 +709,18 @@ if (el.themePicker) {
       chips.forEach((c) => c.classList.remove("is-active"));
       chip.classList.add("is-active");
       selectedTheme = chip.dataset.theme || "상황";
+      stageGame();
     });
   });
 }
 
-el.startBtn.addEventListener("click", startGame);
 el.restartBtn.addEventListener("click", resetGame);
-if (el.beginBtn) el.beginBtn.addEventListener("click", beginGame);
 if (el.restartGameBtn) el.restartGameBtn.addEventListener("click", resetGame);
 if (el.saveReportBtn) el.saveReportBtn.addEventListener("click", buildReportImage);
 if (el.leaderboardReset) el.leaderboardReset.addEventListener("click", resetLeaderboard);
+if (el.teamName) el.teamName.addEventListener("input", scheduleStage);
+// Stage the initial (possibly empty) team name + default category on load.
+stageGame();
 
 // --- Team leaderboard (accumulates across games, per team name) ---
 function getTeamName() {

@@ -35,13 +35,6 @@ _MIN_TORSO_HEIGHT = 0.05  # normalised units; skip if person is too small
 READY_POSE_SHOULDER_MIN = 70.0   # degrees — shoulder joint
 READY_POSE_SHOULDER_MAX = 110.0
 READY_POSE_ELBOW_MIN    = 140.0  # degrees — elbow joint (arm straight)
-# A player counts as "holding the T pose" when these four joints are in range.
-_READY_JOINTS = {
-    "left_shoulder":  (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
-    "right_shoulder": (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
-    "left_elbow":     (READY_POSE_ELBOW_MIN,    180.0),
-    "right_elbow":    (READY_POSE_ELBOW_MIN,    180.0),
-}
 
 # Approximate joint angles (degrees) of a neutral standing "rest" pose
 # (arms hanging down, legs straight). Poses far from this are "expressive";
@@ -179,15 +172,29 @@ def _normalize_keypoints_to_torso(
 def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
     """Return True when the player is holding the T-pose (양팔 T자).
 
-    Both arms must be stretched horizontally (shoulder ~90°, elbow ~straight).
-    Used on the intro screen so players can trigger game start by gesture.
+    Both arms must be raised out to the sides (shoulder ~90°). The defining
+    feature is judged from the shoulder joints (elbow-shoulder-hip), which only
+    need the shoulder, elbow and hip keypoints — these stay visible even when
+    the wrists leave the frame edge during a wide T-pose.
+
+    The elbow-straightness check needs the wrist, which is frequently cut off (or
+    drops below the confidence threshold) when the arms are fully extended, so it
+    is only enforced when the wrist is actually visible. This keeps the gesture
+    reliable instead of silently never triggering.
     """
     if not pose_result or not pose_result.get("person_detected"):
         return False
     angles = compute_joint_angles(pose_result)
-    for joint, (lo, hi) in _READY_JOINTS.items():
+    # Both arms must be horizontal — this is the gesture's defining feature.
+    for joint in ("left_shoulder", "right_shoulder"):
         angle = angles.get(joint)
-        if angle is None or not (lo <= angle <= hi):
+        if angle is None or not (READY_POSE_SHOULDER_MIN <= angle <= READY_POSE_SHOULDER_MAX):
+            return False
+    # Arms should be straight, but only check when the wrist (and thus the elbow
+    # angle) is available; a missing elbow angle means the wrist is out of frame.
+    for joint in ("left_elbow", "right_elbow"):
+        angle = angles.get(joint)
+        if angle is not None and angle < READY_POSE_ELBOW_MIN:
             return False
     return True
 
