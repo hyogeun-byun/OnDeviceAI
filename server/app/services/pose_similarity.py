@@ -2,7 +2,21 @@ from __future__ import annotations
 
 import math
 
-# Joint angle definitions: vertex -> (point_a, vertex, point_c)
+# Bone vector definitions: start -> end. These are the body segments used for
+# scoring pose sync. Each segment is converted to a unit direction vector before
+# comparison, so person size and distance from the camera do not affect score.
+BONE_DEFINITIONS: dict[str, tuple[str, str]] = {
+    "left_upper_arm": ("left_shoulder", "left_elbow"),
+    "left_forearm": ("left_elbow", "left_wrist"),
+    "right_upper_arm": ("right_shoulder", "right_elbow"),
+    "right_forearm": ("right_elbow", "right_wrist"),
+    "left_thigh": ("left_hip", "left_knee"),
+    "left_shin": ("left_knee", "left_ankle"),
+    "right_thigh": ("right_hip", "right_knee"),
+    "right_shin": ("right_knee", "right_ankle"),
+}
+
+# Joint angle definitions used only for ready-pose detection.
 # The angle is measured at the vertex landmark between the two limbs.
 JOINT_DEFINITIONS: dict[str, tuple[str, str, str]] = {
     "left_elbow": ("left_shoulder", "left_elbow", "left_wrist"),
@@ -16,8 +30,9 @@ JOINT_DEFINITIONS: dict[str, tuple[str, str, str]] = {
 }
 
 VISIBILITY_THRESHOLD = 0.3
-# Standard deviation (degrees) of the similarity gaussian. Smaller -> stricter.
-SIMILARITY_SIGMA_DEG = 35.0
+# Standard deviation (degrees) of the bone-direction similarity gaussian.
+# Smaller -> stricter.
+SIMILARITY_SIGMA_DEG = 45.0
 
 # ---------------------------------------------------------------------------
 # Torso normalisation
@@ -43,21 +58,13 @@ _READY_JOINTS = {
     "right_elbow":    (READY_POSE_ELBOW_MIN,    180.0),
 }
 
-# Approximate joint angles (degrees) of a neutral standing "rest" pose
-# (arms hanging down, legs straight). Poses far from this are "expressive";
-# poses close to it (everyone just standing identically) score low even when
-# similarity is high — this is the anti-"stand still and win" gate.
-REST_ANGLES: dict[str, float] = {
-    "left_elbow": 165.0,
-    "right_elbow": 165.0,
-    "left_shoulder": 12.0,
-    "right_shoulder": 12.0,
-    "left_hip": 172.0,
-    "right_hip": 172.0,
-    "left_knee": 175.0,
-    "right_knee": 175.0,
+# Approximate bone directions of a neutral standing "rest" pose.
+# Poses close to it score low even when similarity is high; this is the
+# anti-"stand still and win" gate.
+REST_BONE_VECTORS: dict[str, tuple[float, float]] = {
+    bone: (0.0, -1.0) for bone in BONE_DEFINITIONS
 }
-# Average deviation (degrees) from rest that counts as "fully expressive".
+# Average bone-direction deviation (degrees) from rest that counts as "fully expressive".
 EXPRESSIVENESS_FULL_DEG = 45.0
 # How much a still/neutral group is penalised. The activity factor maps
 # expressiveness 0..1 -> ACTIVITY_FLOOR..1, then multiplies the similarity.
@@ -119,6 +126,30 @@ def _angle_degrees(
     dot = ax * cx + ay * cy
     cross = ax * cy - ay * cx
     return math.degrees(math.atan2(abs(cross), dot))
+
+
+def _unit_bone_vector(
+    start: dict[str, float],
+    end: dict[str, float],
+    x_scale: float = 1.0,
+    y_scale: float = 1.0,
+) -> tuple[float, float] | None:
+    dx = (float(end["x"]) - float(start["x"])) * x_scale
+    dy = (float(end["y"]) - float(start["y"])) * y_scale
+    length = math.hypot(dx, dy)
+    if length <= 1e-6:
+        return None
+    return dx / length, dy / length
+
+
+def bone_vector_angle_difference_degrees(
+    vector_a: tuple[float, float],
+    vector_b: tuple[float, float],
+) -> float:
+    """Return the angular difference between two unit bone vectors."""
+    dot = vector_a[0] * vector_b[0] + vector_a[1] * vector_b[1]
+    dot = max(-1.0, min(1.0, dot))
+    return math.degrees(math.acos(dot))
 
 
 def _normalize_keypoints_to_torso(
@@ -192,6 +223,41 @@ def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
     return True
 
 
+def compute_bone_vectors(pose_result: dict[str, object]) -> dict[str, tuple[float, float]]:
+    """Return bone-name -> unit direction vector for all visible body segments.
+
+    Keypoints are first projected into the torso coordinate frame so that
+    camera tilt, player position, and body-size differences are cancelled out.
+    Falls back to raw aspect-ratio-corrected coords when torso anchors are
+    missing or the person is too small in frame.
+    """
+    keypoints = _keypoint_map(pose_result)
+    x_scale = _aspect_x_scale(pose_result)
+
+    normalised = _normalize_keypoints_to_torso(keypoints, x_scale)
+    if normalised is not None:
+        work_kps = normalised
+        vector_x_scale = 1.0  # torso frame already has isotropic units
+        vector_y_scale = 1.0
+    else:
+        work_kps = keypoints
+        vector_x_scale = x_scale
+        vector_y_scale = -1.0  # image coords grow downward; keep rest pose at (0, -1)
+
+    vectors: dict[str, tuple[float, float]] = {}
+    for bone_name, (start_name, end_name) in BONE_DEFINITIONS.items():
+        start = work_kps.get(start_name)
+        end = work_kps.get(end_name)
+        if start is None or end is None:
+            continue
+        if not (_is_visible(start) and _is_visible(end)):
+            continue
+        vector = _unit_bone_vector(start, end, vector_x_scale, vector_y_scale)
+        if vector is not None:
+            vectors[bone_name] = vector
+    return vectors
+
+
 def compute_joint_angles(pose_result: dict[str, object]) -> dict[str, float]:
     """Return joint-name → angle (degrees) for all visible joints.
 
@@ -225,20 +291,20 @@ def compute_joint_angles(pose_result: dict[str, object]) -> dict[str, float]:
 
 
 def pose_pair_similarity(
-    angles_a: dict[str, float],
-    angles_b: dict[str, float],
+    vectors_a: dict[str, tuple[float, float]],
+    vectors_b: dict[str, tuple[float, float]],
 ) -> float | None:
     """Return a 0~100 similarity score between two poses, or None if not comparable."""
-    common_joints = set(angles_a) & set(angles_b)
-    if not common_joints:
+    common_bones = set(vectors_a) & set(vectors_b)
+    if not common_bones:
         return None
 
     total = 0.0
-    for joint in common_joints:
-        diff = abs(angles_a[joint] - angles_b[joint])
+    for bone in common_bones:
+        diff = bone_vector_angle_difference_degrees(vectors_a[bone], vectors_b[bone])
         total += math.exp(-(diff * diff) / (2.0 * SIMILARITY_SIGMA_DEG * SIMILARITY_SIGMA_DEG))
 
-    return 100.0 * total / len(common_joints)
+    return 100.0 * total / len(common_bones)
 
 
 def group_telepathy_score(pose_results: list[dict[str, object] | None]) -> tuple[float, int]:
@@ -250,14 +316,14 @@ def group_telepathy_score(pose_results: list[dict[str, object] | None]) -> tuple
     return analysis["score"], analysis["ready_count"]
 
 
-def pose_expressiveness(angles: dict[str, float]) -> float:
+def pose_expressiveness(vectors: dict[str, tuple[float, float]]) -> float:
     """0~1 measure of how far a pose is from the neutral standing rest pose."""
-    if not angles:
+    if not vectors:
         return 0.0
     deviations = [
-        abs(angle - REST_ANGLES[joint])
-        for joint, angle in angles.items()
-        if joint in REST_ANGLES
+        bone_vector_angle_difference_degrees(vector, REST_BONE_VECTORS[bone])
+        for bone, vector in vectors.items()
+        if bone in REST_BONE_VECTORS
     ]
     if not deviations:
         return 0.0
@@ -283,18 +349,18 @@ def analyze_group(pose_results: list[dict[str, object] | None]) -> dict:
         other present players, 0~100, or None).
     """
     n = len(pose_results)
-    angles_by_index: list[dict[str, float] | None] = [None] * n
+    vectors_by_index: list[dict[str, tuple[float, float]] | None] = [None] * n
     expr_by_index: list[float] = [0.0] * n
 
     for i, pose_result in enumerate(pose_results):
         if not pose_result or not pose_result.get("person_detected"):
             continue
-        angles = compute_joint_angles(pose_result)
-        if angles:
-            angles_by_index[i] = angles
-            expr_by_index[i] = pose_expressiveness(angles)
+        vectors = compute_bone_vectors(pose_result)
+        if vectors:
+            vectors_by_index[i] = vectors
+            expr_by_index[i] = pose_expressiveness(vectors)
 
-    present_indices = [i for i in range(n) if angles_by_index[i] is not None]
+    present_indices = [i for i in range(n) if vectors_by_index[i] is not None]
     ready_count = len(present_indices)
 
     # Pairwise similarities (and per-player sync accumulation).
@@ -304,7 +370,7 @@ def analyze_group(pose_results: list[dict[str, object] | None]) -> dict:
     for a in range(len(present_indices)):
         for b in range(a + 1, len(present_indices)):
             ia, ib = present_indices[a], present_indices[b]
-            sim = pose_pair_similarity(angles_by_index[ia], angles_by_index[ib])  # type: ignore[arg-type]
+            sim = pose_pair_similarity(vectors_by_index[ia], vectors_by_index[ib])  # type: ignore[arg-type]
             if sim is None:
                 continue
             similarities.append(sim)
@@ -321,7 +387,7 @@ def analyze_group(pose_results: list[dict[str, object] | None]) -> dict:
 
     players = []
     for i in range(n):
-        present = angles_by_index[i] is not None
+        present = vectors_by_index[i] is not None
         sync = (sync_sum[i] / sync_cnt[i]) if sync_cnt[i] else None
         players.append(
             {
@@ -345,34 +411,37 @@ def analyze_group_debug(pose_results: list[dict[str, object] | None]) -> dict:
     """Verbose variant of :func:`analyze_group` for the diagnostics overlay.
 
     On top of the regular game analysis it exposes, per board, the visible
-    joint count and each measured joint angle, plus the pairwise similarity
+    bone count and each measured bone vector, plus the pairwise similarity
     matrix and the separated similarity / activity-factor / final-score values.
     Used only by the ``/api/debug/analysis`` endpoint — never on the game loop.
     """
     base = analyze_group(pose_results)
 
     boards: list[dict[str, object]] = []
-    angles_by_index: list[dict[str, float] | None] = []
+    vectors_by_index: list[dict[str, tuple[float, float]] | None] = []
     for index, pose_result in enumerate(pose_results):
         detected = bool(pose_result and pose_result.get("person_detected"))
-        angles = compute_joint_angles(pose_result) if detected and pose_result else {}
-        angles_by_index.append(angles or None)
+        vectors = compute_bone_vectors(pose_result) if detected and pose_result else {}
+        vectors_by_index.append(vectors or None)
         boards.append(
             {
                 "index": index,
                 "person_detected": detected,
-                "visible_joints": len(angles),
-                "angles": {name: round(value, 1) for name, value in angles.items()},
-                "missing_joints": [j for j in JOINT_DEFINITIONS if j not in angles],
+                "visible_bones": len(vectors),
+                "vectors": {
+                    name: {"x": round(value[0], 2), "y": round(value[1], 2)}
+                    for name, value in vectors.items()
+                },
+                "missing_bones": [bone for bone in BONE_DEFINITIONS if bone not in vectors],
             }
         )
 
-    present = [i for i in range(len(pose_results)) if angles_by_index[i] is not None]
+    present = [i for i in range(len(pose_results)) if vectors_by_index[i] is not None]
     pairs: list[dict[str, object]] = []
     for a in range(len(present)):
         for b in range(a + 1, len(present)):
             ia, ib = present[a], present[b]
-            sim = pose_pair_similarity(angles_by_index[ia], angles_by_index[ib])  # type: ignore[arg-type]
+            sim = pose_pair_similarity(vectors_by_index[ia], vectors_by_index[ib])  # type: ignore[arg-type]
             pairs.append({"a": ia, "b": ib, "sim": round(sim, 1) if sim is not None else None})
 
     return {

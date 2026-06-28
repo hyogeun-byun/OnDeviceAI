@@ -252,8 +252,8 @@ async def analysis(request: Request) -> dict[str, object]:
     """Live telepathy-score breakdown for the diagnostics overlay.
 
     Runs the pose analysis on the latest pose from every camera regardless of
-    game phase, exposing the raw similarity, activity gate and per-board joint
-    angles so the cause of a low score can be inspected in real time.
+    game phase, exposing the raw similarity, activity gate and per-board bone
+    vectors so the cause of a low score can be inspected in real time.
     """
     stream_manager = get_stream_manager(request)
     camera_ids = [str(camera["camera_id"]) for camera in stream_manager.list_camera_statuses()]

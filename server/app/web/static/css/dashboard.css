@@ -282,7 +282,9 @@ h2 {
 
 .angle-chip b {
   color: #f2f5f8;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .angle-chip.missing {
