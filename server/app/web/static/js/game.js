@@ -1066,13 +1066,16 @@ function skeletonPrefix() {
 
 async function refreshSkeletons() {
   const prefix = skeletonPrefix();
-  if (!prefix || skeletonBusy || latestPlayers.length === 0) return;
+  // During the round we still need every player's pose to draw the merged
+  // "포즈 싱크" overlay, even though there are no per-player skeleton cards.
+  const needMerged = currentPhase === "playing" && el.mergedSkel;
+  if ((!prefix && !needMerged) || skeletonBusy || latestPlayers.length === 0) return;
   skeletonBusy = true;
   try {
     const poses = await Promise.all(
       latestPlayers.map(async (player, index) => {
-        const canvas = document.getElementById(`${prefix}-${index}`);
-        const card = document.getElementById(`${prefix}-card-${index}`);
+        const canvas = prefix ? document.getElementById(`${prefix}-${index}`) : null;
+        const card = prefix ? document.getElementById(`${prefix}-card-${index}`) : null;
         let pose = null;
         try {
           const response = await fetch(`/api/cameras/${player.camera_id}/pose`, { cache: "no-store" });
@@ -1087,7 +1090,7 @@ async function refreshSkeletons() {
     );
     captureRoundSnapshot(prefix);
     // Draw merged (torso-normalised) skeleton overlay during playing phase.
-    if (currentPhase === "playing" && el.mergedSkel) {
+    if (needMerged) {
       drawMergedSkeletons(el.mergedSkel, poses);
     }
   } finally {
