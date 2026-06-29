@@ -216,7 +216,7 @@ def intro_tour(theme: str = "") -> list[dict[str, str]]:
         },
         {
             "target": "gauge",
-            "text": "그리고 가운데 이 게이지! 여러분의 동작이 얼마나 똑같은지 실시간 점수예요. 구십오 점만 넘으면 바로 통과, 다음 라운드로 넘어갑니다!",
+            "text": "그리고 가운데 이 게이지! 여러분의 동작이 얼마나 똑같은지 실시간 점수예요. 구십오 점만 넘으면 바로 통과, 다음 제시어로 넘어갑니다!",
         },
         {
             "target": "hint",
@@ -224,7 +224,7 @@ def intro_tour(theme: str = "") -> list[dict[str, str]]:
         },
         {
             "target": "ready",
-            "text": "총 다섯 라운드! 라운드마다 십 초지만, 구십오 점 넘으면 바로 통과! 안 되면 최대 십오 초까지 드려요. 자, 어떤 카테고리로 할지 먼저 골라볼까요?",
+            "text": "제한시간은 단 일 분! 그 안에 제시어를 최대한 많이 맞히면 됩니다. 구십오 점 넘으면 바로 통과, 다음 제시어로! 십 초마다 잠깐씩 모두의 동작이 보이니 힌트로 쓰세요. 자, 어떤 카테고리로 할지 골라볼까요?",
         },
     ]
 
@@ -444,16 +444,17 @@ async def generate_mc_comment(
 # C. Final telepathy report
 # --------------------------------------------------------------------------- #
 def static_final_report(total_score: float) -> str:
-    if total_score >= 90:
-        return "운명 공동체 텔레파시! 다섯 라운드 내내 한 몸처럼 움직인 환상의 팀워크였어요."
-    if total_score >= 75:
-        return "찰떡같은 텔레파시! 대부분의 라운드에서 척척 맞아떨어졌네요."
-    if total_score >= 60:
-        return "제법 통하는 사이! 몇몇 라운드에서 멋진 호흡을 보여줬어요."
-    if total_score >= 40:
-        return "가끔 통하는 사이. 손발은 조금 안 맞아도 즐거운 한 판이었어요."
-    if total_score >= 20:
-        return "데면데면한 사이. 서로의 동작을 더 상상해볼 필요가 있겠어요!"
+    cleared = int(total_score)
+    if cleared >= 10:
+        return f"운명 공동체 텔레파시! 1분 동안 {cleared}개나 맞췄어요. 한 몸처럼 움직인 환상의 팀워크!"
+    if cleared >= 7:
+        return f"찰떡같은 텔레파시! 1분에 {cleared}개, 척척 맞아떨어졌네요."
+    if cleared >= 5:
+        return f"제법 통하는 사이! {cleared}개 성공, 멋진 호흡이었어요."
+    if cleared >= 3:
+        return f"가끔 통하는 사이. {cleared}개 맞췄어요. 즐거운 한 판!"
+    if cleared >= 1:
+        return f"데면데면한 사이. {cleared}개 성공. 다음엔 더 빨리 통할 거예요!"
     return "서로 모르는 사이?! 다음 판엔 분명 더 잘 통할 거예요."
 
 
@@ -476,8 +477,8 @@ async def generate_final_report(
         "2~3문장의 한국어 총평을 쓴다. 점수가 높았던/낮았던 라운드를 자연스럽게 언급해."
     )
     user = (
-        f"라운드별 결과:\n{rounds_desc}\n"
-        f"평균 텔레파시 점수: {round(total_score)}\n"
+        f"맞춘 제시어 결과:\n{rounds_desc}\n"
+        f"1분 동안 맞춘 개수: {int(total_score)}개\n"
         "2~3문장 총평만 출력해."
     )
     ok, text = await llm.chat(

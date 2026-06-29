@@ -15,10 +15,13 @@ from app.services.tts import Speaker
 
 # --- Game timing (seconds) ---
 COUNTDOWN_SECONDS = 3.0
-PLAY_SECONDS = 10.0          # base round length
-PLAY_MAX_SECONDS = 15.0      # extended cap if the team can't sync up in time
-PLAY_PASS_SCORE = 95.0       # reach this and the round clears early (before 10s)
+GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you can
+PLAY_PASS_SCORE = 95.0       # reach this and the current prompt clears; next one loads
+CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
+PEEK_INTERVAL_SECONDS = 10.0 # every 10s, flash a 1s skeleton-overlay hint
+PEEK_DURATION_SECONDS = 1.0
 RESULT_SECONDS = 6.0
+PLAY_MAX_SECONDS = GAME_TOTAL_SECONDS  # legacy alias for hint timing math
 
 # How long the MC opening (intro) screen shows before the countdown auto-starts.
 INTRO_SECONDS = 6.0
@@ -28,7 +31,7 @@ INTRO_CHAR_SECONDS = 0.19
 INTRO_MIN_SECONDS = 6.0
 INTRO_MAX_SECONDS = 50.0
 
-TOTAL_ROUNDS = 5
+TOTAL_ROUNDS = 5  # not used as a hard cap anymore; sprint runs until time is up
 
 # How long (seconds) a player must hold the T pose (within the tolerance window)
 # before the game auto-starts (prevents accidental triggers).
@@ -101,6 +104,12 @@ class GameState:
     players_analysis: list[dict] = field(default_factory=list)
     round_scores: list[float] = field(default_factory=list)
     result_poses: list[dict[str, object] | None] = field(default_factory=list)
+    # --- 60s sprint state ---
+    game_started_at: float = 0.0        # monotonic time the sprint clock started
+    cleared_count: int = 0              # how many prompts matched (95+) so far
+    clear_times: list[float] = field(default_factory=list)  # elapsed at each clear
+    peek_until: float = 0.0             # while now < this, flash skeleton hint
+    next_peek_at: float = 0.0           # monotonic time of the next peek flash
     theme: str = narrator.THEMES[0]
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
@@ -153,6 +162,20 @@ def telepathy_title(score: float) -> str:
     if score >= 40:
         return "가끔 통하는 사이"
     if score >= 20:
+        return "데면데면한 사이"
+    return "서로 모르는 사이"
+
+
+def sprint_title(cleared: int) -> str:
+    if cleared >= 10:
+        return "운명 공동체 텔레파시"
+    if cleared >= 7:
+        return "찰떡같은 텔레파시"
+    if cleared >= 5:
+        return "제법 통하는 사이"
+    if cleared >= 3:
+        return "가끔 통하는 사이"
+    if cleared >= 1:
         return "데면데면한 사이"
     return "서로 모르는 사이"
 
@@ -528,13 +551,22 @@ class GameManager:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
             await self._update_gauge(now)
-            # Clear early once the team hits the pass score; otherwise keep going
-            # up to the 15s cap so a struggling team gets extra time to sync.
-            if state.gauge >= PLAY_PASS_SCORE or elapsed >= PLAY_MAX_SECONDS:
+            game_elapsed = now - state.game_started_at
+            # Schedule a 1s skeleton-overlay "peek" hint every 10s.
+            if now >= state.next_peek_at and game_elapsed < GAME_TOTAL_SECONDS:
+                state.peek_until = now + PEEK_DURATION_SECONDS
+                state.next_peek_at = now + PEEK_INTERVAL_SECONDS
+            # 60s sprint clock: when it runs out, the game is over.
+            if game_elapsed >= GAME_TOTAL_SECONDS:
+                self._advance_round(now)
+            elif state.gauge >= PLAY_PASS_SCORE:
                 self._finish_round(now)
         elif state.phase == PHASE_RESULT:
-            if elapsed >= RESULT_SECONDS:
+            if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
                 self._advance_round(now)
+            elif elapsed >= CLEAR_FLASH_SECONDS:
+                self._next_prompt(now)
+
 
     def _check_idle_ready_pose(self, now: float) -> None:
         """On the idle screen, detect the T-pose and auto-start the game.
@@ -647,6 +679,28 @@ class GameManager:
         self._state.coach = ""
         self._state.coach_key = ""
         self._state.coach_changed_at = 0.0
+        # Kick off the 60s sprint clock the first time we start playing.
+        if self._state.game_started_at <= 0.0:
+            self._state.game_started_at = now
+            self._state.cleared_count = 0
+            self._state.clear_times = []
+            self._state.next_peek_at = now + PEEK_INTERVAL_SECONDS
+            self._state.peek_until = 0.0
+
+    def _next_prompt(self, now: float) -> None:
+        """After clearing a prompt, advance to the next one and resume playing."""
+        next_index = self._state.round_index + 1
+        # Cycle prompts so the 60s sprint never runs out of cards.
+        if self._state.prompts and next_index >= len(self._state.prompts):
+            next_index = 0
+        self._state.round_index = next_index
+        self._state.result_poses = []
+        self._state.hint = ""
+        self._state.hint_given_early = False
+        self._state.hint_given_late = False
+        self._state.hint_changed_at = 0.0
+        self._enter_playing(now)
+
 
     async def _update_gauge(self, now: float) -> None:
         poses = [self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids]
@@ -769,6 +823,9 @@ class GameManager:
 
     def _finish_round(self, now: float) -> None:
         self._state.round_scores.append(round(self._state.gauge, 1))
+        # A prompt was cleared: count it and remember how fast (sprint clock).
+        self._state.cleared_count += 1
+        self._state.clear_times.append(round(now - self._state.game_started_at, 1))
         self._state.result_poses = [
             self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids
         ]
@@ -794,38 +851,20 @@ class GameManager:
             self._spawn(self._build_mc_comment(self._generation, self._state.round_index))
 
     def _advance_round(self, now: float) -> None:
-        next_index = self._state.round_index + 1
-        if next_index >= self._total_rounds:
-            self._state.phase = PHASE_FINISHED
-            self._state.phase_started_at = now
-            # Persist the final team score to the leaderboard (once per game).
-            self._record_result()
-            # C. Final telepathy report — generated in the background.
-            self._state.final_report = ""
-            self._state.final_status = "pending"
-            self._speak(narrator.report_wait_line())
-            self._spawn(self._build_final_report(self._generation))
-            return
-
-        self._state.round_index = next_index
-        self._state.phase = PHASE_COUNTDOWN
+        # In sprint mode this is only called when the 60s clock runs out.
+        self._state.phase = PHASE_FINISHED
         self._state.phase_started_at = now
-        self._state.gauge = 0.0
-        self._state.raw_gauge = 0.0
-        self._state.coach = ""
-        self._state.coach_key = ""
-        self._state.coach_changed_at = 0.0
-        self._state.mc_comment = ""
-        self._state.mc_status = "idle"
-        self._state.result_poses = []
-        self._state.hint = ""
-        self._state.hint_given_early = False
-        self._state.hint_given_late = False
-        self._state.hint_changed_at = 0.0
+        # Persist the final team score to the leaderboard (once per game).
+        self._record_result()
+        # C. Final telepathy report — generated in the background.
+        self._state.final_report = ""
+        self._state.final_status = "pending"
+        self._speak(narrator.report_wait_line())
+        self._spawn(self._build_final_report(self._generation))
 
     def _average_score(self) -> float:
-        scores = self._state.round_scores
-        return round(sum(scores) / len(scores), 1) if scores else 0.0
+        # Sprint score = number of prompts cleared in 60s.
+        return float(self._state.cleared_count)
 
     def get_result_frame(self, round_number: int, player_index: int) -> bytes | None:
         """Return the JPEG frame captured when ``round_number`` (1-based) was
@@ -841,13 +880,16 @@ class GameManager:
             return
         self._state.recorded = True
         total = self._average_score()
+        # Tie-break: time of the last clear (faster = better); 0 if no clears.
+        total_time = self._state.clear_times[-1] if self._state.clear_times else 0.0
         try:
             self._state.leaderboard_id = self._leaderboard.add(
                 team_name=self._state.team_name,
                 score=total,
-                title=telepathy_title(total),
+                title=sprint_title(int(total)),
                 theme=self._state.theme,
                 round_scores=list(self._state.round_scores),
+                total_time=total_time,
             )
         except Exception as exc:  # pragma: no cover - DB failure must not crash the game
             print(f"[leaderboard] failed to record result: {exc}")
@@ -886,6 +928,12 @@ class GameManager:
     def snapshot(self) -> dict[str, object]:
         state = self._state
         total_score = self._average_score()
+        now = time.monotonic()
+        # 60s sprint clock (only meaningful once playing has started).
+        game_time_left: float | None = None
+        if state.game_started_at > 0.0:
+            game_time_left = max(0.0, GAME_TOTAL_SECONDS - (now - state.game_started_at))
+        show_hint_skel = state.phase == PHASE_PLAYING and now < state.peek_until
 
         return {
             "phase": state.phase,
@@ -900,6 +948,10 @@ class GameManager:
             "player_count": len(self._camera_ids),
             "players": self._player_status(),
             "time_left": self._time_left(),
+            "game_time_left": game_time_left,
+            "game_total": GAME_TOTAL_SECONDS,
+            "cleared_count": state.cleared_count,
+            "show_hint_skel": show_hint_skel,
             "phase_duration": _PHASE_DURATIONS.get(state.phase),
             "round_scores": list(state.round_scores),
             "result_poses": list(state.result_poses) if state.phase == PHASE_RESULT else [],
@@ -917,7 +969,7 @@ class GameManager:
             "tour_target": state.tour_target if state.phase == PHASE_INTRO else "",
             "tour_index": state.tour_index if state.phase == PHASE_INTRO else 0,
             "tour_total": len(state.tour_steps) if state.phase == PHASE_INTRO else 0,
-            "final_title": telepathy_title(total_score) if state.phase == PHASE_FINISHED else None,
+            "final_title": sprint_title(int(total_score)) if state.phase == PHASE_FINISHED else None,
             "team_name": state.team_name,
             "leaderboard_id": state.leaderboard_id,
             "ready_pose_instruction": state.ready_pose_instruction,

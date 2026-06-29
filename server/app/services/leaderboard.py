@@ -43,6 +43,13 @@ class Leaderboard:
                 )
                 """
             )
+            # Migration: total_time tracks how fast the matches were cleared
+            # (sum of clear times); used to break score ties (faster = better).
+            cols = {r["name"] for r in con.execute("PRAGMA table_info(scores)")}
+            if "total_time" not in cols:
+                con.execute(
+                    "ALTER TABLE scores ADD COLUMN total_time REAL NOT NULL DEFAULT 0"
+                )
 
     def add(
         self,
@@ -51,6 +58,7 @@ class Leaderboard:
         title: str = "",
         theme: str = "",
         round_scores: list[float] | None = None,
+        total_time: float = 0.0,
     ) -> int:
         team_name = (team_name or "").strip() or "이름 없는 팀"
         rounds_text = ",".join(str(round(s, 1)) for s in (round_scores or []))
@@ -59,10 +67,10 @@ class Leaderboard:
             cur = con.execute(
                 """
                 INSERT INTO scores
-                    (team_name, score, title, theme, round_scores, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (team_name, score, title, theme, round_scores, total_time, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (team_name, float(score), title, theme, rounds_text, created_at),
+                (team_name, float(score), title, theme, rounds_text, float(total_time), created_at),
             )
             return int(cur.lastrowid)
 
@@ -70,9 +78,9 @@ class Leaderboard:
         with self._lock, self._connect() as con:
             rows = con.execute(
                 """
-                SELECT id, team_name, score, title, theme, round_scores, created_at
+                SELECT id, team_name, score, title, theme, round_scores, total_time, created_at
                 FROM scores
-                ORDER BY score DESC, created_at ASC
+                ORDER BY score DESC, total_time ASC, created_at ASC
                 LIMIT ?
                 """,
                 (int(limit),),
@@ -87,6 +95,7 @@ class Leaderboard:
                     "score": round(row["score"], 1),
                     "title": row["title"],
                     "theme": row["theme"],
+                    "total_time": round(row["total_time"], 1),
                     "created_at": row["created_at"],
                 }
             )

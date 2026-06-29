@@ -321,7 +321,7 @@ function render(state) {
   } else if (state.phase === "finished") {
     el.roundPill.textContent = "FINAL";
   } else {
-    el.roundPill.textContent = `ROUND ${state.round_number} / ${state.total_rounds}`;
+    el.roundPill.textContent = `맞춘 개수 ${state.cleared_count || 0}`;
   }
 
   updatePlayerDots(idleDots, state.players);
@@ -388,10 +388,12 @@ function render(state) {
     // Coaching is voiced by the server in the same MC voice (edge-tts) via the
     // shared speech pipeline, so we no longer speak it with the browser voice.
 
-    const duration = state.phase_duration || 1;
-    const left = state.time_left == null ? 0 : state.time_left;
-    el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / duration) * 100))}%`;
+    // The timer is the whole-game 60s sprint clock (not a per-round timer).
+    const total = state.game_total || 60;
+    const left = state.game_time_left == null ? total : state.game_time_left;
+    el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / total) * 100))}%`;
     el.timerText.textContent = left.toFixed(1);
+    peekHint = Boolean(state.show_hint_skel);
   }
 
   if (state.phase === "result") {
@@ -1052,6 +1054,7 @@ const POSE_CONNECTIONS = [
 ];
 const SKELETON_VISIBILITY = 0.5;
 let latestPlayers = [];
+let peekHint = false;  // 10s skeleton-overlay hint flash (sprint mode)
 let currentPhase = "idle";
 let latestGauge = 0;
 let skeletonBusy = false;
@@ -1175,8 +1178,9 @@ function skeletonPrefix() {
 async function refreshSkeletons() {
   const prefix = skeletonPrefix();
   // The merged "포즈 싱크" overlay is a hint, shown only when the score is low
-  // (≤40). Above that, show a teaser instead of fetching poses every tick.
-  const shouldDrawMerged = currentPhase === "playing" && el.mergedSkel && latestGauge <= 40;
+  // (≤40) or during the 10s skeleton-peek flash. Above that, show a teaser.
+  const shouldDrawMerged =
+    currentPhase === "playing" && el.mergedSkel && (latestGauge <= 40 || peekHint);
   if (!prefix && !shouldDrawMerged) {
     if (currentPhase === "playing" && el.mergedSkel) {
       const c = el.mergedSkel;
