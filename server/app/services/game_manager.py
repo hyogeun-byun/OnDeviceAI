@@ -8,7 +8,7 @@ from app.services import game_narrator as narrator
 from app.services.game_narrator import DEFAULT_PROMPTS
 from app.services.leaderboard import Leaderboard
 from app.services.llm_client import LLMClient
-from app.services.pose_similarity import analyze_group, detect_arm_raised, detect_ready_pose
+from app.services.pose_similarity import analyze_group, detect_arm_raised, detect_cheer_pose, detect_ready_pose
 from app.services.speech_audio import SpeechAudioCache
 from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
@@ -126,7 +126,7 @@ class GameState:
     category_armed: bool = False        # True once the start T-pose was released
     category_step_neutral: bool = True  # arm must return to neutral before next step
     # Camera-test (PHASE_CAMTEST) state
-    camtest_pose: str = narrator.READY_POSE_DESCRIPTION
+    camtest_pose: str = "만세 포즈"
     camtest_pass: list[str] = field(default_factory=list)  # camera_ids that passed
     camtest_chime: int = 0                                 # bumps on each new pass (chime cue)
     camtest_hold: dict[str, float] = field(default_factory=dict)  # camera_id -> hold-start time
@@ -360,13 +360,18 @@ class GameManager:
 
     def _check_camtest(self, now: float) -> None:
         """Mark each camera as OK once its player holds the test pose, with a
-        chime cue per new pass. When every camera has passed, proceed."""
+        chime cue per new pass. When every CONNECTED camera has passed (cameras
+        with no feed are ignored), proceed."""
         passed = set(self._state.camtest_pass)
+        connected: list[str] = []
         for cid in self._camera_ids:
+            pose = self._stream_manager.get_pose(cid)
+            present = bool(pose and pose.get("person_detected"))
+            if present:
+                connected.append(cid)
             if cid in passed:
                 continue
-            pose = self._stream_manager.get_pose(cid)
-            if pose and pose.get("person_detected") and detect_ready_pose(pose):
+            if present and detect_cheer_pose(pose):
                 start = self._state.camtest_hold.get(cid)
                 if start is None:
                     self._state.camtest_hold[cid] = now
@@ -375,7 +380,8 @@ class GameManager:
                     self._state.camtest_chime += 1
             else:
                 self._state.camtest_hold.pop(cid, None)
-        if len(self._state.camtest_pass) >= len(self._camera_ids) and self._camera_ids:
+        # Proceed once every currently-connected camera has passed (at least 1).
+        if connected and all(cid in self._state.camtest_pass for cid in connected):
             self._enter_confirm(now, self._state.theme)
 
     def skip_camtest(self) -> None:

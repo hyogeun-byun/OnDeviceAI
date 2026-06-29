@@ -510,6 +510,7 @@ function renderCamtest(state, prevPhase) {
       cam.innerHTML =
         `<img src="/api/cameras/${p.camera_id}/stream" alt="" />` +
         `<div class="camtest-badge">카메라 ${i + 1}</div>` +
+        `<div class="camtest-pose">🙌</div>` +
         `<div class="camtest-ok">통과!</div>`;
       el.camtestCams.appendChild(cam);
     });

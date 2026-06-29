@@ -124,8 +124,8 @@ def camtest_intro_line() -> str:
     """Spoken when the 3-camera framing test opens, before the game starts."""
     return (
         "게임 전에 카메라 테스트입니다! "
-        "화면에 보이는 양팔 T자 포즈를 따라 해 주세요. "
-        "세 카메라 모두 통과하면 바로 시작할게요!"
+        "양손을 머리 위로 번쩍 든 만세 포즈를 따라 해 주세요. "
+        "접속된 카메라가 모두 통과하면 바로 시작할게요!"
     )
 
 

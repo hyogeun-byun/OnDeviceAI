@@ -260,6 +260,28 @@ def detect_arm_raised(pose_result: dict[str, object] | None) -> str | None:
     return None
 
 
+def detect_cheer_pose(pose_result: dict[str, object] | None) -> bool:
+    """Return True when both hands are raised above the head (만세/cheer pose).
+
+    Used as the camera-test sample pose: easy to mimic and visually distinct
+    from the T-pose so it can't be confused with the start/confirm gesture.
+    """
+    if not pose_result or not pose_result.get("person_detected"):
+        return False
+    kps = _keypoint_map(pose_result)
+
+    def above_shoulder(side: str) -> bool:
+        wrist = kps.get(f"{side}_wrist")
+        shoulder = kps.get(f"{side}_shoulder")
+        if wrist is None or shoulder is None:
+            return False
+        if not (_is_visible(wrist) and _is_visible(shoulder)):
+            return False
+        return float(wrist["y"]) < float(shoulder["y"]) - _ARM_RAISE_MARGIN
+
+    return above_shoulder("left") and above_shoulder("right")
+
+
 def compute_bone_vectors(pose_result: dict[str, object]) -> dict[str, tuple[float, float]]:
     """Return bone-name -> unit direction vector for all visible body segments.
 
