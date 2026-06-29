@@ -47,6 +47,8 @@ const el = {
   leaderboardList: document.getElementById("leaderboard-list"),
   leaderboardEmpty: document.getElementById("leaderboard-empty"),
   leaderboardReset: document.getElementById("leaderboard-reset"),
+  finalLeaderboardList: document.getElementById("final-leaderboard-list"),
+  finalLeaderboardEmpty: document.getElementById("final-leaderboard-empty"),
   finalTeam: document.getElementById("final-team"),
   finalRank: document.getElementById("final-rank"),
   tposeCue: document.getElementById("tpose-cue"),
@@ -762,13 +764,15 @@ async function fetchLeaderboard() {
 
 const LB_MEDALS = ["🥇", "🥈", "🥉"];
 
-function renderLeaderboard(data, meId) {
-  if (!el.leaderboardList) return;
+function renderLeaderboard(data, meId, listEl, emptyEl) {
+  const list = listEl || el.leaderboardList;
+  const empty = emptyEl || el.leaderboardEmpty;
+  if (!list) return;
   const entries = (data && data.entries) || [];
-  el.leaderboardList.innerHTML = "";
+  list.innerHTML = "";
   const hasAny = entries.length > 0;
-  el.leaderboardList.classList.toggle("is-hidden", !hasAny);
-  if (el.leaderboardEmpty) el.leaderboardEmpty.classList.toggle("is-hidden", hasAny);
+  list.classList.toggle("is-hidden", !hasAny);
+  if (empty) empty.classList.toggle("is-hidden", hasAny);
   entries.slice(0, 10).forEach((e) => {
     const li = document.createElement("li");
     li.className =
@@ -790,7 +794,7 @@ function renderLeaderboard(data, meId) {
     score.className = "lb-score";
     score.textContent = String(Math.round(e.score));
     li.append(rank, team, score);
-    el.leaderboardList.appendChild(li);
+    list.appendChild(li);
   });
 }
 
@@ -801,7 +805,7 @@ async function refreshLeaderboardIdle() {
 async function refreshLeaderboardFinal(state) {
   const meId = state.leaderboard_id || null;
   const data = await fetchLeaderboard();
-  renderLeaderboard(data, meId);
+  renderLeaderboard(data, meId, el.finalLeaderboardList, el.finalLeaderboardEmpty);
   if (el.finalRank) {
     const me = data && (data.entries || []).find((e) => e.id === meId);
     el.finalRank.textContent = me ? `전체 ${data.count}팀 중 ${me.rank}위` : "";

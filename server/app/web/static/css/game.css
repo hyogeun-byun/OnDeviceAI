@@ -1615,6 +1615,11 @@ body {
   }
 }
 
+.final-leaderboard {
+  margin: 22px auto 8px;
+  max-width: min(520px, 92vw);
+}
+
 /* ---------- T-pose start popup (idle) ---------- */
 .tpose-cue {
   margin: 22px auto 6px;
