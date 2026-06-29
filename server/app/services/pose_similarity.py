@@ -5,15 +5,16 @@ import math
 # Bone vector definitions: start -> end. These are the body segments used for
 # scoring pose sync. Each segment is converted to a unit direction vector before
 # comparison, so person size and distance from the camera do not affect score.
+# Scoring uses face + upper-body only; lower body (thighs/shins) is excluded.
 BONE_DEFINITIONS: dict[str, tuple[str, str]] = {
-    "left_upper_arm": ("left_shoulder", "left_elbow"),
-    "left_forearm": ("left_elbow", "left_wrist"),
+    # Face direction (head turn / tilt)
+    "head_left":  ("left_ear",  "nose"),
+    "head_right": ("right_ear", "nose"),
+    # Upper body
+    "left_upper_arm":  ("left_shoulder",  "left_elbow"),
+    "left_forearm":    ("left_elbow",     "left_wrist"),
     "right_upper_arm": ("right_shoulder", "right_elbow"),
-    "right_forearm": ("right_elbow", "right_wrist"),
-    "left_thigh": ("left_hip", "left_knee"),
-    "left_shin": ("left_knee", "left_ankle"),
-    "right_thigh": ("right_hip", "right_knee"),
-    "right_shin": ("right_knee", "right_ankle"),
+    "right_forearm":   ("right_elbow",    "right_wrist"),
 }
 
 # Joint angle definitions used only for ready-pose detection.
