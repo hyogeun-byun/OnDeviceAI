@@ -320,7 +320,9 @@ class GameManager:
         """On the idle screen, detect the T-pose and auto-start the game.
 
         Requires a staged (entered) team name so the game never starts by
-        accident before the players have set themselves up.
+        accident before the players have set themselves up. Once a team name is
+        set, ANY single present player holding the T-pose for the hold window
+        triggers the start (gap-tolerant against brief keypoint dropouts).
         """
         if not self._pending_team_name:
             self._state.ready_pose_hold_since = 0.0
@@ -328,15 +330,19 @@ class GameManager:
         poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
         present = [p for p in poses if p and p.get("person_detected")]
         if not present:
-            self._state.ready_pose_hold_since = 0.0
+            if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
+                self._state.ready_pose_hold_since = 0.0
             return
-        if all(detect_ready_pose(p) for p in present):
+        if any(detect_ready_pose(p) for p in present):
+            self._state.ready_pose_last_seen = now
             if self._state.ready_pose_hold_since == 0.0:
                 self._state.ready_pose_hold_since = now
             elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
                 self.start(self._pending_theme, self._pending_team_name)
         else:
-            self._state.ready_pose_hold_since = 0.0
+            if self._state.ready_pose_hold_since > 0.0:
+                if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
+                    self._state.ready_pose_hold_since = 0.0
 
     def _check_ready_pose(self, now: float) -> None:
         """Detect T-pose from any present player; start when at least one holds it.
@@ -401,6 +407,10 @@ class GameManager:
             self._state.coach = coaching["text"]
             self._state.coach_key = coaching["key"]
             self._state.coach_changed_at = now
+            # Speak coaching in the same MC voice (edge-tts) as the intro/result
+            # lines. This only fires on category changes (throttled), so it stays
+            # off the real-time path while keeping one consistent host voice.
+            self._speak(coaching["text"])
 
         # Hints
         self._update_hint(now, analysis)

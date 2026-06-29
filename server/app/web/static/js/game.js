@@ -170,21 +170,6 @@ function maybeSpeak(state) {
   else speakLine(state.speech);
 }
 
-// Live in-round coaching uses the browser's instant Web Speech voice (runs on
-// the laptop, never on the board) so MC 민수 can talk during play without
-// touching the LLM/edge-tts pipeline. Deterministic server text means it only
-// changes when the coaching category changes; throttle so it never stutters.
-const coachVoice = { text: "", at: 0 };
-function speakCoach(text) {
-  if (!text || tts.muted || !tts.supported) return;
-  if (text === coachVoice.text) return;
-  const now = Date.now();
-  if (now - coachVoice.at < 3500) return;
-  coachVoice.text = text;
-  coachVoice.at = now;
-  speakLine(text);
-}
-
 if (el.ttsToggle) {
   el.ttsToggle.addEventListener("click", () => {
     tts.muted = !tts.muted;
@@ -326,7 +311,8 @@ function render(state) {
     setGauge(state.gauge);
     el.playTagline.textContent = taglineFor(state.gauge, state.ready_count);
     if (el.coachText && state.coach) el.coachText.textContent = state.coach;
-    speakCoach(state.coach);
+    // Coaching is voiced by the server in the same MC voice (edge-tts) via the
+    // shared speech pipeline, so we no longer speak it with the browser voice.
 
     const duration = state.phase_duration || 1;
     const left = state.time_left == null ? 0 : state.time_left;
@@ -683,8 +669,6 @@ function scheduleStage() {
 async function resetGame() {
   if (!window.confirm("게임을 처음부터 다시 시작할까요?")) return;
   stopSpeaking();
-  coachVoice.text = "";
-  coachVoice.at = 0;
   lastResultRound = 0;
   lastResultPoseRound = 0;
   currentRoundMeta = null;
