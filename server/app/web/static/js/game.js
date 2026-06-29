@@ -3,6 +3,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 104;
 const screens = {
   idle: document.getElementById("screen-idle"),
   category: document.getElementById("screen-category"),
+  confirm: document.getElementById("screen-category"),
   intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
@@ -103,7 +104,7 @@ function setMcTalking(on, text) {
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
   // 인트로 투어·카테고리 화면에선 아래 글자로 대사가 나오므로 말풍선을 숨겨 데모를 안 가리게 한다.
   const suppressBubble =
-    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category";
+    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "confirm";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -134,7 +135,7 @@ function speakLine(text) {
     utter.pitch = 1.05;
     if (tts.voice) utter.voice = tts.voice;
     utter.onstart = () => setMcTalking(true, text);
-    utter.onend = () => { setMcTalking(false); if (currentPhase === "intro") sendIntroDone(); };
+    utter.onend = () => { setMcTalking(false); if (currentPhase === "intro" || currentPhase === "confirm") sendIntroDone(); };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   } catch {
@@ -158,7 +159,7 @@ function playServerAudio(id, text, attempt) {
       audio.onended = () => {
         setMcTalking(false);
         if (currentAudio === audio) currentAudio = null;
-        if (currentPhase === "intro") sendIntroDone();
+        if (currentPhase === "intro" || currentPhase === "confirm") sendIntroDone();
       };
       audio.onerror = () => {
         setMcTalking(false);
@@ -180,6 +181,9 @@ function playServerAudio(id, text, attempt) {
 function maybeSpeak(state) {
   const id = state.speech_id || 0;
   if (id <= tts.lastSpokenId) return;
+  // Each new intro/confirm line must re-arm the audio-end signal so we advance
+  // the moment that line finishes (instead of waiting on the fallback timer).
+  if (state.phase === "intro" || state.phase === "confirm") introDoneSent = false;
   tts.lastSpokenId = id;
   if (tts.muted) return;
   stopSpeaking();
@@ -330,6 +334,8 @@ function render(state) {
 
   if (state.phase === "category" && prevPhase !== "category") lastCatIndex = -1;
   if (state.phase === "category") renderCategory(state);
+  // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 카드 화면을 유지하며 대사를 보여준다.
+  if (state.phase === "confirm" && el.catSpeech) el.catSpeech.textContent = state.speech || "";
 
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";

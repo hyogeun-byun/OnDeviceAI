@@ -14,7 +14,7 @@ from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
 
 # --- Game timing (seconds) ---
-COUNTDOWN_SECONDS = 4.5
+COUNTDOWN_SECONDS = 3.0
 PLAY_SECONDS = 10.0
 RESULT_SECONDS = 4.0
 
@@ -64,6 +64,7 @@ COACH_MIN_HOLD_SECONDS = 4.0
 PHASE_IDLE = "idle"
 PHASE_CATEGORY = "category"          # body-controlled category picker
 PHASE_INTRO = "intro"
+PHASE_CONFIRM = "confirm"          # spoken category-confirm lines before countdown
 PHASE_WAITING_POSE = "waiting_pose"   # new: wait for T-pose gesture
 PHASE_COUNTDOWN = "countdown"
 PHASE_PLAYING = "playing"
@@ -110,6 +111,9 @@ class GameState:
     tour_steps: list[dict[str, str]] = field(default_factory=list)
     tour_index: int = 0
     tour_target: str = ""
+    # Category-confirm spoken sequence
+    confirm_lines: list[str] = field(default_factory=list)
+    confirm_index: int = 0
     # Category picker (PHASE_CATEGORY) state
     category_index: int = 0
     category_step_at: float = 0.0       # monotonic time of the last hand-raise step
@@ -262,6 +266,9 @@ class GameManager:
         The opening greeting plays first, then the guided tour walks through
         each part of the screen (제시어 → 게이지 → 힌트 → 준비). When all the
         tour steps are done, the countdown begins."""
+        if self._state.phase == PHASE_CONFIRM:
+            self._advance_confirm(time.monotonic())
+            return
         if self._state.phase != PHASE_INTRO:
             if self._state.phase == PHASE_WAITING_POSE:
                 self._enter_countdown(time.monotonic())
@@ -293,6 +300,32 @@ class GameManager:
         self._state.coach_changed_at = 0.0
         if speak:
             self._speak(narrator.ready_pose_detected_line())
+
+    def _enter_confirm(self, now: float, theme: str) -> None:
+        """Play the two confirm lines one after another, then count down."""
+        self._state.phase = PHASE_CONFIRM
+        self._state.phase_started_at = now
+        self._state.confirm_lines = narrator.category_confirm_lines(theme)
+        self._state.confirm_index = 0
+        line = self._state.confirm_lines[0]
+        self._state.intro_seconds = max(
+            INTRO_MIN_SECONDS, min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.0)
+        )
+        self._speak(line)
+
+    def _advance_confirm(self, now: float) -> None:
+        next_index = self._state.confirm_index + 1
+        if next_index < len(self._state.confirm_lines):
+            self._state.confirm_index = next_index
+            line = self._state.confirm_lines[next_index]
+            self._state.phase_started_at = now
+            self._state.intro_seconds = max(
+                INTRO_MIN_SECONDS, min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.0)
+            )
+            self._speak(line)
+        else:
+            self._enter_countdown(now, speak=False)
+
 
     def reset(self) -> None:
         """Abort whatever is happening and go all the way back to the idle
@@ -381,6 +414,9 @@ class GameManager:
             # get stuck if the audio fails.
             if elapsed >= state.intro_seconds:
                 self.intro_done()
+        elif state.phase == PHASE_CONFIRM:
+            if elapsed >= state.intro_seconds:
+                self._advance_confirm(now)
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
@@ -449,8 +485,7 @@ class GameManager:
                     narrator.default_prompts(theme=chosen, n=self._total_rounds)
                 )
                 self._state.prompt_source = "category_random_in_theme"
-                self._speak(narrator.category_confirmed_line(chosen))
-                self._enter_countdown(now, speak=False)
+                self._enter_confirm(now, chosen)
             return
         self._state.category_confirm_since = 0.0
         self._state.category_armed = True
