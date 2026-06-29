@@ -126,12 +126,14 @@ def category_select_line() -> str:
     )
 
 
-def intro_line(mc_name: str = "민수", team_name: str = "") -> str:
+def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") -> str:
     """Short spoken greeting played (via TTS) when the intro screen opens."""
     audience = f"{team_name.strip()} 여러분" if team_name.strip() else "여러분"
+    category = f"오, '{theme.strip()}' 카테고리를 선택하셨네요! " if theme.strip() else ""
     return (
         f"안녕하세요 {audience}! "
         f"저, 에이아이 엠씨 {mc_name}와 함께하는 텔레파시 게임. "
+        f"{category}"
         "모두 준비 되셨나요! 서로의 동작은 볼 수 없습니다. 오직 텔레파시만 믿으세요! "
         + random.choice(_INTRO_BANTER)
     )

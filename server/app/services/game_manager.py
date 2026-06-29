@@ -204,7 +204,7 @@ class GameManager:
             prompt_source="category_random_in_theme",
             team_name=team,
         )
-        opening = narrator.intro_line(self._mc_name, team)
+        opening = narrator.intro_line(self._mc_name, team, chosen)
         self._state.intro_seconds = max(
             INTRO_MIN_SECONDS,
             min(INTRO_MAX_SECONDS, len(opening) * INTRO_CHAR_SECONDS + 2.0),
