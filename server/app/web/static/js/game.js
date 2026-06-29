@@ -268,8 +268,9 @@ function updatePlayerDots(dots, players) {
 }
 
 function showScreen(phase) {
-  Object.entries(screens).forEach(([name, node]) => {
-    node.classList.toggle("is-active", name === phase);
+  const activeNode = screens[phase];
+  Object.values(screens).forEach((node) => {
+    node.classList.toggle("is-active", node === activeNode);
   });
 }
 
