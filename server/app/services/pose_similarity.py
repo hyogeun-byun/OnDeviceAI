@@ -226,6 +226,40 @@ def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
     return True
 
 
+# Wrist must be at least this far above the shoulder (normalised image units)
+# to count as "arm raised". Image y grows downward, so raised = smaller y.
+_ARM_RAISE_MARGIN = 0.05
+
+
+def detect_arm_raised(pose_result: dict[str, object] | None) -> str | None:
+    """Return 'left'/'right' when exactly one hand is raised above the shoulder.
+
+    Used as a single-hand menu gesture (e.g. choosing a category). Returns None
+    when no hand or both hands are raised (both = T-pose / confirm, handled
+    separately). Names follow the keypoint labels (player's own left/right).
+    """
+    if not pose_result or not pose_result.get("person_detected"):
+        return None
+    kps = _keypoint_map(pose_result)
+
+    def raised(side: str) -> bool:
+        wrist = kps.get(f"{side}_wrist")
+        shoulder = kps.get(f"{side}_shoulder")
+        if wrist is None or shoulder is None:
+            return False
+        if not (_is_visible(wrist) and _is_visible(shoulder)):
+            return False
+        return float(wrist["y"]) < float(shoulder["y"]) - _ARM_RAISE_MARGIN
+
+    left = raised("left")
+    right = raised("right")
+    if left and not right:
+        return "left"
+    if right and not left:
+        return "right"
+    return None
+
+
 def compute_bone_vectors(pose_result: dict[str, object]) -> dict[str, tuple[float, float]]:
     """Return bone-name -> unit direction vector for all visible body segments.
 

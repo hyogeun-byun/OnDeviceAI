@@ -117,6 +117,15 @@ def ready_pose_detected_line() -> str:
     return random.choice(_READY_POSE_DETECTED)
 
 
+def category_select_line() -> str:
+    """Spoken when the body-controlled category picker opens."""
+    return (
+        "이제 카테고리를 골라볼까요! "
+        "왼손을 들면 이전, 오른손을 들면 다음 카테고리. "
+        "마음에 드는 카테고리에서 T자로 팔을 벌리면 확정됩니다!"
+    )
+
+
 def intro_line(mc_name: str = "민수", team_name: str = "") -> str:
     """Short spoken greeting played (via TTS) when the intro screen opens."""
     audience = f"{team_name.strip()} 여러분" if team_name.strip() else "여러분"

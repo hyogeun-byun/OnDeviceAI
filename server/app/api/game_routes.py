@@ -70,6 +70,15 @@ async def begin_game(request: Request) -> dict[str, object]:
     return game_manager.snapshot()
 
 
+@router.post("/intro-done")
+async def intro_done(request: Request) -> dict[str, object]:
+    """Browser reports the MC finished reading the opening line, so the
+    countdown can start exactly when speech ends (no early cut-off)."""
+    game_manager = get_game_manager(request)
+    game_manager.intro_done()
+    return game_manager.snapshot()
+
+
 @router.post("/reset")
 async def reset_game(request: Request) -> dict[str, object]:
     game_manager = get_game_manager(request)

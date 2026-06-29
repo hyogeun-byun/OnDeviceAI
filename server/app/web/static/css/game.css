@@ -1614,3 +1614,122 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- T-pose start popup (idle) ---------- */
+.tpose-cue {
+  margin: 22px auto 6px;
+  max-width: min(560px, 92vw);
+  padding: 26px 28px 22px;
+  border-radius: 24px;
+  border: 2px solid rgba(0, 255, 198, 0.45);
+  background: linear-gradient(160deg, rgba(0, 255, 198, 0.12), rgba(124, 92, 255, 0.1));
+  box-shadow: 0 16px 50px rgba(0, 255, 198, 0.18);
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.tpose-cue.is-holding {
+  transform: scale(1.03);
+  border-color: var(--accent);
+  box-shadow: 0 20px 60px rgba(0, 255, 198, 0.45);
+}
+.tpose-icon {
+  font-size: clamp(48px, 9vw, 72px);
+  line-height: 1;
+}
+.tpose-headline {
+  font-family: "Black Han Sans", Inter, sans-serif;
+  font-size: clamp(22px, 4.5vw, 34px);
+  margin: 8px 0 4px;
+}
+.tpose-headline em {
+  color: var(--accent);
+  font-style: normal;
+}
+.tpose-sub {
+  color: var(--muted);
+  font-size: clamp(13px, 2.4vw, 16px);
+}
+.tpose-progress {
+  margin-top: 14px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.tpose-progress span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #45ffd0);
+  transition: width 0.1s linear;
+}
+
+/* ---------- Body-controlled category picker ---------- */
+.cat-eyebrow {
+  letter-spacing: 2px;
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 14px;
+}
+.cat-title {
+  font-family: "Black Han Sans", Inter, sans-serif;
+  font-size: clamp(30px, 6vw, 54px);
+  margin: 10px 0 22px;
+}
+.cat-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  max-width: min(680px, 92vw);
+}
+.cat-card {
+  padding: 22px 30px;
+  border-radius: 20px;
+  border: 2px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--muted);
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 900;
+  transition: transform 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.cat-card.is-active {
+  color: #05111a;
+  background: linear-gradient(120deg, var(--accent), #45ffd0);
+  border-color: transparent;
+  transform: scale(1.12);
+  box-shadow: 0 14px 40px rgba(0, 255, 198, 0.45);
+}
+.cat-help {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 26px 0 14px;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: clamp(15px, 2.6vw, 19px);
+}
+.cat-help-item small {
+  display: block;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+.cat-confirm {
+  width: min(420px, 80vw);
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.cat-confirm span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #45ffd0);
+  transition: width 0.1s linear;
+}

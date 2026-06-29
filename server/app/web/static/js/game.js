@@ -2,6 +2,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 104;
 
 const screens = {
   idle: document.getElementById("screen-idle"),
+  category: document.getElementById("screen-category"),
   intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
@@ -50,6 +51,8 @@ const el = {
   finalRank: document.getElementById("final-rank"),
   tposeCue: document.getElementById("tpose-cue"),
   tposeProgressFill: document.getElementById("tpose-progress-fill"),
+  catCards: document.getElementById("cat-cards"),
+  catConfirmFill: document.getElementById("cat-confirm-fill"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
 };
 
@@ -67,6 +70,15 @@ const tts = {
   voice: null,
 };
 let currentAudio = null;
+
+// Tell the server the MC opening finished so the countdown starts exactly when
+// speech ends (never cut off, never too early). Fires once per intro.
+let introDoneSent = false;
+function sendIntroDone() {
+  if (introDoneSent) return;
+  introDoneSent = true;
+  fetch("/api/game/intro-done", { method: "POST" }).catch(() => {});
+}
 
 function pickKoreanVoice() {
   if (!tts.supported) return null;
@@ -118,7 +130,7 @@ function speakLine(text) {
     utter.pitch = 1.05;
     if (tts.voice) utter.voice = tts.voice;
     utter.onstart = () => setMcTalking(true, text);
-    utter.onend = () => setMcTalking(false);
+    utter.onend = () => { setMcTalking(false); if (currentPhase === "intro") sendIntroDone(); };
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
   } catch {
@@ -142,6 +154,7 @@ function playServerAudio(id, text, attempt) {
       audio.onended = () => {
         setMcTalking(false);
         if (currentAudio === audio) currentAudio = null;
+        if (currentPhase === "intro") sendIntroDone();
       };
       audio.onerror = () => {
         setMcTalking(false);
@@ -248,6 +261,7 @@ function render(state) {
   // A fresh game just began (idle/finished -> intro): clear the per-round
   // capture state that startGame() used to reset before the button was removed.
   if (state.phase === "intro" && prevPhase !== "intro") {
+    introDoneSent = false;
     lastResultRound = 0;
     lastResultPoseRound = 0;
     currentRoundMeta = null;
@@ -299,6 +313,9 @@ function render(state) {
   if (state.phase === "intro") {
     el.introSpeech.textContent = state.speech || "민수가 인사 중…";
   }
+
+  if (state.phase === "category" && prevPhase !== "category") lastCatIndex = -1;
+  if (state.phase === "category") renderCategory(state);
 
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";
@@ -379,6 +396,27 @@ function render(state) {
       el.finalBreakdown.appendChild(li);
     });
     renderReport(state);
+  }
+}
+
+// --- Body-controlled category picker ---
+let lastCatIndex = -1;
+function renderCategory(state) {
+  const options = state.category_options || [];
+  const index = state.category_index || 0;
+  if (el.catCards && lastCatIndex !== index) {
+    el.catCards.innerHTML = "";
+    options.forEach((name, i) => {
+      const card = document.createElement("div");
+      card.className = "cat-card" + (i === index ? " is-active" : "");
+      card.textContent = name;
+      el.catCards.appendChild(card);
+    });
+    lastCatIndex = index;
+  }
+  if (el.catConfirmFill) {
+    const pct = Math.round((state.category_confirm_progress || 0) * 100);
+    el.catConfirmFill.style.width = `${pct}%`;
   }
 }
 

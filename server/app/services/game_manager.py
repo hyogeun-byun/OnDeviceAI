@@ -8,7 +8,7 @@ from app.services import game_narrator as narrator
 from app.services.game_narrator import DEFAULT_PROMPTS
 from app.services.leaderboard import Leaderboard
 from app.services.llm_client import LLMClient
-from app.services.pose_similarity import analyze_group, detect_ready_pose
+from app.services.pose_similarity import analyze_group, detect_arm_raised, detect_ready_pose
 from app.services.speech_audio import SpeechAudioCache
 from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
@@ -24,7 +24,7 @@ INTRO_SECONDS = 6.0
 # line (instead of cutting off). Duration scales with the line length, clamped.
 INTRO_CHAR_SECONDS = 0.19
 INTRO_MIN_SECONDS = 6.0
-INTRO_MAX_SECONDS = 18.0
+INTRO_MAX_SECONDS = 25.0
 
 TOTAL_ROUNDS = 5
 
@@ -34,6 +34,12 @@ READY_POSE_HOLD_SECONDS = 1.5
 # Keypoint jitter tolerance: brief dropouts shorter than this are ignored so
 # intermittent keypoint loss does not reset the hold timer.
 READY_POSE_GAP_TOLERANCE = 0.8
+
+# Body-controlled category picker: raise one hand to step, hold T-pose to confirm.
+# Cooldown between hand-raise steps so one raise = one move (not a fast scroll).
+CATEGORY_STEP_COOLDOWN = 0.9
+# Hold the T-pose this long in the picker to confirm the highlighted category.
+CATEGORY_CONFIRM_SECONDS = 1.2
 
 # Hint thresholds
 # Low-score hint: shown once at the START of a round when gauge <= this value
@@ -56,6 +62,7 @@ GAUGE_EMA_ALPHA = 0.3
 COACH_MIN_HOLD_SECONDS = 4.0
 
 PHASE_IDLE = "idle"
+PHASE_CATEGORY = "category"          # body-controlled category picker
 PHASE_INTRO = "intro"
 PHASE_WAITING_POSE = "waiting_pose"   # new: wait for T-pose gesture
 PHASE_COUNTDOWN = "countdown"
@@ -99,6 +106,10 @@ class GameState:
     leaderboard_id: int = 0
     recorded: bool = False
     intro_seconds: float = INTRO_SECONDS  # how long the intro waits (set per-line)
+    # Category picker (PHASE_CATEGORY) state
+    category_index: int = 0
+    category_step_at: float = 0.0       # monotonic time of the last hand-raise step
+    category_confirm_since: float = 0.0  # monotonic time the T-pose hold started
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
     ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
@@ -222,6 +233,26 @@ class GameManager:
         self._state.ready_pose_last_seen = 0.0
         self._speak(narrator.ready_pose_wait_line())
 
+    def _enter_category(self, now: float) -> None:
+        """After the T-pose start, open the body-controlled category picker."""
+        try:
+            start_index = list(narrator.THEMES).index(self._pending_theme)
+        except ValueError:
+            start_index = 0
+        self._state = GameState(
+            phase=PHASE_CATEGORY,
+            phase_started_at=now,
+            theme=self._pending_theme,
+            team_name=self._pending_team_name,
+            category_index=start_index,
+        )
+        self._speak(narrator.category_select_line())
+
+    def intro_done(self) -> None:
+        """Frontend signal that the MC finished reading the opening line."""
+        if self._state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
+            self._enter_countdown(time.monotonic())
+
     def _enter_countdown(self, now: float) -> None:
         self._state.phase = PHASE_COUNTDOWN
         self._state.round_index = 0
@@ -312,8 +343,12 @@ class GameManager:
             # On the idle screen, holding the T-pose (after a team name is
             # entered) auto-starts the game — no button needed.
             self._check_idle_ready_pose(now)
+        elif state.phase == PHASE_CATEGORY:
+            self._check_category_gesture(now)
         elif state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
-            # The MC plays the opening, then the countdown starts automatically.
+            # The MC plays the opening; the browser signals when speech ends
+            # (intro_done). intro_seconds is only a fallback cap so it can never
+            # get stuck if the audio fails.
             if elapsed >= state.intro_seconds:
                 self._enter_countdown(now)
         elif state.phase == PHASE_COUNTDOWN:
@@ -349,11 +384,42 @@ class GameManager:
             if self._state.ready_pose_hold_since == 0.0:
                 self._state.ready_pose_hold_since = now
             elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
-                self.start(self._pending_theme, self._pending_team_name)
+                self._enter_category(now)
         else:
             if self._state.ready_pose_hold_since > 0.0:
                 if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
                     self._state.ready_pose_hold_since = 0.0
+
+    def _check_category_gesture(self, now: float) -> None:
+        """Body-controlled category picker: one raised hand steps the highlight,
+        a held T-pose confirms and starts the game."""
+        themes = list(narrator.THEMES)
+        if not themes:
+            self.start(self._pending_theme, self._pending_team_name)
+            return
+        poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
+        present = [p for p in poses if p and p.get("person_detected")]
+        if not present:
+            self._state.category_confirm_since = 0.0
+            return
+        # Confirm: any player holds the T-pose for the confirm window.
+        if any(detect_ready_pose(p) for p in present):
+            if self._state.category_confirm_since == 0.0:
+                self._state.category_confirm_since = now
+            elif now - self._state.category_confirm_since >= CATEGORY_CONFIRM_SECONDS:
+                self.start(themes[self._state.category_index], self._pending_team_name)
+            return
+        self._state.category_confirm_since = 0.0
+        # Step: one raised hand moves the highlight (rate-limited).
+        if now - self._state.category_step_at < CATEGORY_STEP_COOLDOWN:
+            return
+        direction = next((d for d in (detect_arm_raised(p) for p in present) if d), None)
+        if direction == "right":
+            self._state.category_index = (self._state.category_index + 1) % len(themes)
+            self._state.category_step_at = now
+        elif direction == "left":
+            self._state.category_index = (self._state.category_index - 1) % len(themes)
+            self._state.category_step_at = now
 
     def _check_ready_pose(self, now: float) -> None:
         """Detect T-pose from any present player; start when at least one holds it.
@@ -663,6 +729,13 @@ class GameManager:
             "team_name": state.team_name,
             "leaderboard_id": state.leaderboard_id,
             "ready_pose_instruction": state.ready_pose_instruction,
+            "category_options": list(narrator.THEMES),
+            "category_index": state.category_index,
+            "category_confirm_progress": (
+                min(1.0, (time.monotonic() - state.category_confirm_since) / CATEGORY_CONFIRM_SECONDS)
+                if state.phase == PHASE_CATEGORY and state.category_confirm_since > 0
+                else 0.0
+            ),
             "ready_pose_hold_progress": (
                 min(1.0, (time.monotonic() - state.ready_pose_hold_since) / READY_POSE_HOLD_SECONDS)
                 if state.phase in (PHASE_IDLE, PHASE_WAITING_POSE) and state.ready_pose_hold_since > 0
