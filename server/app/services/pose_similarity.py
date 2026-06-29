@@ -49,8 +49,8 @@ _MIN_TORSO_HEIGHT = 0.05  # normalised units; skip if person is too small
 # game start.  Only the upper-arm segment is checked so wrist visibility is not
 # required — useful when the far end of the arm is out of frame.
 # Shoulder angle (elbow-shoulder-hip) ≈ 70~110° means the upper arm is horizontal.
-READY_POSE_SHOULDER_MIN = 70.0   # degrees — shoulder joint
-READY_POSE_SHOULDER_MAX = 110.0
+READY_POSE_SHOULDER_MIN = 60.0   # degrees — shoulder joint
+READY_POSE_SHOULDER_MAX = 120.0
 # A player counts as "holding the T pose" when both shoulder joints are in range.
 # Elbow / wrist visibility is NOT required.
 _READY_JOINTS = {

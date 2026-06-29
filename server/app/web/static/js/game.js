@@ -4,6 +4,7 @@ const screens = {
   idle: document.getElementById("screen-idle"),
   category: document.getElementById("screen-category"),
   confirm: document.getElementById("screen-category"),
+  camtest: document.getElementById("screen-camtest"),
   intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
@@ -62,6 +63,8 @@ const el = {
   catPrevBtn: document.getElementById("cat-prev-btn"),
   catNextBtn: document.getElementById("cat-next-btn"),
   catConfirmBtn: document.getElementById("cat-confirm-btn"),
+  camtestCams: document.getElementById("camtest-cams"),
+  camtestSkipBtn: document.getElementById("camtest-skip-btn"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
 };
 
@@ -109,7 +112,7 @@ function setMcTalking(on, text) {
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
   // 인트로 투어·카테고리 화면에선 아래 글자로 대사가 나오므로 말풍선을 숨겨 데모를 안 가리게 한다.
   const suppressBubble =
-    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "confirm";
+    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "confirm" || currentPhase === "camtest";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -221,6 +224,7 @@ if (el.skipIntroBtn) el.skipIntroBtn.addEventListener("click", () => postGame("/
 if (el.catPrevBtn) el.catPrevBtn.addEventListener("click", () => postGame("/api/game/category-step/prev"));
 if (el.catNextBtn) el.catNextBtn.addEventListener("click", () => postGame("/api/game/category-step/next"));
 if (el.catConfirmBtn) el.catConfirmBtn.addEventListener("click", () => postGame("/api/game/confirm-category"));
+if (el.camtestSkipBtn) el.camtestSkipBtn.addEventListener("click", () => postGame("/api/game/skip-camtest"));
 
 function gaugeColor(value) {
   if (value >= 75) return "#00ffc6";
@@ -359,6 +363,8 @@ function render(state) {
   // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 카드 화면을 유지하며 대사를 보여준다.
   if (state.phase === "confirm" && el.catSpeech) el.catSpeech.textContent = state.speech || "";
 
+  if (state.phase === "camtest") renderCamtest(state, prevPhase);
+
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";
     // The very first word eases in slowly (re-trigger the CSS reveal once).
@@ -470,6 +476,52 @@ function renderCategory(state) {
     el.catConfirmFill.style.width = `${pct}%`;
   }
   if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+}
+
+// --- Camera test: 3 large live feeds; each turns green + chimes when its
+// player holds the T-pose, all green -> proceed. Manual skip button fallback. ---
+let camtestLastChime = 0;
+function chime() {
+  try {
+    const ctx = chime.ctx || (chime.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain).connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.09);
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.36);
+  } catch (e) {}
+}
+
+function renderCamtest(state, prevPhase) {
+  const players = Array.isArray(state.players) ? state.players : [];
+  const passed = new Set(state.camtest_pass || []);
+  if (prevPhase !== "camtest") camtestLastChime = 0;
+  if (el.camtestCams && (prevPhase !== "camtest" || el.camtestCams.childElementCount !== players.length)) {
+    el.camtestCams.innerHTML = "";
+    players.forEach((p, i) => {
+      const cam = document.createElement("div");
+      cam.className = "camtest-cam";
+      cam.dataset.cameraId = p.camera_id;
+      cam.innerHTML =
+        `<img src="/api/cameras/${p.camera_id}/stream" alt="" />` +
+        `<div class="camtest-badge">카메라 ${i + 1}</div>` +
+        `<div class="camtest-ok">통과!</div>`;
+      el.camtestCams.appendChild(cam);
+    });
+  }
+  if (el.camtestCams) {
+    el.camtestCams.querySelectorAll(".camtest-cam").forEach((cam) =>
+      cam.classList.toggle("is-pass", passed.has(cam.dataset.cameraId))
+    );
+  }
+  const chimeCount = state.camtest_chime || 0;
+  if (chimeCount > camtestLastChime) chime();
+  camtestLastChime = chimeCount;
 }
 
 // --- Final telepathy report (best / worst rounds) ---

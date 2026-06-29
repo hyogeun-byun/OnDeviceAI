@@ -1807,6 +1807,7 @@ body {
 /* Temporary fallback buttons: small + low-key so gestures stay the main path. */
 #manual-start-btn,
 #skip-intro-btn,
+#camtest-skip-btn,
 .cat-buttons .cta {
   margin-top: 14px;
   padding: 7px 16px;
@@ -1818,9 +1819,70 @@ body {
 }
 #manual-start-btn:hover,
 #skip-intro-btn:hover,
+#camtest-skip-btn:hover,
 .cat-buttons .cta:hover {
   opacity: 1;
   transform: translateY(-1px) scale(1.01);
+}
+
+/* ---------- Camera test (3-camera framing check) ---------- */
+.camtest-sub {
+  margin: 6px 0 22px;
+  font-size: 15px;
+  opacity: 0.7;
+}
+.camtest-cams {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.camtest-cam {
+  position: relative;
+  width: min(30vw, 360px);
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #02080d;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.12);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.camtest-cam img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.camtest-badge {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.55);
+}
+.camtest-ok {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 900;
+  color: #05111a;
+  background: rgba(0, 255, 198, 0.78);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.camtest-cam.is-pass {
+  box-shadow: inset 0 0 0 4px var(--accent);
+  transform: scale(1.02);
+}
+.camtest-cam.is-pass .camtest-ok {
+  opacity: 1;
 }
 
 /* ---------- Intro guided-tour demo board ---------- */
