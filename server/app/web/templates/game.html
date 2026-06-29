@@ -55,20 +55,6 @@
             placeholder="예) 텔레파시 4인방"
           />
         </div>
-        <div class="theme-picker" id="theme-picker">
-          <span class="theme-label">카테고리</span>
-          <div class="theme-options">
-            {% for theme in themes %}
-            <button
-              type="button"
-              class="theme-chip{% if loop.first %} is-active{% endif %}"
-              data-theme="{{ theme }}"
-            >
-              {{ theme }}
-            </button>
-            {% endfor %}
-          </div>
-        </div>
         <div class="tpose-cue" id="tpose-cue">
           <div class="tpose-icon">🙆</div>
           <p class="tpose-headline">팀 이름을 적고 <em>T자 포즈</em>로 시작!</p>
