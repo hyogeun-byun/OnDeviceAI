@@ -1,0 +1,8 @@
++ set -x
++ cd /home/willtek/OnDeviceAI
++ python3 -m unittest discover -s tests/requirements -p 'test_R_*.py'
+............................
+----------------------------------------------------------------------
+Ran 28 tests in 0.175s
+
+OK

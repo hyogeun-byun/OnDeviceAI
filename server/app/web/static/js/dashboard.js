@@ -184,14 +184,12 @@ const DIAG_BONES = [
   ["left_forearm", "L fore"],
   ["right_upper_arm", "R upper"],
   ["right_forearm", "R fore"],
-  ["left_thigh", "L thigh"],
-  ["left_shin", "L shin"],
-  ["right_thigh", "R thigh"],
-  ["right_shin", "R shin"],
+  ["head_left", "Head L"],
+  ["head_right", "Head R"],
 ];
 
 function renderBoardVectors(board) {
-  setText(`${board.camera_id}-visible`, `${board.visible_bones}/8`);
+  setText(`${board.camera_id}-visible`, `${board.visible_bones}/6`);
   const container = document.getElementById(`${board.camera_id}-angles`);
   if (!container) {
     return;

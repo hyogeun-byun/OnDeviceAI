@@ -1,0 +1,59 @@
+URL=http://127.0.0.1:18000/api/game/state
+STATUS=200
+{
+  "phase": "idle",
+  "round_number": 1,
+  "total_rounds": 5,
+  "prompt": null,
+  "gauge": 0.0,
+  "ready_count": 0,
+  "expressiveness": 0.0,
+  "coach": "",
+  "hint": "",
+  "player_count": 1,
+  "players": [
+    {
+      "camera_id": "camera_01",
+      "label": "Player 1",
+      "ready": false,
+      "sync": null,
+      "expressiveness": null
+    }
+  ],
+  "time_left": null,
+  "phase_duration": null,
+  "round_scores": [],
+  "result_poses": [],
+  "total_score": 0.0,
+  "theme": "상황",
+  "prompt_source": "default",
+  "prompts": [
+    "팀장님하면 떠오르는 포즈",
+    "현 시점 LG 상황을 바라보는 나의 자세",
+    "벌레 발견했을 때 내 반응",
+    "사진 찍을 때 갑자기 예쁜 척 하는 나",
+    "무궁화꽃이 피었습니다"
+  ],
+  "mc_comment": "",
+  "mc_status": "idle",
+  "final_report": "",
+  "final_status": "idle",
+  "speech": "",
+  "speech_id": 0,
+  "speech_audio": false,
+  "final_title": null,
+  "team_name": "",
+  "leaderboard_id": 0,
+  "ready_pose_instruction": "양팔을 옆으로 쭉 펴서 T자를 만들어주세요!",
+  "category_options": [
+    "상황",
+    "운동",
+    "감정",
+    "영화 혹은 애니메이션",
+    "인물(for 2,30대)",
+    "인물(for 4,50대)"
+  ],
+  "category_index": 0,
+  "category_confirm_progress": 0.0,
+  "ready_pose_hold_progress": 0.0
+}

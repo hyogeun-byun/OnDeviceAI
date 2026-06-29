@@ -1,0 +1,35 @@
+URL=http://127.0.0.1:18000/api/cameras
+STATUS=200
+{
+  "cameras": [
+    {
+      "camera_id": "camera_01",
+      "online": false,
+      "updated_at": null,
+      "pose_online": true,
+      "pose_updated_at": "2026-06-29T06:10:09.177606+00:00",
+      "person_detected": true,
+      "keypoint_count": 33,
+      "worker_metrics": {
+        "camera_id": "camera_01",
+        "elapsed_seconds": 5.0,
+        "frame_fps": 10.0,
+        "pose_fps": 10.0,
+        "avg_capture_ms": 1.0,
+        "avg_pose_ms": 1.0,
+        "avg_encode_ms": 1.0,
+        "avg_frame_upload_ms": 1.0,
+        "avg_pose_upload_ms": 1.0,
+        "avg_frame_kb": 20.0,
+        "upload_kb_s": 200.0,
+        "sent_frames": 10,
+        "failed_frames": 0,
+        "sent_poses": 10,
+        "failed_poses": 0,
+        "updated_at": "2026-06-29T06:10:09.177679+00:00",
+        "version": 1
+      },
+      "server_metrics": null
+    }
+  ]
+}
