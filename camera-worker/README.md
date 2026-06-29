@@ -50,12 +50,14 @@ POSE_DRAW_LANDMARKS=true
 - `POSE_INPUT_WIDTH`: 포즈 추정에 넣을 축소 이미지 너비 (기본 192px)
 - `POSE_MODEL_COMPLEXITY=0`: Lite 버전 (0=Lite, 1=Full)
 - `LOG_INTERVAL_SECONDS`: FPS와 전송량 로그를 몇 초마다 찍을지 설정
+- `LOG_DIR`: 실제 실행 로그와 FPS JSONL 파일 저장 위치 (기본 `../log`)
+- `METRICS_LOG_ENABLED`: 실제 FPS JSONL 저장 여부
 
 keypoint 추론은 코드 상수 `KEYPOINT_INFERENCE_FPS = 10.0` 기준으로 초당 10회 실행한다. 워커 내부는 카메라 캡처, 프레임 전송, 포즈 추정 스레드로 분리되어 포즈 추정이 영상 전송을 최대한 막지 않도록 구성한다.
 
 ## 속도 확인 로그
 
-워커는 `LOG_INTERVAL_SECONDS`마다 다음 값을 출력한다.
+워커는 `LOG_INTERVAL_SECONDS`마다 다음 값을 콘솔과 `log/camera-worker-<CAMERA_ID>.log`에 출력한다. 검증용 원본 값은 `log/camera-worker-<CAMERA_ID>-metrics.jsonl`에도 한 줄씩 저장된다.
 
 ```text
 frame_fps: 실제 카메라 프레임 처리 FPS
@@ -68,6 +70,12 @@ avg_pose_upload_ms: 포즈 결과 업로드 평균 시간
 avg_frame_kb: 프레임 1장 평균 크기
 upload_kb_s: 초당 업로드 전송량
 failed_frames / failed_poses: 서버 전송 실패 횟수
+```
+
+JSONL 예시:
+
+```json
+{"timestamp":"2026-06-29T10:00:00+00:00","camera_id":"camera_01","elapsed_seconds":5.01,"frame_fps":9.98,"pose_fps":9.78,"sent_frames":50,"failed_frames":0,"sent_poses":49,"failed_poses":0}
 ```
 
 `avg_pose_ms`가 크면 포즈 모델이 병목이고, `avg_frame_upload_ms`나 `upload_kb_s`가 높으면 네트워크/전송량이 병목일 가능성이 높다.

@@ -16,6 +16,9 @@ class CameraWorkerConfig:
     jpeg_quality: int
     fps: float
     log_interval_seconds: float
+    log_file_enabled: bool
+    log_dir: str
+    metrics_log_enabled: bool
     pose_enabled: bool
     pose_model_complexity: int
     pose_input_width: int
@@ -43,6 +46,9 @@ def load_config() -> CameraWorkerConfig:
         jpeg_quality=int(os.getenv("JPEG_QUALITY", "80")),
         fps=float(os.getenv("FPS", "10")),
         log_interval_seconds=max(1.0, float(os.getenv("LOG_INTERVAL_SECONDS", "5"))),
+        log_file_enabled=read_bool("LOG_FILE_ENABLED", True),
+        log_dir=os.getenv("LOG_DIR", "../log"),
+        metrics_log_enabled=read_bool("METRICS_LOG_ENABLED", True),
         pose_enabled=read_bool("POSE_ENABLED", True),
         pose_model_complexity=int(os.getenv("POSE_MODEL_COMPLEXITY", "0")),
         pose_input_width=max(128, int(os.getenv("POSE_INPUT_WIDTH", "192"))),

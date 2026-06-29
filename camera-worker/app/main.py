@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from pathlib import Path
 from queue import Empty, Full, Queue
 from threading import Event, Thread
 
@@ -9,20 +10,58 @@ import cv2
 
 from app.camera.camera_reader import CameraReader
 from app.camera.frame_encoder import FrameEncoder
-from app.config import load_config
+from app.config import CameraWorkerConfig, load_config
 from app.constants import KEYPOINT_INFERENCE_FPS
 from app.inference.pose_estimator import PoseEstimator
 from app.metrics import CameraWorkerMetrics
 from app.network.websocket_client import WebSocketCameraClient
 
+LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s - %(message)s"
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    format=LOG_FORMAT,
 )
 
 logger = logging.getLogger(__name__)
 
 FramePacket = tuple[cv2.typing.MatLike, float]
+
+
+def resolve_log_dir(config: CameraWorkerConfig) -> Path:
+    log_dir = Path(config.log_dir).expanduser()
+    if not log_dir.is_absolute():
+        log_dir = Path.cwd() / log_dir
+    return log_dir.resolve()
+
+
+def configure_file_logging(config: CameraWorkerConfig) -> Path | None:
+    if not config.log_file_enabled:
+        return None
+
+    log_dir = resolve_log_dir(config)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"camera-worker-{config.camera_id}.log"
+
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers:
+        if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).resolve() == log_path:
+            return log_path
+
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+    root_logger.addHandler(file_handler)
+    return log_path
+
+
+def build_metrics_log_path(config: CameraWorkerConfig) -> Path | None:
+    if not config.metrics_log_enabled:
+        return None
+
+    log_dir = resolve_log_dir(config)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir / f"camera-worker-{config.camera_id}-metrics.jsonl"
 
 
 def put_latest(queue: Queue[FramePacket], packet: FramePacket) -> None:
@@ -118,11 +157,14 @@ def pose_inference_loop(
 
 def main() -> None:
     config = load_config()
+    worker_log_path = configure_file_logging(config)
+    metrics_log_path = build_metrics_log_path(config)
 
     logger.info(
         (
             "Starting camera worker: camera_id=%s server=%s target_fps=%.2f "
-            "pose_enabled=%s keypoint_inference_fps=%.2f pose_input_width=%s jpeg_quality=%s"
+            "pose_enabled=%s keypoint_inference_fps=%.2f pose_input_width=%s jpeg_quality=%s "
+            "worker_log=%s metrics_log=%s"
         ),
         config.camera_id,
         config.server_url,
@@ -131,6 +173,8 @@ def main() -> None:
         KEYPOINT_INFERENCE_FPS,
         config.pose_input_width,
         config.jpeg_quality,
+        worker_log_path or "disabled",
+        metrics_log_path or "disabled",
     )
 
     camera_reader = CameraReader(
@@ -143,6 +187,7 @@ def main() -> None:
     metrics = CameraWorkerMetrics(
         camera_id=config.camera_id,
         log_interval_seconds=config.log_interval_seconds,
+        metrics_log_path=metrics_log_path,
     )
     pose_estimator = PoseEstimator(
         camera_id=config.camera_id,

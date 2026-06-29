@@ -474,7 +474,7 @@
               <td>8</td>
               <td>애플리케이션 실행·기동</td>
               <td><span class="status ok">충족</span></td>
-              <td>FastAPI 서버 기동, <code>/health</code>, <code>/api/game/state</code>, 카메라 워커 WebSocket smoke, <code>/api/cameras</code> 응답 확인. 근거: <code>log/server-run.log</code>, <code>log/server-health.log</code>, <code>log/server-game-state.log</code>, <code>log/camera-worker-run.log</code>, <code>log/camera-api-smoke.log</code></td>
+              <td>FastAPI 서버 기동, <code>/health</code>, <code>/api/game/state</code>, 카메라 워커 WebSocket smoke, <code>/api/cameras</code> 응답 확인. 실제 워커 실행 시 <code>log/camera-worker-&lt;CAMERA_ID&gt;.log</code>와 <code>log/camera-worker-&lt;CAMERA_ID&gt;-metrics.jsonl</code>에 <code>frame_fps</code>, <code>pose_fps</code>가 저장됨. 근거: <code>log/server-run.log</code>, <code>log/server-health.log</code>, <code>log/server-game-state.log</code>, <code>log/camera-worker-run.log</code>, <code>log/camera-api-smoke.log</code></td>
             </tr>
           </tbody>
         </table>

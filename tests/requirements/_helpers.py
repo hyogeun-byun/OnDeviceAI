@@ -35,7 +35,12 @@ def load_path_module(module_name: str, rel_path: str):
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load module from {rel_path}")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    sys.modules[module_name] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(module_name, None)
+        raise
     return module
 
 

@@ -48,6 +48,9 @@ cp camera-worker/.env.example camera-worker/.env
 | `SERVER_URL` | camera-worker | 카메라 워커가 연결할 서버 LAN 주소 |
 | `CAMERA_ID` | camera-worker | 워커 고유 ID |
 | `FPS` | camera-worker | 영상 전송 FPS |
+| `LOG_DIR` | camera-worker | 실제 워커 실행 로그와 FPS JSONL 저장 위치, 기본 `../log` |
+| `LOG_INTERVAL_SECONDS` | camera-worker | `frame_fps`, `pose_fps` 측정/기록 주기 |
+| `METRICS_LOG_ENABLED` | camera-worker | 실제 FPS JSONL 저장 여부 |
 | `POSE_MODEL_COMPLEXITY` | camera-worker | MediaPipe Pose complexity, `0`은 Lite |
 | `LLM_ENABLED` | server | 로컬 Ollama LLM 사용 여부 |
 | `EDGE_TTS_ENABLED` | server | edge-tts 서버 합성 사용 여부 |
@@ -123,6 +126,13 @@ cd camera-worker
 python -m app.main
 ```
 
+실제 카메라 워커를 `LOG_INTERVAL_SECONDS` 이상 실행하면 다음 파일이 생성된다.
+
+| 로그 | 내용 |
+|---|---|
+| `log/camera-worker-<CAMERA_ID>.log` | 워커 실행 로그, `metrics camera_id=... frame_fps=... pose_fps=...` 포함 |
+| `log/camera-worker-<CAMERA_ID>-metrics.jsonl` | 실제 측정 FPS와 지연시간을 JSONL로 저장한 검증 원본 |
+
 브라우저:
 
 ```text
@@ -151,6 +161,8 @@ RECREATE_VENV=1 bash scripts/verify_devops.sh
 | `log/server-health.log` | `/health` 응답 확인 |
 | `log/server-game-state.log` | `/api/game/state` 응답 확인 |
 | `log/camera-worker-run.log` | 카메라 워커 WebSocket smoke 실행 로그 |
+| `log/camera-worker-<CAMERA_ID>.log` | 실제 카메라 워커 실행 시 frame_fps/pose_fps 포함 |
+| `log/camera-worker-<CAMERA_ID>-metrics.jsonl` | 실제 카메라 FPS/포즈 FPS 검증용 JSONL |
 | `log/camera-api-smoke.log` | 서버가 smoke pose/metrics를 수신했는지 확인 |
 | `log/offline-lan-checklist.log` | R-26 오프라인 LAN 현장 검증 체크리스트 |
 | `log/devops-summary.log` | DevOps 6~8 기준 충족 근거 요약 |

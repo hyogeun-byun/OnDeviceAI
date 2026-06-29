@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock
 
 logger = logging.getLogger(__name__)
@@ -12,8 +15,12 @@ logger = logging.getLogger(__name__)
 class CameraWorkerMetrics:
     camera_id: str
     log_interval_seconds: float
+    metrics_log_path: str | Path | None = None
 
     def __post_init__(self) -> None:
+        self._metrics_log_path = Path(self.metrics_log_path).expanduser() if self.metrics_log_path else None
+        if self._metrics_log_path is not None:
+            self._metrics_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._started_at = time.perf_counter()
         self._last_log_at = self._started_at
         self._frames = 0
@@ -110,8 +117,23 @@ class CameraWorkerMetrics:
                 payload["sent_poses"],
                 payload["failed_poses"],
             )
+            self._write_metrics_payload(payload)
             self._reset(now)
             return payload
+
+    def _write_metrics_payload(self, payload: dict[str, object]) -> None:
+        if self._metrics_log_path is None:
+            return
+
+        record = {
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            **payload,
+        }
+        try:
+            with self._metrics_log_path.open("a", encoding="utf-8") as fp:
+                fp.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except OSError:
+            logger.warning("failed to write metrics log path=%s", self._metrics_log_path, exc_info=True)
 
     def _reset(self, now: float) -> None:
         self._last_log_at = now

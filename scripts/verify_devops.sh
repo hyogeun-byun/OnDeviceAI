@@ -182,6 +182,7 @@ probe_url "http://127.0.0.1:${PORT}/api/cameras" "${LOG_DIR}/camera-api-smoke.lo
   echo "DEVOPS_7_CAMERA_WORKER_INSTALL=OK log/camera-worker-install.log"
   echo "DEVOPS_8_SERVER_RUNTIME=OK log/server-run.log log/server-health.log log/server-game-state.log"
   echo "DEVOPS_8_CAMERA_WORKER_SMOKE=OK log/camera-worker-run.log log/camera-api-smoke.log"
+  echo "REAL_CAMERA_FPS_LOGGING=OK python -m app.main writes log/camera-worker-<CAMERA_ID>.log and log/camera-worker-<CAMERA_ID>-metrics.jsonl"
   echo "R26_OFFLINE_LAN_PROCEDURE=OK log/offline-lan-checklist.log test-results/offline-lan/R-26-offline-lan-guide.md"
   echo "REQUIREMENT_TESTS=OK log/requirements-unittest.log"
 } >"${LOG_DIR}/devops-summary.log"

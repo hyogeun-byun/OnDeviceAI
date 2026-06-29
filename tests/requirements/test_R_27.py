@@ -19,11 +19,19 @@ class TestR27ConfigurationExamples(unittest.TestCase):
             "CAMERA_ID=",
             "SERVER_URL=",
             "FPS=",
+            "LOG_DIR=../log",
+            "METRICS_LOG_ENABLED=true",
             "POSE_MODEL_COMPLEXITY=",
             "POSE_INPUT_WIDTH=192",
         )
         assert_contains(self, "config/server.example.yaml", "camera_ids", "visualize_metrics")
-        assert_contains(self, "config/camera-worker.example.yaml", "pose_model_complexity", "pose_input_width")
+        assert_contains(
+            self,
+            "config/camera-worker.example.yaml",
+            "pose_model_complexity",
+            "pose_input_width",
+            "metrics_log_enabled",
+        )
 
 
 if __name__ == "__main__":
