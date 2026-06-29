@@ -5,15 +5,16 @@ import math
 # Bone vector definitions: start -> end. These are the body segments used for
 # scoring pose sync. Each segment is converted to a unit direction vector before
 # comparison, so person size and distance from the camera do not affect score.
+# Scoring uses face + upper-body only; lower body (thighs/shins) is excluded.
 BONE_DEFINITIONS: dict[str, tuple[str, str]] = {
-    "left_upper_arm": ("left_shoulder", "left_elbow"),
-    "left_forearm": ("left_elbow", "left_wrist"),
+    # Face direction (head turn / tilt)
+    "head_left":  ("left_ear",  "nose"),
+    "head_right": ("right_ear", "nose"),
+    # Upper body
+    "left_upper_arm":  ("left_shoulder",  "left_elbow"),
+    "left_forearm":    ("left_elbow",     "left_wrist"),
     "right_upper_arm": ("right_shoulder", "right_elbow"),
-    "right_forearm": ("right_elbow", "right_wrist"),
-    "left_thigh": ("left_hip", "left_knee"),
-    "left_shin": ("left_knee", "left_ankle"),
-    "right_thigh": ("right_hip", "right_knee"),
-    "right_shin": ("right_knee", "right_ankle"),
+    "right_forearm":   ("right_elbow",    "right_wrist"),
 }
 
 # Joint angle definitions used only for ready-pose detection.
@@ -42,14 +43,20 @@ _MIN_TORSO_HEIGHT = 0.05  # normalised units; skip if person is too small
 
 
 # ---------------------------------------------------------------------------
-# Ready-pose detection  ("양팔 T자" — both arms horizontal, elbows extended)
+# Ready-pose detection  ("양팔 T자" — both upper arms horizontal)
 # ---------------------------------------------------------------------------
-# Players hold both arms out sideways (like the letter T) to trigger game start.
-# Shoulder angle (elbow-shoulder-hip) ≈ 85~95° means arm is horizontal.
-# Elbow angle (shoulder-elbow-wrist) ≈ 155~180° means arm is straight.
+# Players raise both upper arms sideways (shoulder → elbow horizontal) to trigger
+# game start.  Only the upper-arm segment is checked so wrist visibility is not
+# required — useful when the far end of the arm is out of frame.
+# Shoulder angle (elbow-shoulder-hip) ≈ 70~110° means the upper arm is horizontal.
 READY_POSE_SHOULDER_MIN = 70.0   # degrees — shoulder joint
 READY_POSE_SHOULDER_MAX = 110.0
-READY_POSE_ELBOW_MIN    = 140.0  # degrees — elbow joint (arm straight)
+# A player counts as "holding the T pose" when both shoulder joints are in range.
+# Elbow / wrist visibility is NOT required.
+_READY_JOINTS = {
+    "left_shoulder":  (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
+    "right_shoulder": (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
+}
 
 # Approximate bone directions of a neutral standing "rest" pose.
 # Poses close to it score low even when similarity is high; this is the
@@ -203,29 +210,18 @@ def _normalize_keypoints_to_torso(
 def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
     """Return True when the player is holding the T-pose (양팔 T자).
 
-    Both arms must be raised out to the sides (shoulder ~90°). The defining
-    feature is judged from the shoulder joints (elbow-shoulder-hip), which only
-    need the shoulder, elbow and hip keypoints — these stay visible even when
-    the wrists leave the frame edge during a wide T-pose.
-
-    The elbow-straightness check needs the wrist, which is frequently cut off (or
-    drops below the confidence threshold) when the arms are fully extended, so it
-    is only enforced when the wrist is actually visible. This keeps the gesture
-    reliable instead of silently never triggering.
+    Both upper arms (shoulder → elbow) must be roughly horizontal. The shoulder
+    angle (elbow-shoulder-hip) only needs the shoulder, elbow and hip keypoints,
+    so wrist / forearm visibility is NOT required — the gesture still triggers
+    even when the wrists leave the frame edge during a wide T-pose.
+    Used on the intro screen so players can trigger game start by gesture.
     """
     if not pose_result or not pose_result.get("person_detected"):
         return False
     angles = compute_joint_angles(pose_result)
-    # Both arms must be horizontal — this is the gesture's defining feature.
-    for joint in ("left_shoulder", "right_shoulder"):
+    for joint, (lo, hi) in _READY_JOINTS.items():
         angle = angles.get(joint)
-        if angle is None or not (READY_POSE_SHOULDER_MIN <= angle <= READY_POSE_SHOULDER_MAX):
-            return False
-    # Arms should be straight, but only check when the wrist (and thus the elbow
-    # angle) is available; a missing elbow angle means the wrist is out of frame.
-    for joint in ("left_elbow", "right_elbow"):
-        angle = angles.get(joint)
-        if angle is not None and angle < READY_POSE_ELBOW_MIN:
+        if angle is None or not (lo <= angle <= hi):
             return False
     return True
 
