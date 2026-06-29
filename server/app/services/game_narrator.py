@@ -143,6 +143,7 @@ def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") ->
     return (
         f"안녕하세요 {audience}! "
         f"저, 에이아이 엠씨 {mc_name}와 함께하는 텔레파시 게임. "
+        "혹시 해보신 분은 T자 포즈를 만들면 설명을 건너뛸 수 있어요. "
         "먼저 제가 화면을 돌아다니면서 어떻게 하는지 설명해 드릴게요!"
     )
 
