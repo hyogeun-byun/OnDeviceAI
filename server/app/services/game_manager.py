@@ -356,7 +356,7 @@ class GameManager:
         self._state.camtest_pass = []
         self._state.camtest_chime = 0
         self._state.camtest_hold = {}
-        self._speak(narrator.camtest_intro_line())
+        self._speak(narrator.camtest_intro_line(theme))
 
     def _check_camtest(self, now: float) -> None:
         """Mark each camera as OK once its player holds the test pose, with a

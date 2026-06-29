@@ -3,7 +3,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 104;
 const screens = {
   idle: document.getElementById("screen-idle"),
   category: document.getElementById("screen-category"),
-  confirm: document.getElementById("screen-category"),
+  confirm: document.getElementById("screen-camtest"),
   camtest: document.getElementById("screen-camtest"),
   intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
