@@ -20,6 +20,11 @@ RESULT_SECONDS = 4.0
 
 # How long the MC opening (intro) screen shows before the countdown auto-starts.
 INTRO_SECONDS = 6.0
+# Estimated speaking pace so the intro waits for the MC to finish the opening
+# line (instead of cutting off). Duration scales with the line length, clamped.
+INTRO_CHAR_SECONDS = 0.19
+INTRO_MIN_SECONDS = 6.0
+INTRO_MAX_SECONDS = 18.0
 
 TOTAL_ROUNDS = 5
 
@@ -93,6 +98,7 @@ class GameState:
     team_name: str = ""
     leaderboard_id: int = 0
     recorded: bool = False
+    intro_seconds: float = INTRO_SECONDS  # how long the intro waits (set per-line)
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
     ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
@@ -186,7 +192,12 @@ class GameManager:
             prompt_source="category_random_in_theme",
             team_name=team,
         )
-        self._speak(narrator.intro_line(self._mc_name, team))
+        opening = narrator.intro_line(self._mc_name, team)
+        self._state.intro_seconds = max(
+            INTRO_MIN_SECONDS,
+            min(INTRO_MAX_SECONDS, len(opening) * INTRO_CHAR_SECONDS + 2.0),
+        )
+        self._speak(opening)
         if self._llm.enabled and chosen != "기본":
             self._spawn(self._build_prompts(self._generation, chosen))
 
@@ -303,7 +314,7 @@ class GameManager:
             self._check_idle_ready_pose(now)
         elif state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
             # The MC plays the opening, then the countdown starts automatically.
-            if elapsed >= INTRO_SECONDS:
+            if elapsed >= state.intro_seconds:
                 self._enter_countdown(now)
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
