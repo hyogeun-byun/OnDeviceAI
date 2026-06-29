@@ -24,46 +24,73 @@ def _strip_emoji(text: str) -> str:
 # Fixed game categories and prompts (요청사항 반영).
 CATEGORY_PROMPTS: dict[str, tuple[str, ...]] = {
     "상황": (
+        "사진 찍을 때 갑자기 예쁜 척 하는 나",
         "팀장님하면 떠오르는 포즈",
         "현 시점 LG 상황을 바라보는 나의 자세",
         "벌레 발견했을 때 내 반응",
-        "사진 찍을 때 갑자기 예쁜 척 하는 나",
         "무궁화꽃이 피었습니다",
+        "최애 음식 한입 먹은 순간",
+        "2시간째 하는 주간회의",
+        "여름 지옥철 안",
     ),
     "운동": (
+        "복싱",
         "헬스",
         "미스코리아",
         "무에타이",
         "스키점프",
         "농구",
+        "양궁",
+        "골프",
+        "야구",
+        "수영",
+        "배구",
+        "골키퍼",
     ),
     "감정": (
+        "사랑",
         "아련",
         "섹시",
         "졸림",
         "분노",
-        "사랑",
+        "배부름",
+        "비장함",
+        "대혼란",
+        "배고픔",
     ),
     "영화 혹은 애니메이션": (
+        "타노스",
         "아이언맨",
         "진격의거인",
         "주술회전",
         "드래곤볼",
         "부산행",
+        "스파이더맨",
+        "메트릭스",
+        "타이타닉",
+        "원피스 루피",
     ),
     "인물(for 2,30대)": (
+        "군인",
         "코르티스",
         "미나미",
         "페이커",
         "신봉선",
         "호날두",
+        "일리네어",
+        "트와이스",
+        "손흥민",
     ),
     "인물(for 4,50대)": (
+        "싸이",
         "안정환",
         "핑클",
         "구광모",
         "이정현",
-        "싸이",
+        "박남정",
+        "터미네이터",
+        "영구",
+        "슬픈연가 권상우",
     ),
 }
 
@@ -72,11 +99,25 @@ DEFAULT_PROMPTS: tuple[str, ...] = tuple(CATEGORY_PROMPTS[THEMES[0]][:5])
 
 
 def default_prompts(theme: str | None = None, n: int = 5) -> tuple[str, ...]:
-    """Return ``n`` random prompts from one selected category."""
+    """Return prompts from one category with a fixed first prompt.
+
+    The first round always uses the first prompt in the category list,
+    and the remaining rounds are filled by random picks from the rest.
+    """
     selected_theme = theme if theme in CATEGORY_PROMPTS else THEMES[0]
     pool = list(CATEGORY_PROMPTS[selected_theme])
-    random.shuffle(pool)
-    return tuple(pool[: min(n, len(pool))])
+
+    if not pool or n <= 0:
+        return ()
+
+    total = min(n, len(pool))
+    first_prompt = pool[0]
+    if total == 1:
+        return (first_prompt,)
+
+    remaining = pool[1:]
+    random.shuffle(remaining)
+    return tuple([first_prompt, *remaining[: total - 1]])
 
 
 _INTRO_BANTER = (
