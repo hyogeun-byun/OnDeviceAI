@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #637083;
+        --line: #d9dee8;
+        --ok: #117a45;
+        --warn: #a15c00;
+        --bad: #b42318;
+        --info: #2457c5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 34px 0 56px;
+      }
+
+      header {
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+
+      h2 {
+        margin: 34px 0 12px;
+        font-size: 21px;
+      }
+
+      h3 {
+        margin: 22px 0 10px;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 8px 0;
+      }
+
+      code {
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #eef2f8;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      .notice,
+      section {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: 0 10px 24px rgba(23, 32, 51, 0.06);
+      }
+
+      .notice {
+        padding: 14px 16px;
+        border-left: 5px solid var(--info);
+        color: #24324a;
+      }
+
+      section {
+        padding: 18px;
+        margin-top: 18px;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcff;
+      }
+
+      .card strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 24px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+      }
+
+      th,
+      td {
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+        font-size: 14px;
+      }
+
+      th {
+        background: #eef2f8;
+        font-weight: 700;
+      }
+
+      .status {
+        display: inline-block;
+        min-width: 72px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .ok {
+        color: var(--ok);
+        background: #e8f6ee;
+      }
+
+      .warn {
+        color: var(--warn);
+        background: #fff3df;
+      }
+
+      .bad {
+        color: var(--bad);
+        background: #fdeceb;
+      }
+
+      .unknown {
+        color: #4b5563;
+        background: #eef0f3;
+      }
+
+      .priority {
+        margin: 8px 0 0;
+        padding-left: 22px;
+      }
+
+      .priority li {
+        margin: 6px 0;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</h1>
+        <p class="meta">
+          프로젝트: 이구동성 텔레파시 (On-Device AI Party Game) · 분석일: 2026-06-29 ·
+          기준 문서: <code>프로젝트_평가_Agent_정의서.md</code>, <code>checklist.md</code>
+        </p>
+      </header>
+
+      <div class="notice">
+        이 리포트는 현재 저장소 상태를 기준으로 생성한 자체 점검 HTML입니다. 별도의 공식 평가 Agent 실행기가
+        제공되는 경우, 최종 제출 전 그 Agent로 다시 생성한 최신 HTML로 교체하는 것을 권장합니다.
+      </div>
+
+      <section>
+        <h2>요약</h2>
+        <div class="grid">
+          <div class="card">
+            필수 제출 파일
+            <strong>2 / 8</strong>
+            <span class="small">요구사항 명세서 + 본 HTML 기준</span>
+          </div>
+          <div class="card">
+            요구사항 명세
+            <strong>27개</strong>
+            <span class="small">검증 기준 및 타임스탬프/N/A 사유 기입됨</span>
+          </div>
+          <div class="card">
+            프로젝트 테스트
+            <strong>0개</strong>
+            <span class="small">가상환경 제외 기준 test_*.py 미검출</span>
+          </div>
+          <div class="card">
+            Git 작성자
+            <strong>5명</strong>
+            <span class="small">커밋은 다수이나 특정 작성자 집중 있음</span>
+          </div>
+        </div>
+
+        <h3>최우선 보완 항목</h3>
+        <ol class="priority">
+          <li>최종 제출 폴더에 결과보고서 PDF/PPTX, 결과파일 ZIP, 시연영상 MP4, 포스터 PDF/PPTX를 추가해야 합니다.</li>
+          <li>명세서와 README의 MoveNet 17 keypoint/5fps/8관절 설명을 실제 코드 기준(MediaPipe 33 landmark/10fps/6 bone)과 맞춰야 합니다.</li>
+          <li>요구사항별 테스트와 테스트 실행 결과(<code>test-results/</code>)가 필요합니다.</li>
+          <li><code>RUN.md</code>를 만들어 서버/카메라 워커 설치, 실행, 환경 변수, 외부 서비스 조건을 한곳에 정리하는 것이 안전합니다.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>산출물 점검</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>산출물</th>
+              <th>상태</th>
+              <th>근거 / 조치</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>요구사항 명세서</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>SW_Bootcamp_13기_최종제출/SW_Bootcamp_13기_A반_3팀_요구사항_명세서.md</code></td>
+            </tr>
+            <tr>
+              <td>결과보고서 PDF</td>
+              <td><span class="status bad">누락</span></td>
+              <td>제출 폴더에 <code>SW_Bootcamp_13기_A반_3팀_결과보고서.pdf</code> 필요</td>
+            </tr>
+            <tr>
+              <td>결과보고서 PPTX</td>
+              <td><span class="status bad">누락</span></td>
+              <td>제출 폴더에 <code>SW_Bootcamp_13기_A반_3팀_결과보고서.pptx</code> 필요</td>
+            </tr>
+            <tr>
+              <td>결과파일 ZIP</td>
+              <td><span class="status bad">누락</span></td>
+              <td>소스, 테스트, test-results, RUN.md, requirements, Git 히스토리를 포함한 ZIP 필요</td>
+            </tr>
+            <tr>
+              <td>시연영상 MP4</td>
+              <td><span class="status bad">누락</span></td>
+              <td>요구사항 타임스탬프와 대응되는 최종 시연영상 필요</td>
+            </tr>
+            <tr>
+              <td>포스터 PDF</td>
+              <td><span class="status warn">형식 보완</span></td>
+              <td><code>poster/poster.pdf</code>는 있으나 제출 폴더 파일명 형식으로 복사/이름 변경 필요</td>
+            </tr>
+            <tr>
+              <td>포스터 PPTX</td>
+              <td><span class="status bad">누락</span></td>
+              <td>제출 폴더에 <code>SW_Bootcamp_13기_A반_3팀_포스터.pptx</code> 필요</td>
+            </tr>
+            <tr>
+              <td>평가 결과 HTML</td>
+              <td><span class="status ok">생성됨</span></td>
+              <td><code>SW_Bootcamp_13기_A반_3팀_평가결과.html</code> (현재 파일)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>요구사항 명세 점검</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>상태</th>
+              <th>근거</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>중립 ID 사용</td>
+              <td><span class="status ok">충족</span></td>
+              <td>요구사항이 <code>R-01</code>부터 <code>R-27</code>까지 작성됨</td>
+            </tr>
+            <tr>
+              <td>검증 기준 작성</td>
+              <td><span class="status ok">충족</span></td>
+              <td>모든 요구사항 행에 완료 조건이 있음</td>
+            </tr>
+            <tr>
+              <td>시연 타임스탬프/N/A 사유</td>
+              <td><span class="status ok">충족</span></td>
+              <td>영상 대상은 <code>MM:SS</code>, 비영상 대상은 <code>N/A (사유)</code>로 표기됨</td>
+            </tr>
+            <tr>
+              <td>코드와 명세 정합성</td>
+              <td><span class="status bad">위험</span></td>
+              <td>R-03/R-12에서 포즈 백엔드, keypoint 수, FPS, scoring bone 수가 실제 코드와 다름</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>구현 매핑 주요 결과</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>요구사항</th>
+              <th>판정</th>
+              <th>근거 / 리스크</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>R-01~R-06 카메라 수신, 대시보드, 포즈 오버레이</td>
+              <td><span class="status warn">부분 확인</span></td>
+              <td><code>server/app/api/camera_routes.py</code>, <code>server/app/web/static/js/dashboard.js</code>에 구현 근거 있음. 단 실제 다중 하드웨어 검증 로그는 미첨부.</td>
+            </tr>
+            <tr>
+              <td>R-03 MoveNet 17 keypoint, 5fps</td>
+              <td><span class="status bad">불일치</span></td>
+              <td><code>camera-worker/app/inference/pose_estimator.py</code>는 MediaPipe Pose 33 landmarks를 사용. <code>KEYPOINT_INFERENCE_FPS = 10.0</code>.</td>
+            </tr>
+            <tr>
+              <td>R-07~R-11 게임 시작/카테고리/라운드 상태머신</td>
+              <td><span class="status ok">구현 근거 있음</span></td>
+              <td><code>server/app/services/game_manager.py</code>, <code>server/app/api/game_routes.py</code>, <code>server/app/web/static/js/game.js</code></td>
+            </tr>
+            <tr>
+              <td>R-12 8개 관절 각도 유사도</td>
+              <td><span class="status bad">불일치</span></td>
+              <td><code>server/app/services/pose_similarity.py</code>의 <code>BONE_DEFINITIONS</code>는 head 2개 + upper body 4개, 총 6개 bone을 사용.</td>
+            </tr>
+            <tr>
+              <td>R-14 참가자 화면 영상 비노출</td>
+              <td><span class="status ok">구현 근거 있음</span></td>
+              <td><code>server/app/web/templates/game.html</code>에는 카메라 stream img 대신 게이지, 코칭, 포즈 싱크 Canvas가 있음.</td>
+            </tr>
+            <tr>
+              <td>R-15 포즈 싱크 Canvas</td>
+              <td><span class="status ok">구현 근거 있음</span></td>
+              <td><code>merged-skel-canvas</code>, <code>drawMergedSkeletons()</code>, <code>refreshSkeletons()</code> 흐름 존재.</td>
+            </tr>
+            <tr>
+              <td>R-16 관객 화면</td>
+              <td><span class="status ok">구현 근거 있음</span></td>
+              <td><code>server/app/web/templates/stage.html</code>, <code>server/app/web/static/js/stage.js</code></td>
+            </tr>
+            <tr>
+              <td>R-18~R-22 LLM/TTS/음성 폴백</td>
+              <td><span class="status warn">부분 확인</span></td>
+              <td><code>llm_client.py</code>, <code>speech_audio.py</code>, <code>tts.py</code>, <code>game.js</code>에 구현 근거 있음. 장애 주입 로그는 미첨부.</td>
+            </tr>
+            <tr>
+              <td>R-23~R-25 초기화, 최종 점수, PNG 저장</td>
+              <td><span class="status ok">구현 근거 있음</span></td>
+              <td><code>game_manager.py</code>, <code>game.js</code>, <code>leaderboard.py</code>에 구현 근거 있음.</td>
+            </tr>
+            <tr>
+              <td>R-26 오프라인 LAN 동작</td>
+              <td><span class="status unknown">확인 불가</span></td>
+              <td>코드와 폴백 경로는 있으나 인터넷 차단 완주 로그가 없음.</td>
+            </tr>
+            <tr>
+              <td>R-27 설정 파일 관리</td>
+              <td><span class="status warn">부분 충족</span></td>
+              <td><code>.env.example</code>, <code>config/*.example.yaml</code> 존재. 단 README와 코드 설정 일부가 불일치.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>테스트 점검</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>상태</th>
+              <th>근거 / 조치</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>테스트 코드 존재</td>
+              <td><span class="status bad">미충족</span></td>
+              <td>가상환경과 scratch를 제외한 프로젝트 영역에서 <code>test_*.py</code>, <code>*.test.js</code> 미검출</td>
+            </tr>
+            <tr>
+              <td>테스트 실행 결과</td>
+              <td><span class="status bad">미충족</span></td>
+              <td><code>test-results/</code>, JUnit XML, pytest 로그 등 미검출</td>
+            </tr>
+            <tr>
+              <td>권장 테스트</td>
+              <td><span class="status warn">필요</span></td>
+              <td>pose_similarity 계산, ready pose 판정, game_manager 상태 전환, leaderboard 저장, API 라우트 smoke test 추가 권장</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>DevOps 및 실행 가능성 8개 기준</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>기준</th>
+              <th>판정</th>
+              <th>근거</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>라이브러리 목록 명시</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>server/requirements.txt</code>, <code>camera-worker/requirements.txt</code></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>라이브러리 버전 고정</td>
+              <td><span class="status warn">부분 충족</span></td>
+              <td>서버는 고정. 카메라 워커의 <code>mediapipe&gt;=0.10.14</code>는 범위 지정이라 완전 고정 아님.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>빌드·설치 방법 문서화</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>README.md</code>, <code>server/README.md</code>, <code>camera-worker/README.md</code></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>실행·기동 방법 문서화</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>start.sh</code>, <code>start-camera.sh</code>, README 실행 예시</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>환경 변수·설정 파일 문서화</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>server/.env.example</code>, <code>camera-worker/.env.example</code>, <code>config/*.example.yaml</code></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>외부 서비스·자원 안내</td>
+              <td><span class="status warn">부분 충족</span></td>
+              <td>Ollama, edge-tts, OpenAI/Piper/espeak 설명은 있으나 발표/제출용 RUN.md에 통합 필요</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>빌드·설치 성공</td>
+              <td><span class="status unknown">확인 불가</span></td>
+              <td>이번 점검에서 의존성 재설치 실행은 하지 않음. 제출 시 설치 로그 첨부 권장.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>애플리케이션 실행·기동</td>
+              <td><span class="status unknown">확인 불가</span></td>
+              <td>이번 점검에서 서버/워커 실기동은 하지 않음. 실행 로그 또는 시연 영상 필요.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>시연 확인표</h2>
+        <p class="small">Agent 정의서 기준으로 실제 동작 여부는 평가자가 영상에서 확인합니다. 이 표는 명세서의 타임스탬프 제공 여부를 정리합니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>요구사항</th>
+              <th>타임스탬프</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status ok">시연 있음</span></td>
+              <td>R-02, R-05, R-06, R-07, R-08, R-09, R-10, R-11, R-12, R-14, R-15, R-16, R-18, R-21, R-23, R-24, R-25</td>
+              <td>00:10 ~ 02:55</td>
+            </tr>
+            <tr>
+              <td><span class="status warn">N/A 사유 있음</span></td>
+              <td>R-01, R-03, R-04, R-13, R-17, R-19, R-20, R-22, R-26, R-27</td>
+              <td>하드웨어, 로그, 설정, 장애 주입, 환경 조건 등</td>
+            </tr>
+            <tr>
+              <td><span class="status bad">파일 누락</span></td>
+              <td>시연영상 자체</td>
+              <td>제출 폴더에 <code>SW_Bootcamp_13기_A반_3팀_시연영상.mp4</code> 필요</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Git 협업 지표</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>지표</th>
+              <th>결과</th>
+              <th>해석</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>작성자 분포</td>
+              <td><code>manypeople 41</code>, <code>hyogeun_byun 23</code>, <code>hyogeun-byun 3</code>, <code>jongmin 2</code>, <code>langleman2 2</code></td>
+              <td>여러 작성자가 있으나 특정 작성자 집중이 큼. 동일 인물의 author 표기 분리 가능성도 정리 필요.</td>
+            </tr>
+            <tr>
+              <td>작업 지속성</td>
+              <td>2026-06-08, 06-22, 06-23, 06-24, 06-25, 06-26, 06-28, 06-29에 커밋 존재</td>
+              <td>마감 직전 집중은 있으나 여러 날짜에 작업 흔적이 있음.</td>
+            </tr>
+            <tr>
+              <td>협업 상호작용</td>
+              <td>merge commit 다수 존재</td>
+              <td>브랜치 병합 흔적은 있으나 PR/리뷰 증거는 로컬 Git 로그만으로 확인 제한.</td>
+            </tr>
+            <tr>
+              <td>제출 ZIP 내 Git 히스토리</td>
+              <td><span class="status bad">확인 불가</span></td>
+              <td>결과파일 ZIP이 아직 없으므로 <code>.git</code> 또는 <code>git_log.txt</code> 포함 여부 확인 불가.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>비기능 평가자 확인 항목</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              <th>출처 요구사항</th>
+              <th>평가자 확인 포인트</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>성능</td>
+              <td>R-03, R-04, R-17, R-19</td>
+              <td>포즈 FPS, 프레임 FPS, WebSocket 동기화 지연, playing 구간 LLM/TTS 비호출 로그 확인</td>
+            </tr>
+            <tr>
+              <td>신뢰성</td>
+              <td>R-01, R-20, R-22, R-23</td>
+              <td>카메라 일부 종료, LLM/TTS 실패, reset 동작에서 게임이 중단되지 않는지 확인</td>
+            </tr>
+            <tr>
+              <td>사용성</td>
+              <td>R-07, R-14, R-15, R-16, R-24, R-25</td>
+              <td>참가자/관객 화면 분리, T자 포즈 시작, 포즈 싱크 표시, 결과 리포트 이해 가능성 확인</td>
+            </tr>
+            <tr>
+              <td>유지보수성</td>
+              <td>R-27</td>
+              <td>환경 변수, 설정 예시, 실행 문서가 제출 ZIP 안에서 일관되게 제공되는지 확인</td>
+            </tr>
+            <tr>
+              <td>호환성/운영</td>
+              <td>R-26</td>
+              <td>LAN 오프라인 환경, edge-tts 실패 시 폴백, 브라우저 음성 권한 조건 확인</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>확인 불가 및 한계</h2>
+        <ul>
+          <li>시연영상 파일이 없으므로 실제 화면 동작은 이 리포트에서 판정하지 않았습니다.</li>
+          <li>테스트 코드와 테스트 결과가 없어 요구사항별 테스트 통과 여부를 확인하지 못했습니다.</li>
+          <li>서버/카메라 워커를 이번 점검에서 직접 기동하지 않아 설치 성공과 런타임 동작은 확인 불가입니다.</li>
+          <li>현재 파일은 정적 분석 기반 자체 점검 리포트입니다. 공식 Agent 실행 결과가 필요한 경우 별도 실행본으로 교체하세요.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
