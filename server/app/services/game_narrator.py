@@ -124,12 +124,10 @@ def category_select_line() -> str:
 def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") -> str:
     """Short spoken greeting played (via TTS) when the intro screen opens."""
     audience = f"{team_name.strip()} 여러분" if team_name.strip() else "여러분"
-    category = f"오, '{theme.strip()}' 카테고리를 선택하셨네요! " if theme.strip() else ""
     return (
         f"안녕하세요 {audience}! "
         f"저, 에이아이 엠씨 {mc_name}와 함께하는 텔레파시 게임. "
-        f"{category}"
-        "제가 화면을 돌아다니면서 어떻게 하는지 설명해 드릴게요!"
+        "먼저 제가 화면을 돌아다니면서 어떻게 하는지 설명해 드릴게요!"
     )
 
 
@@ -152,7 +150,7 @@ def intro_tour(theme: str = "") -> list[dict[str, str]]:
         },
         {
             "target": "ready",
-            "text": "총 다섯 라운드, 라운드마다 십 초! 다들 준비 되셨나요? 그럼 시작합니다!",
+            "text": "총 다섯 라운드, 라운드마다 십 초! 자, 그럼 어떤 카테고리로 할지 먼저 골라볼까요?",
         },
     ]
 

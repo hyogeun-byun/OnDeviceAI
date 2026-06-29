@@ -280,7 +280,7 @@ class GameManager:
             self._state.phase_started_at = time.monotonic()
             self._speak(line)
         else:
-            self._enter_countdown(time.monotonic())
+            self._enter_category(time.monotonic())
 
     def _enter_countdown(self, now: float) -> None:
         self._state.phase = PHASE_COUNTDOWN
@@ -413,7 +413,7 @@ class GameManager:
             if self._state.ready_pose_hold_since == 0.0:
                 self._state.ready_pose_hold_since = now
             elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
-                self._enter_category(now)
+                self.start(self._pending_theme, self._pending_team_name)
         else:
             if self._state.ready_pose_hold_since > 0.0:
                 if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
@@ -442,7 +442,13 @@ class GameManager:
             if self._state.category_confirm_since == 0.0:
                 self._state.category_confirm_since = now
             elif now - self._state.category_confirm_since >= CATEGORY_CONFIRM_SECONDS:
-                self.start(themes[self._state.category_index], self._pending_team_name)
+                chosen = themes[self._state.category_index]
+                self._state.theme = chosen
+                self._state.prompts = list(
+                    narrator.default_prompts(theme=chosen, n=self._total_rounds)
+                )
+                self._state.prompt_source = "category_random_in_theme"
+                self._enter_countdown(now)
             return
         self._state.category_confirm_since = 0.0
         self._state.category_armed = True
