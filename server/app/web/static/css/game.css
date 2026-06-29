@@ -774,14 +774,14 @@ body {
 
 .skeleton-strip {
   display: flex;
-  gap: 14px;
+  gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .skel-card {
   position: relative;
-  width: clamp(96px, 14vw, 150px);
+  width: clamp(220px, 28vw, 420px);
   aspect-ratio: 3 / 4;
   border-radius: 14px;
   background: rgba(8, 10, 22, 0.6);

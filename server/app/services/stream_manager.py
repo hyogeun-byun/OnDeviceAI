@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import Lock
+
+# Missing/invisible keypoints are back-filled from the last good frame for up to
+# this long, so brief detection dropouts don't break the pose math or drawing.
+_KEYPOINT_STALE_TTL = 1.0  # seconds
+_KEYPOINT_MIN_VISIBILITY = 0.3
 
 
 @dataclass(frozen=True)
@@ -32,6 +38,8 @@ class StreamManager:
         self._frames: dict[str, CameraFrame] = {}
         self._poses: dict[str, CameraPose] = {}
         self._worker_metrics: dict[str, CameraWorkerMetrics] = {}
+        # Last good keypoint per camera: name -> (keypoint dict, monotonic time)
+        self._kp_cache: dict[str, dict[str, tuple[dict[str, object], float]]] = {}
         self._lock = Lock()
 
     def update_frame(self, camera_id: str, frame_bytes: bytes) -> None:
@@ -45,12 +53,40 @@ class StreamManager:
 
     def update_pose(self, camera_id: str, pose_result: dict[str, object]) -> None:
         with self._lock:
+            self._backfill_keypoints(camera_id, pose_result)
             current_version = self._poses.get(camera_id).version if camera_id in self._poses else 0
             self._poses[camera_id] = CameraPose(
                 pose_result=pose_result,
                 updated_at=datetime.now(timezone.utc),
                 version=current_version + 1,
             )
+
+    def _backfill_keypoints(self, camera_id: str, pose_result: dict[str, object]) -> None:
+        """Merge missing/invisible keypoints with the last good ones so brief
+        detection dropouts don't drop a joint from the math or the drawing."""
+        if not pose_result.get("person_detected"):
+            return
+        now = time.monotonic()
+        cache = self._kp_cache.setdefault(camera_id, {})
+        keypoints = list(pose_result.get("keypoints") or [])
+        present: dict[str, dict[str, object]] = {}
+        for kp in keypoints:
+            name = kp.get("name")
+            if not name:
+                continue
+            present[name] = kp
+            vis = kp.get("visibility")
+            if vis is None or vis >= _KEYPOINT_MIN_VISIBILITY:
+                cache[name] = (kp, now)  # remember this good keypoint
+        # Re-add any cached joint that's missing/low-vis and still fresh.
+        for name, (kp, ts) in cache.items():
+            if now - ts > _KEYPOINT_STALE_TTL:
+                continue
+            cur = present.get(name)
+            cur_vis = cur.get("visibility") if cur else None
+            if cur is None or (cur_vis is not None and cur_vis < _KEYPOINT_MIN_VISIBILITY):
+                present[name] = kp
+        pose_result["keypoints"] = list(present.values())
 
     def update_worker_metrics(self, camera_id: str, metrics: dict[str, object]) -> None:
         with self._lock:
