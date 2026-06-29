@@ -328,6 +328,7 @@ function render(state) {
   if (state.phase === "playing") {
     el.playPrompt.textContent = state.prompt || "";
     setGauge(state.gauge);
+    latestGauge = state.gauge;
     el.playTagline.textContent = taglineFor(state.gauge, state.ready_count);
     if (el.coachText && state.coach) el.coachText.textContent = state.coach;
     // Coaching is voiced by the server in the same MC voice (edge-tts) via the
@@ -950,6 +951,7 @@ const POSE_CONNECTIONS = [
 const SKELETON_VISIBILITY = 0.5;
 let latestPlayers = [];
 let currentPhase = "idle";
+let latestGauge = 0;
 let skeletonBusy = false;
 
 function drawSkeletonCard(canvas, pose) {
@@ -1070,10 +1072,24 @@ function skeletonPrefix() {
 
 async function refreshSkeletons() {
   const prefix = skeletonPrefix();
-  // During the round we still need every player's pose to draw the merged
-  // "포즈 싱크" overlay, even though there are no per-player skeleton cards.
-  const shouldDrawMerged = currentPhase === "playing" && el.mergedSkel;
-  if (skeletonBusy || latestPlayers.length === 0 || (!prefix && !shouldDrawMerged)) return;
+  // The merged "포즈 싱크" overlay is a hint, shown only when the score is low
+  // (≤40). Above that, show a teaser instead of fetching poses every tick.
+  const shouldDrawMerged = currentPhase === "playing" && el.mergedSkel && latestGauge <= 40;
+  if (!prefix && !shouldDrawMerged) {
+    if (currentPhase === "playing" && el.mergedSkel) {
+      const c = el.mergedSkel;
+      const ctx = c.getContext("2d");
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.fillStyle = "rgba(6,7,13,0.7)";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = "rgba(139,147,180,0.6)";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("40점 이하일 때 힌트 공개!", c.width / 2, c.height / 2);
+    }
+    return;
+  }
+  if (skeletonBusy || latestPlayers.length === 0) return;
   skeletonBusy = true;
   try {
     const poses = await Promise.all(
