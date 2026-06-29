@@ -20,9 +20,12 @@ RESULT_SECONDS = 4.0
 
 TOTAL_ROUNDS = 5
 
-# How long (seconds) a player must *continuously* hold the T pose before the
-# game auto-starts (prevents accidental triggers).
+# How long (seconds) a player must hold the T pose (within the tolerance window)
+# before the game auto-starts (prevents accidental triggers).
 READY_POSE_HOLD_SECONDS = 1.5
+# Keypoint jitter tolerance: brief dropouts shorter than this are ignored so
+# intermittent keypoint loss does not reset the hold timer.
+READY_POSE_GAP_TOLERANCE = 0.8
 
 # Hint thresholds
 # Low-score hint: shown once at the START of a round when gauge <= this value
@@ -89,6 +92,7 @@ class GameState:
     recorded: bool = False
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
+    ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
     ready_pose_instruction: str = narrator.READY_POSE_INSTRUCTION
     # Hint state
     hint: str = ""              # current hint text (empty = no active hint)
@@ -189,6 +193,7 @@ class GameManager:
         self._state.phase = PHASE_WAITING_POSE
         self._state.phase_started_at = now
         self._state.ready_pose_hold_since = 0.0
+        self._state.ready_pose_last_seen = 0.0
         self._speak(narrator.ready_pose_wait_line())
 
     def _enter_countdown(self, now: float) -> None:
@@ -294,25 +299,34 @@ class GameManager:
                 self._advance_round(now)
 
     def _check_ready_pose(self, now: float) -> None:
-        """Detect T-pose from all present players; start when all hold it.
+        """Detect T-pose from any present player; start when at least one holds it.
 
+        Gap-tolerant: keypoint dropouts shorter than READY_POSE_GAP_TOLERANCE
+        seconds do not reset the hold timer, so intermittent frame loss does not
+        block the start trigger.
         Only called when a team name is already set.  The start button
         (begin()) is always an alternative — this is the gesture path.
         """
         poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
         present = [p for p in poses if p and p.get("person_detected")]
         if not present:
-            self._state.ready_pose_hold_since = 0.0
+            # No person in frame at all — only reset if gap exceeds tolerance.
+            if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
+                self._state.ready_pose_hold_since = 0.0
             return
 
-        all_ready = all(detect_ready_pose(p) for p in present)
-        if all_ready:
+        any_ready = any(detect_ready_pose(p) for p in present)
+        if any_ready:
+            self._state.ready_pose_last_seen = now
             if self._state.ready_pose_hold_since == 0.0:
                 self._state.ready_pose_hold_since = now
             elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
                 self._enter_countdown(now)
         else:
-            self._state.ready_pose_hold_since = 0.0
+            # T-pose not detected this tick — tolerate brief gaps.
+            if self._state.ready_pose_hold_since > 0.0:
+                if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
+                    self._state.ready_pose_hold_since = 0.0
 
     def _enter_playing(self, now: float) -> None:
         self._state.phase = PHASE_PLAYING

@@ -42,20 +42,19 @@ _MIN_TORSO_HEIGHT = 0.05  # normalised units; skip if person is too small
 
 
 # ---------------------------------------------------------------------------
-# Ready-pose detection  ("양팔 T자" — both arms horizontal, elbows extended)
+# Ready-pose detection  ("양팔 T자" — both upper arms horizontal)
 # ---------------------------------------------------------------------------
-# Players hold both arms out sideways (like the letter T) to trigger game start.
-# Shoulder angle (elbow-shoulder-hip) ≈ 85~95° means arm is horizontal.
-# Elbow angle (shoulder-elbow-wrist) ≈ 155~180° means arm is straight.
+# Players raise both upper arms sideways (shoulder → elbow horizontal) to trigger
+# game start.  Only the upper-arm segment is checked so wrist visibility is not
+# required — useful when the far end of the arm is out of frame.
+# Shoulder angle (elbow-shoulder-hip) ≈ 70~110° means the upper arm is horizontal.
 READY_POSE_SHOULDER_MIN = 70.0   # degrees — shoulder joint
 READY_POSE_SHOULDER_MAX = 110.0
-READY_POSE_ELBOW_MIN    = 140.0  # degrees — elbow joint (arm straight)
-# A player counts as "holding the T pose" when these four joints are in range.
+# A player counts as "holding the T pose" when both shoulder joints are in range.
+# Elbow / wrist visibility is NOT required.
 _READY_JOINTS = {
     "left_shoulder":  (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
     "right_shoulder": (READY_POSE_SHOULDER_MIN, READY_POSE_SHOULDER_MAX),
-    "left_elbow":     (READY_POSE_ELBOW_MIN,    180.0),
-    "right_elbow":    (READY_POSE_ELBOW_MIN,    180.0),
 }
 
 # Approximate bone directions of a neutral standing "rest" pose.
@@ -210,7 +209,8 @@ def _normalize_keypoints_to_torso(
 def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
     """Return True when the player is holding the T-pose (양팔 T자).
 
-    Both arms must be stretched horizontally (shoulder ~90°, elbow ~straight).
+    Both upper arms (shoulder → elbow) must be roughly horizontal.
+    Wrist / forearm visibility is NOT required.
     Used on the intro screen so players can trigger game start by gesture.
     """
     if not pose_result or not pose_result.get("person_detected"):
