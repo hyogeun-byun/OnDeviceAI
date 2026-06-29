@@ -581,10 +581,11 @@ body {
 
 .prompt-word {
   margin: 0;
-  font-family: "Black Han Sans", sans-serif;
+  font-weight: 800;
   font-size: clamp(40px, 7vw, 84px);
   line-height: 1.1;
-  text-shadow: 0 0 40px rgba(124, 92, 255, 0.5);
+  letter-spacing: 1px;
+  text-shadow: 0 0 32px rgba(124, 92, 255, 0.4);
 }
 
 .prompt-word.small {
@@ -1405,7 +1406,7 @@ body {
 .cast-prompt {
   flex: 1;
   text-align: center;
-  font-family: "Black Han Sans", sans-serif;
+  font-weight: 800;
   font-size: clamp(26px, 4.4vw, 56px);
   line-height: 1.1;
   background: linear-gradient(120deg, var(--accent), var(--accent-2));
