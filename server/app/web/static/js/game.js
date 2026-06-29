@@ -1072,8 +1072,8 @@ async function refreshSkeletons() {
   const prefix = skeletonPrefix();
   // During the round we still need every player's pose to draw the merged
   // "포즈 싱크" overlay, even though there are no per-player skeleton cards.
-  const needMerged = currentPhase === "playing" && el.mergedSkel;
-  if ((!prefix && !needMerged) || skeletonBusy || latestPlayers.length === 0) return;
+  const shouldDrawMerged = currentPhase === "playing" && el.mergedSkel;
+  if (skeletonBusy || latestPlayers.length === 0 || (!prefix && !shouldDrawMerged)) return;
   skeletonBusy = true;
   try {
     const poses = await Promise.all(
@@ -1081,20 +1081,22 @@ async function refreshSkeletons() {
         const canvas = prefix ? document.getElementById(`${prefix}-${index}`) : null;
         const card = prefix ? document.getElementById(`${prefix}-card-${index}`) : null;
         let pose = null;
-        try {
-          const response = await fetch(`/api/cameras/${player.camera_id}/pose`, { cache: "no-store" });
-          if (response.ok) pose = await response.json();
-        } catch {
-          pose = null;
+        if (player && player.camera_id) {
+          try {
+            const response = await fetch(`/api/cameras/${player.camera_id}/pose`, { cache: "no-store" });
+            if (response.ok) pose = await response.json();
+          } catch {
+            pose = null;
+          }
         }
         if (canvas) drawSkeletonCard(canvas, pose);
         if (card) card.classList.toggle("ready", Boolean(pose && pose.person_detected));
         return pose;
       }),
     );
-    captureRoundSnapshot(prefix);
+    if (prefix) captureRoundSnapshot(prefix);
     // Draw merged (torso-normalised) skeleton overlay during playing phase.
-    if (needMerged) {
+    if (shouldDrawMerged) {
       drawMergedSkeletons(el.mergedSkel, poses);
     }
   } finally {
