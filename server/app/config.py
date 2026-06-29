@@ -67,6 +67,6 @@ def load_config() -> ServerConfig:
         tts_mc_name=os.getenv("TTS_MC_NAME", "민수"),
         edge_tts_enabled=read_bool("EDGE_TTS_ENABLED", True),
         edge_tts_voice=os.getenv("EDGE_TTS_VOICE", "ko-KR-InJoonNeural"),
-        edge_tts_rate=os.getenv("EDGE_TTS_RATE", "+8%"),
+        edge_tts_rate=os.getenv("EDGE_TTS_RATE", "+22%"),
         leaderboard_db=os.getenv("LEADERBOARD_DB", "data/leaderboard.db"),
     )
