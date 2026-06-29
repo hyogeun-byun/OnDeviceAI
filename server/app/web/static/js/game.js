@@ -50,6 +50,7 @@ const el = {
   leaderboardReset: document.getElementById("leaderboard-reset"),
   finalTeam: document.getElementById("final-team"),
   finalRank: document.getElementById("final-rank"),
+  mergedSkel: document.getElementById("merged-skel-canvas"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
@@ -789,6 +790,105 @@ async function resetLeaderboard() {
   refreshLeaderboardIdle();
 }
 
+// --- Merged skeleton: torso-normalised overlay of all players ---
+// Bones shown in the merged view (face + upper-body, matches scoring bones).
+const MERGED_CONNECTIONS = [
+  ["left_ear", "nose"],
+  ["right_ear", "nose"],
+  ["nose", "left_shoulder"],
+  ["nose", "right_shoulder"],
+  ["left_shoulder", "right_shoulder"],
+  ["left_shoulder", "left_elbow"],
+  ["left_elbow", "left_wrist"],
+  ["right_shoulder", "right_elbow"],
+  ["right_elbow", "right_wrist"],
+  ["left_shoulder", "left_hip"],
+  ["right_shoulder", "right_hip"],
+  ["left_hip", "right_hip"],
+];
+const MERGED_COLORS = ["#00ffc6", "#ff4d8d", "#7c5cff", "#ffd166"];
+const MERGED_VIS = 0.3;
+
+// Normalize all keypoints into torso space:
+//   origin = torso centre, unit = torso height, y-up.
+// Returns {name -> {nx, ny, visibility}} or null when torso anchors are missing.
+function normalizePoseToTorso(pose) {
+  if (!pose || !pose.person_detected || !Array.isArray(pose.keypoints)) return null;
+  const kps = {};
+  pose.keypoints.forEach((kp) => { if (kp && kp.name) kps[kp.name] = kp; });
+  const aspect = pose.frame_width && pose.frame_height
+    ? pose.frame_width / pose.frame_height : 1.0;
+  for (const name of ["left_shoulder", "right_shoulder", "left_hip", "right_hip"]) {
+    const kp = kps[name];
+    if (!kp || (kp.visibility != null && kp.visibility < MERGED_VIS)) return null;
+  }
+  const ax = (n) => kps[n].x * aspect;
+  const ay = (n) => kps[n].y;
+  const smx = (ax("left_shoulder") + ax("right_shoulder")) / 2;
+  const smy = (ay("left_shoulder") + ay("right_shoulder")) / 2;
+  const hmx = (ax("left_hip") + ax("right_hip")) / 2;
+  const hmy = (ay("left_hip") + ay("right_hip")) / 2;
+  const torsoH = Math.hypot(smx - hmx, smy - hmy);
+  if (torsoH < 0.02) return null;
+  const cx = (ax("left_shoulder") + ax("right_shoulder") + ax("left_hip") + ax("right_hip")) / 4;
+  const cy = (ay("left_shoulder") + ay("right_shoulder") + ay("left_hip") + ay("right_hip")) / 4;
+  const result = {};
+  pose.keypoints.forEach((kp) => {
+    if (!kp || !kp.name) return;
+    result[kp.name] = {
+      nx: (kp.x * aspect - cx) / torsoH,
+      ny: -((kp.y - cy) / torsoH), // flip y so up = positive
+      visibility: kp.visibility,
+    };
+  });
+  return result;
+}
+
+function drawMergedSkeletons(canvas, poses) {
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(6,7,13,0.7)";
+  ctx.fillRect(0, 0, W, H);
+  // torso height maps to 38% of canvas height; origin slightly below centre
+  const scale = H * 0.38;
+  const originX = W / 2;
+  const originY = H * 0.56;
+  let anyDrawn = false;
+  poses.forEach((pose, i) => {
+    const norm = normalizePoseToTorso(pose);
+    if (!norm) return;
+    anyDrawn = true;
+    const color = MERGED_COLORS[i % MERGED_COLORS.length];
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.9;
+    MERGED_CONNECTIONS.forEach(([a, b]) => {
+      const ka = norm[a], kb = norm[b];
+      if (!ka || !kb) return;
+      if ((ka.visibility ?? 1) < MERGED_VIS || (kb.visibility ?? 1) < MERGED_VIS) return;
+      ctx.beginPath();
+      ctx.moveTo(originX + ka.nx * scale, originY - ka.ny * scale);
+      ctx.lineTo(originX + kb.nx * scale, originY - kb.ny * scale);
+      ctx.stroke();
+    });
+    Object.values(norm).forEach((kp) => {
+      if ((kp.visibility ?? 1) < MERGED_VIS) return;
+      ctx.beginPath();
+      ctx.arc(originX + kp.nx * scale, originY - kp.ny * scale, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+  ctx.globalAlpha = 1.0;
+  if (!anyDrawn) {
+    ctx.fillStyle = "rgba(139,147,180,0.4)";
+    ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("대기 중…", W / 2, H / 2);
+  }
+}
+
 // --- Skeleton rendering on the game screen ---
 const POSE_CONNECTIONS = [
   ["left_shoulder", "right_shoulder"],
@@ -932,11 +1032,10 @@ async function refreshSkeletons() {
   if (!prefix || skeletonBusy || latestPlayers.length === 0) return;
   skeletonBusy = true;
   try {
-    await Promise.all(
+    const poses = await Promise.all(
       latestPlayers.map(async (player, index) => {
         const canvas = document.getElementById(`${prefix}-${index}`);
         const card = document.getElementById(`${prefix}-card-${index}`);
-        if (!canvas) return;
         let pose = null;
         try {
           const response = await fetch(`/api/cameras/${player.camera_id}/pose`, { cache: "no-store" });
@@ -944,11 +1043,16 @@ async function refreshSkeletons() {
         } catch {
           pose = null;
         }
-        drawSkeletonCard(canvas, pose);
+        if (canvas) drawSkeletonCard(canvas, pose);
         if (card) card.classList.toggle("ready", Boolean(pose && pose.person_detected));
+        return pose;
       }),
     );
     captureRoundSnapshot(prefix);
+    // Draw merged (torso-normalised) skeleton overlay during playing phase.
+    if (currentPhase === "playing" && el.mergedSkel) {
+      drawMergedSkeletons(el.mergedSkel, poses);
+    }
   } finally {
     skeletonBusy = false;
   }
