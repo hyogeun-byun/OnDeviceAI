@@ -1,0 +1,12 @@
++ set -x
++ cd /home/willtek/OnDeviceAI/camera-worker
++ SERVER_URL=http://127.0.0.1:18000
++ CAMERA_ID=camera_01
++ POSE_ENABLED=false
++ .venv/bin/python scripts/verify_worker_smoke.py
+camera_id=camera_01
+server_url=http://127.0.0.1:18000
+sending synthetic pose via camera worker WebSocket path
+send_pose_ms=3.698511001857696
+send_metrics_ms=0.05477800004882738
+camera worker websocket smoke OK

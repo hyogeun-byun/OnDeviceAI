@@ -1,0 +1,10 @@
+DevOps verification summary
+date=2026-06-29T15:10:09+09:00
+DEVOPS_6_EXTERNAL_RESOURCES=OK RUN.md documents Ollama, edge-tts, OpenAI/Piper/espeak, SQLite, LAN
+DEVOPS_7_SERVER_INSTALL=OK log/server-install.log
+DEVOPS_7_CAMERA_WORKER_INSTALL=OK log/camera-worker-install.log
+DEVOPS_8_SERVER_RUNTIME=OK log/server-run.log log/server-health.log log/server-game-state.log
+DEVOPS_8_CAMERA_WORKER_SMOKE=OK log/camera-worker-run.log log/camera-api-smoke.log
+REAL_CAMERA_FPS_LOGGING=OK python -m app.main writes log/camera-worker-<CAMERA_ID>.log and log/camera-worker-<CAMERA_ID>-metrics.jsonl
+R26_OFFLINE_LAN_PROCEDURE=OK log/offline-lan-checklist.log test-results/offline-lan/R-26-offline-lan-guide.md
+REQUIREMENT_TESTS=OK log/requirements-unittest.log

@@ -1,0 +1,44 @@
++ echo 'R-26 offline LAN field verification checklist'
+R-26 offline LAN field verification checklist
+++ date -Iseconds
++ echo date=2026-06-29T15:10:09+09:00
+date=2026-06-29T15:10:09+09:00
++ echo
+
++ echo 'Manual field steps:'
+Manual field steps:
++ echo '[ ] Disconnect router WAN / internet uplink'
+[ ] Disconnect router WAN / internet uplink
++ echo '[ ] Server: ping -c 3 8.8.8.8 fails'
+[ ] Server: ping -c 3 8.8.8.8 fails
++ echo '[ ] Server: hostname -I shows LAN IP'
+[ ] Server: hostname -I shows LAN IP
++ echo '[ ] Camera worker: ping -c 3 <SERVER_LAN_IP> succeeds'
+[ ] Camera worker: ping -c 3 <SERVER_LAN_IP> succeeds
++ echo '[ ] Camera worker .env SERVER_URL=http://<SERVER_LAN_IP>:8000'
+[ ] Camera worker .env SERVER_URL=http://<SERVER_LAN_IP>:8000
++ echo '[ ] Dashboard shows camera Online, keypoint count, frame_fps, pose_fps'
+[ ] Dashboard shows camera Online, keypoint count, frame_fps, pose_fps
++ echo '[ ] /game and /stage complete 5 rounds'
+[ ] /game and /stage complete 5 rounds
++ echo '[ ] EDGE_TTS_ENABLED=false or edge-tts failure falls back without stopping game'
+[ ] EDGE_TTS_ENABLED=false or edge-tts failure falls back without stopping game
++ echo
+
++ echo 'Local smoke performed by this script:'
+Local smoke performed by this script:
++ echo server_health=log/server-health.log
+server_health=log/server-health.log
++ echo game_state=log/server-game-state.log
+game_state=log/server-game-state.log
++ echo camera_worker_websocket_smoke=log/camera-worker-run.log
+camera_worker_websocket_smoke=log/camera-worker-run.log
++ echo camera_api_after_smoke=log/camera-api-smoke.log
+camera_api_after_smoke=log/camera-api-smoke.log
++ echo
+
++ echo 'Internet probe from this machine:'
+Internet probe from this machine:
++ ping -c 1 -W 2 8.8.8.8
++ echo internet_reachable=true
+internet_reachable=true

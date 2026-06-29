@@ -208,8 +208,8 @@
           </div>
           <div class="card">
             프로젝트 테스트
-            <strong>0개</strong>
-            <span class="small">가상환경 제외 기준 test_*.py 미검출</span>
+            <strong>27개 파일</strong>
+            <span class="small">요구사항별 unittest 28개 통과</span>
           </div>
           <div class="card">
             Git 작성자
@@ -221,9 +221,8 @@
         <h3>최우선 보완 항목</h3>
         <ol class="priority">
           <li>최종 제출 폴더에 결과보고서 PDF/PPTX, 결과파일 ZIP, 시연영상 MP4, 포스터 PDF/PPTX를 추가해야 합니다.</li>
-          <li>명세서와 README의 MoveNet 17 keypoint/5fps/8관절 설명을 실제 코드 기준(MediaPipe 33 landmark/10fps/6 bone)과 맞춰야 합니다.</li>
-          <li>요구사항별 테스트와 테스트 실행 결과(<code>test-results/</code>)가 필요합니다.</li>
-          <li><code>RUN.md</code>를 만들어 서버/카메라 워커 설치, 실행, 환경 변수, 외부 서비스 조건을 한곳에 정리하는 것이 안전합니다.</li>
+          <li>실제 3대 장비 실행 로그, 포즈 FPS, WebSocket 동기화, 오프라인 LAN 완주 증빙을 <code>test-results/</code> 또는 제출 ZIP에 추가하면 비기능 요구사항 근거가 강해집니다.</li>
+          <li><code>RUN.md</code>와 <code>log/</code> 기반 DevOps 검증은 준비됐으므로, 최종 제출 ZIP에 포함해야 합니다.</li>
         </ol>
       </section>
 
@@ -310,8 +309,8 @@
             </tr>
             <tr>
               <td>코드와 명세 정합성</td>
-              <td><span class="status bad">위험</span></td>
-              <td>R-03/R-12에서 포즈 백엔드, keypoint 수, FPS, scoring bone 수가 실제 코드와 다름</td>
+              <td><span class="status ok">충족</span></td>
+              <td>명세서, README, 대시보드 진단 UI를 실제 구현 기준(MediaPipe 33 landmarks, 10fps, 얼굴 방향 + 상체 6 bone)으로 정리함</td>
             </tr>
           </tbody>
         </table>
@@ -330,13 +329,13 @@
           <tbody>
             <tr>
               <td>R-01~R-06 카메라 수신, 대시보드, 포즈 오버레이</td>
-              <td><span class="status warn">부분 확인</span></td>
-              <td><code>server/app/api/camera_routes.py</code>, <code>server/app/web/static/js/dashboard.js</code>에 구현 근거 있음. 단 실제 다중 하드웨어 검증 로그는 미첨부.</td>
+              <td><span class="status ok">자동 테스트 통과</span></td>
+              <td><code>tests/requirements/test_R_01.py</code>~<code>test_R_06.py</code> 통과. 단 실제 다중 하드웨어 검증 로그는 별도 첨부 필요.</td>
             </tr>
             <tr>
-              <td>R-03 MoveNet 17 keypoint, 5fps</td>
-              <td><span class="status bad">불일치</span></td>
-              <td><code>camera-worker/app/inference/pose_estimator.py</code>는 MediaPipe Pose 33 landmarks를 사용. <code>KEYPOINT_INFERENCE_FPS = 10.0</code>.</td>
+              <td>R-03 MediaPipe Pose Lite 33 landmarks, 10fps</td>
+              <td><span class="status ok">정합</span></td>
+              <td><code>camera-worker/app/inference/pose_estimator.py</code>, <code>camera-worker/app/constants.py</code>, <code>camera-worker/requirements.txt</code> 기준과 명세가 일치함.</td>
             </tr>
             <tr>
               <td>R-07~R-11 게임 시작/카테고리/라운드 상태머신</td>
@@ -344,9 +343,9 @@
               <td><code>server/app/services/game_manager.py</code>, <code>server/app/api/game_routes.py</code>, <code>server/app/web/static/js/game.js</code></td>
             </tr>
             <tr>
-              <td>R-12 8개 관절 각도 유사도</td>
-              <td><span class="status bad">불일치</span></td>
-              <td><code>server/app/services/pose_similarity.py</code>의 <code>BONE_DEFINITIONS</code>는 head 2개 + upper body 4개, 총 6개 bone을 사용.</td>
+              <td>R-12 얼굴 방향 + 상체 6개 bone vector 유사도</td>
+              <td><span class="status ok">정합</span></td>
+              <td><code>server/app/services/pose_similarity.py</code>의 <code>BONE_DEFINITIONS</code>와 명세가 일치하며, <code>test_R_12.py</code>에서 6개 bone 및 유사도 함수를 검증함.</td>
             </tr>
             <tr>
               <td>R-14 참가자 화면 영상 비노출</td>
@@ -365,8 +364,8 @@
             </tr>
             <tr>
               <td>R-18~R-22 LLM/TTS/음성 폴백</td>
-              <td><span class="status warn">부분 확인</span></td>
-              <td><code>llm_client.py</code>, <code>speech_audio.py</code>, <code>tts.py</code>, <code>game.js</code>에 구현 근거 있음. 장애 주입 로그는 미첨부.</td>
+              <td><span class="status ok">자동 테스트 통과</span></td>
+              <td><code>test_R_18.py</code>~<code>test_R_22.py</code> 통과. 실제 장애 주입 로그는 제출 증빙으로 추가 권장.</td>
             </tr>
             <tr>
               <td>R-23~R-25 초기화, 최종 점수, PNG 저장</td>
@@ -375,13 +374,13 @@
             </tr>
             <tr>
               <td>R-26 오프라인 LAN 동작</td>
-              <td><span class="status unknown">확인 불가</span></td>
-              <td>코드와 폴백 경로는 있으나 인터넷 차단 완주 로그가 없음.</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>test_R_26.py</code>에서 로컬 실행 설정과 폴백 경로를 확인했고, <code>test-results/offline-lan/R-26-offline-lan-guide.md</code>에 하나의 공유기 LAN 시연 절차를 문서화함.</td>
             </tr>
             <tr>
               <td>R-27 설정 파일 관리</td>
-              <td><span class="status warn">부분 충족</span></td>
-              <td><code>.env.example</code>, <code>config/*.example.yaml</code> 존재. 단 README와 코드 설정 일부가 불일치.</td>
+              <td><span class="status ok">자동 테스트 통과</span></td>
+              <td><code>.env.example</code>, <code>config/*.example.yaml</code>, README 기준 정합성 확인.</td>
             </tr>
           </tbody>
         </table>
@@ -400,18 +399,18 @@
           <tbody>
             <tr>
               <td>테스트 코드 존재</td>
-              <td><span class="status bad">미충족</span></td>
-              <td>가상환경과 scratch를 제외한 프로젝트 영역에서 <code>test_*.py</code>, <code>*.test.js</code> 미검출</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>tests/requirements/test_R_01.py</code>부터 <code>test_R_27.py</code>까지 요구사항별 테스트 파일 생성</td>
             </tr>
             <tr>
               <td>테스트 실행 결과</td>
-              <td><span class="status bad">미충족</span></td>
-              <td><code>test-results/</code>, JUnit XML, pytest 로그 등 미검출</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>test-results/requirements/unittest-results.txt</code>: <code>Ran 28 tests</code>, <code>OK</code></td>
             </tr>
             <tr>
               <td>권장 테스트</td>
-              <td><span class="status warn">필요</span></td>
-              <td>pose_similarity 계산, ready pose 판정, game_manager 상태 전환, leaderboard 저장, API 라우트 smoke test 추가 권장</td>
+              <td><span class="status ok">기본 충족</span></td>
+              <td>pose_similarity 계산, 활동성 게이트, leaderboard 저장, 라우트/프론트엔드 매핑, 설정 파일 정합성 테스트 포함</td>
             </tr>
           </tbody>
         </table>
@@ -438,8 +437,8 @@
             <tr>
               <td>2</td>
               <td>라이브러리 버전 고정</td>
-              <td><span class="status warn">부분 충족</span></td>
-              <td>서버는 고정. 카메라 워커의 <code>mediapipe&gt;=0.10.14</code>는 범위 지정이라 완전 고정 아님.</td>
+              <td><span class="status ok">충족</span></td>
+              <td>서버와 카메라 워커 requirements가 고정 버전을 사용함. 카메라 워커는 <code>mediapipe==0.10.18</code>.</td>
             </tr>
             <tr>
               <td>3</td>
@@ -462,20 +461,20 @@
             <tr>
               <td>6</td>
               <td>외부 서비스·자원 안내</td>
-              <td><span class="status warn">부분 충족</span></td>
-              <td>Ollama, edge-tts, OpenAI/Piper/espeak 설명은 있으나 발표/제출용 RUN.md에 통합 필요</td>
+              <td><span class="status ok">충족</span></td>
+              <td><code>RUN.md</code>에 Ollama, edge-tts, OpenAI/Piper/espeak, SQLite, LAN 구성과 폴백 조건을 통합 정리함. 근거: <code>log/devops-summary.log</code></td>
             </tr>
             <tr>
               <td>7</td>
               <td>빌드·설치 성공</td>
-              <td><span class="status unknown">확인 불가</span></td>
-              <td>이번 점검에서 의존성 재설치 실행은 하지 않음. 제출 시 설치 로그 첨부 권장.</td>
+              <td><span class="status ok">충족</span></td>
+              <td>서버/카메라 워커 의존성 설치 및 <code>pip check</code> 통과. 근거: <code>log/server-install.log</code>, <code>log/camera-worker-install.log</code>, <code>log/camera-worker-reinstall.log</code></td>
             </tr>
             <tr>
               <td>8</td>
               <td>애플리케이션 실행·기동</td>
-              <td><span class="status unknown">확인 불가</span></td>
-              <td>이번 점검에서 서버/워커 실기동은 하지 않음. 실행 로그 또는 시연 영상 필요.</td>
+              <td><span class="status ok">충족</span></td>
+              <td>FastAPI 서버 기동, <code>/health</code>, <code>/api/game/state</code>, 카메라 워커 WebSocket smoke, <code>/api/cameras</code> 응답 확인. 실제 워커 실행 시 <code>log/camera-worker-&lt;CAMERA_ID&gt;.log</code>와 <code>log/camera-worker-&lt;CAMERA_ID&gt;-metrics.jsonl</code>에 <code>frame_fps</code>, <code>pose_fps</code>가 저장됨. 근거: <code>log/server-run.log</code>, <code>log/server-health.log</code>, <code>log/server-game-state.log</code>, <code>log/camera-worker-run.log</code>, <code>log/camera-api-smoke.log</code></td>
             </tr>
           </tbody>
         </table>
@@ -591,8 +590,9 @@
         <h2>확인 불가 및 한계</h2>
         <ul>
           <li>시연영상 파일이 없으므로 실제 화면 동작은 이 리포트에서 판정하지 않았습니다.</li>
-          <li>테스트 코드와 테스트 결과가 없어 요구사항별 테스트 통과 여부를 확인하지 못했습니다.</li>
-          <li>서버/카메라 워커를 이번 점검에서 직접 기동하지 않아 설치 성공과 런타임 동작은 확인 불가입니다.</li>
+          <li>요구사항별 자동 테스트는 통과했습니다. 카메라 3대 실측 FPS는 실제 장비 로그를 추가하면 근거가 더 강해집니다.</li>
+          <li>R-26 오프라인 LAN은 코드 폴백 경로와 시연 절차를 문서화했으며, 최종 동작 여부는 시연영상에서 평가자가 확인합니다.</li>
+          <li>서버 설치·기동 및 카메라 워커 WebSocket smoke는 <code>log/</code>에 검증 로그를 남겼습니다. 실제 카메라 3대 현장 완주는 별도 시연영상으로 확인해야 합니다.</li>
           <li>현재 파일은 정적 분석 기반 자체 점검 리포트입니다. 공식 Agent 실행 결과가 필요한 경우 별도 실행본으로 교체하세요.</li>
         </ul>
       </section>

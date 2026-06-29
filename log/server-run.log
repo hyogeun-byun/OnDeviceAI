@@ -1,0 +1,24 @@
++ cd /home/willtek/OnDeviceAI/server
++ SERVER_HOST=127.0.0.1
++ SERVER_PORT=18000
++ CAMERA_IDS=camera_01
++ LLM_ENABLED=false
++ TTS_ENABLED=false
++ EDGE_TTS_ENABLED=false
++ LEADERBOARD_DB=../log/devops-leaderboard.db
++ .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 18000
+INFO:     Started server process [30362]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:37786 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37796 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37808 - "GET /api/game/state HTTP/1.1" 200 OK
+INFO:     ('127.0.0.1', 37810) - "WebSocket /api/cameras/camera_01/ws" [accepted]
+INFO:     connection open
+INFO:     connection closed
+INFO:     127.0.0.1:37820 - "GET /api/cameras HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [30362]
