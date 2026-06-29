@@ -129,13 +129,32 @@ def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") ->
         f"안녕하세요 {audience}! "
         f"저, 에이아이 엠씨 {mc_name}와 함께하는 텔레파시 게임. "
         f"{category}"
-        "간단히 설명할게요. 제시어가 나오면 머릿속에 떠오르는 동작을 똑같이 취해주세요. "
-        "서로의 모습은 볼 수 없고, 화면의 게이지가 여러분의 호흡이 얼마나 맞는지 실시간으로 보여줍니다. "
-        "점수가 낮으면 아래에 포즈 싱크 힌트가 떠서, 누가 다르게 하고 있는지 알려줘요. "
-        "총 다섯 라운드, 라운드마다 십 초! 합산 점수로 텔레파시를 측정합니다. "
-        "준비 되셨나요! 오직 텔레파시만 믿으세요! "
-        + random.choice(_INTRO_BANTER)
+        "제가 화면을 돌아다니면서 어떻게 하는지 설명해 드릴게요!"
     )
+
+
+# Guided intro tour: the MC flies to each part of the play screen and explains
+# it. Each step is (target, spoken line); the browser positions the MC next to
+# that target and signals when the line finishes so the next step plays.
+def intro_tour(theme: str = "") -> list[dict[str, str]]:
+    return [
+        {
+            "target": "prompt",
+            "text": "보세요! 여기 위에 이렇게 제시어가 뜹니다. 이 단어를 보고, 머릿속에 떠오르는 동작을 똑같이 취해주세요!",
+        },
+        {
+            "target": "gauge",
+            "text": "그리고 가운데 이 게이지! 여러분의 동작이 얼마나 똑같은지, 텔레파시가 얼마나 통했는지 실시간으로 보여주는 점수예요. 높을수록 좋습니다!",
+        },
+        {
+            "target": "hint",
+            "text": "여기 아래! 동작이 많이 다르면 이 스켈레톤 힌트가 겹쳐서, 누가 다르게 하고 있는지 보여줘요. 서로 못 보니까 이걸 믿으세요!",
+        },
+        {
+            "target": "ready",
+            "text": "총 다섯 라운드, 라운드마다 십 초! 다들 준비 되셨나요? 그럼 시작합니다!",
+        },
+    ]
 
 
 _START_LINES = (

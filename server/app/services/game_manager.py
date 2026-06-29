@@ -106,6 +106,10 @@ class GameState:
     leaderboard_id: int = 0
     recorded: bool = False
     intro_seconds: float = INTRO_SECONDS  # how long the intro waits (set per-line)
+    # Guided intro tour state
+    tour_steps: list[dict[str, str]] = field(default_factory=list)
+    tour_index: int = 0
+    tour_target: str = ""
     # Category picker (PHASE_CATEGORY) state
     category_index: int = 0
     category_step_at: float = 0.0       # monotonic time of the last hand-raise step
@@ -205,6 +209,9 @@ class GameManager:
             team_name=team,
         )
         opening = narrator.intro_line(self._mc_name, team, chosen)
+        self._state.tour_steps = narrator.intro_tour(chosen)
+        self._state.tour_index = -1  # -1 = still on the opening greeting
+        self._state.tour_target = "intro"
         self._state.intro_seconds = max(
             INTRO_MIN_SECONDS,
             min(INTRO_MAX_SECONDS, len(opening) * INTRO_CHAR_SECONDS + 2.0),
@@ -250,8 +257,29 @@ class GameManager:
         self._speak(narrator.category_select_line())
 
     def intro_done(self) -> None:
-        """Frontend signal that the MC finished reading the opening line."""
-        if self._state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
+        """Frontend signal that the MC finished reading the current intro line.
+
+        The opening greeting plays first, then the guided tour walks through
+        each part of the screen (제시어 → 게이지 → 힌트 → 준비). When all the
+        tour steps are done, the countdown begins."""
+        if self._state.phase != PHASE_INTRO:
+            if self._state.phase == PHASE_WAITING_POSE:
+                self._enter_countdown(time.monotonic())
+            return
+        next_index = self._state.tour_index + 1
+        steps = self._state.tour_steps
+        if 0 <= next_index < len(steps):
+            step = steps[next_index]
+            self._state.tour_index = next_index
+            self._state.tour_target = step.get("target", "")
+            line = step.get("text", "")
+            self._state.intro_seconds = max(
+                INTRO_MIN_SECONDS,
+                min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 2.0),
+            )
+            self._state.phase_started_at = time.monotonic()
+            self._speak(line)
+        else:
             self._enter_countdown(time.monotonic())
 
     def _enter_countdown(self, now: float) -> None:
@@ -351,7 +379,7 @@ class GameManager:
             # (intro_done). intro_seconds is only a fallback cap so it can never
             # get stuck if the audio fails.
             if elapsed >= state.intro_seconds:
-                self._enter_countdown(now)
+                self.intro_done()
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
@@ -733,6 +761,9 @@ class GameManager:
             "speech": state.speech,
             "speech_id": state.speech_id,
             "speech_audio": bool(self._speech_audio and self._speech_audio.enabled),
+            "tour_target": state.tour_target if state.phase == PHASE_INTRO else "",
+            "tour_index": state.tour_index if state.phase == PHASE_INTRO else 0,
+            "tour_total": len(state.tour_steps) if state.phase == PHASE_INTRO else 0,
             "final_title": telepathy_title(total_score) if state.phase == PHASE_FINISHED else None,
             "team_name": state.team_name,
             "leaderboard_id": state.leaderboard_id,

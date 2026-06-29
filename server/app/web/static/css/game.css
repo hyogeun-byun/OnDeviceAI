@@ -1788,3 +1788,56 @@ body {
   background: linear-gradient(90deg, var(--accent), #45ffd0);
   transition: width 0.1s linear;
 }
+
+/* ---------- Intro guided-tour demo board ---------- */
+.intro-demo {
+  position: relative;
+  width: min(340px, 84vw);
+  margin: 18px auto 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.intro-demo [data-tour] {
+  opacity: 0.45;
+  transform: scale(0.94);
+  transition: opacity 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+  border-radius: 16px;
+  padding: 10px 16px;
+}
+.intro-demo [data-tour].is-spotlight {
+  opacity: 1;
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2px var(--accent), 0 12px 36px rgba(0, 255, 198, 0.3);
+}
+.demo-prompt { display: flex; flex-direction: column; align-items: center; }
+.demo-prompt-label { font-size: 11px; letter-spacing: 4px; color: var(--accent); font-weight: 800; }
+.demo-prompt-word { font-size: 30px; font-weight: 800; }
+.demo-gauge { position: relative; width: 96px; height: 96px; }
+.demo-gauge svg { width: 100%; transform: rotate(-90deg); }
+.demo-gauge-track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 9; }
+.demo-gauge-fill { fill: none; stroke: var(--accent); stroke-width: 9; stroke-linecap: round; stroke-dasharray: 314; stroke-dashoffset: 40; }
+.demo-gauge-val { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 24px; }
+.demo-hint { display: flex; align-items: center; gap: 4px; font-size: 26px; }
+.demo-hint small { display: block; margin-left: 8px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.demo-skel-b { margin-left: -16px; opacity: 0.7; }
+.demo-skel-c { margin-left: -16px; opacity: 0.5; }
+
+/* MC flies to the part it is explaining (relative to centred content column) */
+.mc-stage.tour-prompt { right: calc(50% + 200px); bottom: 62%; width: 150px; }
+.mc-stage.tour-gauge  { right: calc(50% + 200px); bottom: 42%; width: 150px; }
+.mc-stage.tour-hint   { right: calc(50% + 200px); bottom: 26%; width: 150px; }
+.mc-stage.tour-ready,
+.mc-stage.tour-intro  { right: calc(50% + 280px); bottom: clamp(150px, 30vh, 380px); width: 200px; }
+
+/* The very first prompt eases in slowly so it never appears abruptly */
+.prompt-word.is-reveal {
+  animation: word-reveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes word-reveal {
+  0% { opacity: 0; transform: scale(0.4); filter: blur(8px); letter-spacing: 18px; }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); letter-spacing: 1px; }
+}
+

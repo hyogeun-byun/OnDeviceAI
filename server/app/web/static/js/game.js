@@ -99,9 +99,9 @@ if (tts.supported) {
 
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
-  // 인트로·결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
-  // (민수는 입만 움직이며 읽어주는 듯한 연출)
-  const suppressBubble = currentPhase === "intro" || currentPhase === "finished";
+  // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
+  // 인트로 투어에선 민수가 각 요소 옆에서 말풍선으로 설명한다.
+  const suppressBubble = currentPhase === "finished";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -307,6 +307,14 @@ function render(state) {
     el.mcStage.classList.toggle("is-final", !mcHidden && mcFinal);
     el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter && !mcFinal);
     el.mcStage.classList.toggle("is-category", state.phase === "category");
+    // Guided intro tour: fly to the demo element the MC is explaining.
+    const tour = state.phase === "intro" ? (state.tour_target || "intro") : "";
+    ["prompt", "gauge", "hint", "ready", "intro"].forEach((t) =>
+      el.mcStage.classList.toggle(`tour-${t}`, tour === t)
+    );
+    document.querySelectorAll(".intro-demo [data-tour]").forEach((node) =>
+      node.classList.toggle("is-spotlight", tour === node.dataset.tour)
+    );
   }
   // The "start over" button only makes sense once a game is under way.
   if (el.restartGameBtn) el.restartGameBtn.classList.toggle("is-hidden", state.phase === "idle");
@@ -323,6 +331,14 @@ function render(state) {
 
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";
+    // The very first word eases in slowly (re-trigger the CSS reveal once).
+    if (prevPhase !== "countdown" && state.round_number === 1) {
+      el.cdPrompt.classList.remove("is-reveal");
+      void el.cdPrompt.offsetWidth;
+      el.cdPrompt.classList.add("is-reveal");
+    } else if (state.round_number !== 1) {
+      el.cdPrompt.classList.remove("is-reveal");
+    }
     const left = state.time_left == null ? 0 : state.time_left;
     el.cdNumber.textContent = String(Math.max(1, Math.ceil(left)));
   }

@@ -84,14 +84,34 @@
         </section>
       </section>
 
-      <!-- INTRO (MC greets; countdown starts automatically) -->
+      <!-- INTRO (MC greets, then flies around the demo board explaining it) -->
       <section class="screen screen-intro" id="screen-intro">
         <p class="intro-eyebrow">🎤 AI MC 민수</p>
         <h2 class="intro-title">곧 시작합니다!</h2>
         <p class="intro-speech" id="intro-speech">민수가 인사 중…</p>
+
+        <!-- Demo board: a mini mock of the real play screen the MC points at -->
+        <div class="intro-demo" id="intro-demo">
+          <div class="demo-prompt" id="demo-prompt" data-tour="prompt">
+            <span class="demo-prompt-label">제시어</span>
+            <span class="demo-prompt-word">사과</span>
+          </div>
+          <div class="demo-gauge" id="demo-gauge" data-tour="gauge">
+            <svg viewBox="0 0 120 120"><circle class="demo-gauge-track" cx="60" cy="60" r="50"/><circle class="demo-gauge-fill" cx="60" cy="60" r="50"/></svg>
+            <span class="demo-gauge-val">87</span>
+          </div>
+          <div class="demo-hint" id="demo-hint" data-tour="hint">
+            <span class="demo-skel demo-skel-a">🧍</span>
+            <span class="demo-skel demo-skel-b">🧍</span>
+            <span class="demo-skel demo-skel-c">🧍</span>
+            <small>포즈 싱크 힌트</small>
+          </div>
+        </div>
+
         <div class="player-dots" id="intro-players"></div>
-        <p class="idle-hint">민수의 오프닝이 끝나면 바로 카운트다운이 시작됩니다!</p>
+        <p class="idle-hint">민수의 설명이 끝나면 바로 카운트다운이 시작됩니다!</p>
       </section>
+
 
       <!-- CATEGORY (body-controlled category picker) -->
       <section class="screen screen-category" id="screen-category">
