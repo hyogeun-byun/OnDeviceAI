@@ -112,6 +112,14 @@ def ready_pose_detected_line() -> str:
     return random.choice(_READY_POSE_DETECTED)
 
 
+def report_wait_line() -> str:
+    """Bridges the silence between the last round and the LLM final report."""
+    return (
+        "자, 여기서 조금만 기다리면 여러분의 팀워크를 제가 분석해 드리겠습니다! "
+        "분석 후 레포트도 저장해 갈 수 있어요. 모두 고생하셨습니다!"
+    )
+
+
 def category_select_line() -> str:
     """Spoken when the body-controlled category picker opens."""
     return (

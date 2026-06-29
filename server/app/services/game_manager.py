@@ -119,6 +119,7 @@ class GameState:
     category_step_at: float = 0.0       # monotonic time of the last hand-raise step
     category_confirm_since: float = 0.0  # monotonic time the T-pose hold started
     category_armed: bool = False        # True once the start T-pose was released
+    category_step_neutral: bool = True  # arm must return to neutral before next step
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
     ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
@@ -530,16 +531,23 @@ class GameManager:
             return
         self._state.category_confirm_since = 0.0
         self._state.category_armed = True
-        # Step: one raised hand moves the highlight (rate-limited).
+        # Step: one raised hand moves the highlight by exactly one per raise.
+        # Edge-triggered: the arm must drop back to neutral before it can step
+        # again, so holding it out doesn't scroll runaway through the list.
+        direction = next((d for d in (detect_arm_raised(p) for p in present) if d), None)
+        if direction is None:
+            self._state.category_step_neutral = True
+            return
+        if not self._state.category_step_neutral:
+            return
         if now - self._state.category_step_at < CATEGORY_STEP_COOLDOWN:
             return
-        direction = next((d for d in (detect_arm_raised(p) for p in present) if d), None)
         if direction == "right":
             self._state.category_index = (self._state.category_index + 1) % len(themes)
-            self._state.category_step_at = now
         elif direction == "left":
             self._state.category_index = (self._state.category_index - 1) % len(themes)
-            self._state.category_step_at = now
+        self._state.category_step_at = now
+        self._state.category_step_neutral = False
 
     def _check_ready_pose(self, now: float) -> None:
         """Detect T-pose from any present player; start when at least one holds it.
@@ -735,6 +743,7 @@ class GameManager:
             # C. Final telepathy report — generated in the background.
             self._state.final_report = ""
             self._state.final_status = "pending"
+            self._speak(narrator.report_wait_line())
             self._spawn(self._build_final_report(self._generation))
             return
 
