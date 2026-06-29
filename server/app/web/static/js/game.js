@@ -100,8 +100,8 @@ if (tts.supported) {
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
-  // 인트로 투어에선 민수가 각 요소 옆에서 말풍선으로 설명한다.
-  const suppressBubble = currentPhase === "finished";
+  // 인트로 투어에선 위쪽 글자가 멘트를 보여주므로 말풍선이 게이지·데모를 가리지 않게 숨긴다.
+  const suppressBubble = currentPhase === "finished" || currentPhase === "intro";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
