@@ -121,6 +121,13 @@ def category_select_line() -> str:
     )
 
 
+def category_confirmed_line(theme: str = "") -> str:
+    """Spoken right after a category is confirmed, before the countdown."""
+    name = theme.strip()
+    head = f"오, '{name}' 카테고리를 선택하셨네요! " if name else "좋아요! "
+    return head + "그럼 게임을 시작해볼게요!"
+
+
 def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") -> str:
     """Short spoken greeting played (via TTS) when the intro screen opens."""
     audience = f"{team_name.strip()} 여러분" if team_name.strip() else "여러분"

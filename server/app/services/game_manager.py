@@ -14,7 +14,7 @@ from app.services.stream_manager import StreamManager
 from app.services.tts import Speaker
 
 # --- Game timing (seconds) ---
-COUNTDOWN_SECONDS = 3.0
+COUNTDOWN_SECONDS = 4.5
 PLAY_SECONDS = 10.0
 RESULT_SECONDS = 4.0
 
@@ -275,14 +275,14 @@ class GameManager:
             line = step.get("text", "")
             self._state.intro_seconds = max(
                 INTRO_MIN_SECONDS,
-                min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 2.0),
+                min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.0),
             )
             self._state.phase_started_at = time.monotonic()
             self._speak(line)
         else:
             self._enter_category(time.monotonic())
 
-    def _enter_countdown(self, now: float) -> None:
+    def _enter_countdown(self, now: float, speak: bool = True) -> None:
         self._state.phase = PHASE_COUNTDOWN
         self._state.round_index = 0
         self._state.phase_started_at = now
@@ -291,7 +291,8 @@ class GameManager:
         self._state.coach = ""
         self._state.coach_key = ""
         self._state.coach_changed_at = 0.0
-        self._speak(narrator.ready_pose_detected_line())
+        if speak:
+            self._speak(narrator.ready_pose_detected_line())
 
     def reset(self) -> None:
         """Abort whatever is happening and go all the way back to the idle
@@ -448,7 +449,8 @@ class GameManager:
                     narrator.default_prompts(theme=chosen, n=self._total_rounds)
                 )
                 self._state.prompt_source = "category_random_in_theme"
-                self._enter_countdown(now)
+                self._speak(narrator.category_confirmed_line(chosen))
+                self._enter_countdown(now, speak=False)
             return
         self._state.category_confirm_since = 0.0
         self._state.category_armed = True

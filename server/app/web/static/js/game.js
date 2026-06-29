@@ -342,7 +342,7 @@ function render(state) {
       el.cdPrompt.classList.remove("is-reveal");
     }
     const left = state.time_left == null ? 0 : state.time_left;
-    el.cdNumber.textContent = String(Math.max(1, Math.ceil(left)));
+    el.cdNumber.textContent = String(Math.min(3, Math.max(1, Math.ceil(left))));
   }
 
   if (state.phase === "playing") {
