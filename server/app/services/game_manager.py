@@ -15,8 +15,10 @@ from app.services.tts import Speaker
 
 # --- Game timing (seconds) ---
 COUNTDOWN_SECONDS = 3.0
-PLAY_SECONDS = 10.0
-RESULT_SECONDS = 4.0
+PLAY_SECONDS = 10.0          # base round length
+PLAY_MAX_SECONDS = 15.0      # extended cap if the team can't sync up in time
+PLAY_PASS_SCORE = 95.0       # reach this and the round clears early (before 10s)
+RESULT_SECONDS = 6.0
 
 # How long the MC opening (intro) screen shows before the countdown auto-starts.
 INTRO_SECONDS = 6.0
@@ -78,7 +80,7 @@ PHASE_FINISHED = "finished"
 
 _PHASE_DURATIONS = {
     PHASE_COUNTDOWN: COUNTDOWN_SECONDS,
-    PHASE_PLAYING: PLAY_SECONDS,
+    PHASE_PLAYING: PLAY_MAX_SECONDS,
     PHASE_RESULT: RESULT_SECONDS,
     PHASE_WAITING_POSE: None,   # open-ended; no fixed duration
 }
@@ -526,7 +528,9 @@ class GameManager:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
             await self._update_gauge(now)
-            if elapsed >= PLAY_SECONDS:
+            # Clear early once the team hits the pass score; otherwise keep going
+            # up to the 15s cap so a struggling team gets extra time to sync.
+            if state.gauge >= PLAY_PASS_SCORE or elapsed >= PLAY_MAX_SECONDS:
                 self._finish_round(now)
         elif state.phase == PHASE_RESULT:
             if elapsed >= RESULT_SECONDS:
@@ -679,7 +683,7 @@ class GameManager:
     def _update_hint(self, now: float, analysis: dict) -> None:
         """Fire early/late hints based on gauge and time remaining."""
         elapsed = now - self._state.phase_started_at
-        time_left = max(0.0, PLAY_SECONDS - elapsed)
+        time_left = max(0.0, PLAY_MAX_SECONDS - elapsed)
         gauge = self._state.gauge
         players = analysis.get("players", [])
         hint_gap_ok = (now - self._state.hint_changed_at) >= HINT_MIN_GAP_SECONDS
