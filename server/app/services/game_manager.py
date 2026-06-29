@@ -110,6 +110,7 @@ class GameState:
     category_index: int = 0
     category_step_at: float = 0.0       # monotonic time of the last hand-raise step
     category_confirm_since: float = 0.0  # monotonic time the T-pose hold started
+    category_armed: bool = False        # True once the start T-pose was released
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
     ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
@@ -401,15 +402,22 @@ class GameManager:
         present = [p for p in poses if p and p.get("person_detected")]
         if not present:
             self._state.category_confirm_since = 0.0
+            self._state.category_armed = True
             return
-        # Confirm: any player holds the T-pose for the confirm window.
+        # Confirm: any player holds the T-pose for the confirm window. The start
+        # T-pose must be released first (armed) so the picker doesn't instantly
+        # confirm the moment it opens.
         if any(detect_ready_pose(p) for p in present):
+            if not self._state.category_armed:
+                self._state.category_confirm_since = 0.0
+                return
             if self._state.category_confirm_since == 0.0:
                 self._state.category_confirm_since = now
             elif now - self._state.category_confirm_since >= CATEGORY_CONFIRM_SECONDS:
                 self.start(themes[self._state.category_index], self._pending_team_name)
             return
         self._state.category_confirm_since = 0.0
+        self._state.category_armed = True
         # Step: one raised hand moves the highlight (rate-limited).
         if now - self._state.category_step_at < CATEGORY_STEP_COOLDOWN:
             return
