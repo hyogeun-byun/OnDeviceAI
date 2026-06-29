@@ -8,7 +8,7 @@ fps: 10
 pose_enabled: true
 # MediaPipe Pose Lite (model_complexity=0). Avg ~30ms on Pi 4/5.
 pose_model_complexity: 0
-pose_input_width: 256
+pose_input_width: 192
 pose_min_detection_confidence: 0.5
 pose_min_tracking_confidence: 0.5
 pose_draw_landmarks: true
