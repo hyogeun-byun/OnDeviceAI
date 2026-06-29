@@ -57,6 +57,11 @@ const el = {
   catCards: document.getElementById("cat-cards"),
   catSpeech: document.getElementById("cat-speech"),
   catConfirmFill: document.getElementById("cat-confirm-fill"),
+  manualStartBtn: document.getElementById("manual-start-btn"),
+  skipIntroBtn: document.getElementById("skip-intro-btn"),
+  catPrevBtn: document.getElementById("cat-prev-btn"),
+  catNextBtn: document.getElementById("cat-next-btn"),
+  catConfirmBtn: document.getElementById("cat-confirm-btn"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
 };
 
@@ -200,6 +205,22 @@ if (el.ttsToggle) {
     if (tts.muted) stopSpeaking();
   });
 }
+
+// Manual fallback buttons (in case the T-pose / hand gestures don't register).
+const postGame = (path) => fetch(path, { method: "POST" }).catch(() => {});
+if (el.manualStartBtn)
+  el.manualStartBtn.addEventListener("click", () => {
+    const name = (el.teamName && el.teamName.value.trim()) || "";
+    fetch("/api/game/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ team_name: name }),
+    }).catch(() => {});
+  });
+if (el.skipIntroBtn) el.skipIntroBtn.addEventListener("click", () => postGame("/api/game/skip-intro"));
+if (el.catPrevBtn) el.catPrevBtn.addEventListener("click", () => postGame("/api/game/category-step/prev"));
+if (el.catNextBtn) el.catNextBtn.addEventListener("click", () => postGame("/api/game/category-step/next"));
+if (el.catConfirmBtn) el.catConfirmBtn.addEventListener("click", () => postGame("/api/game/confirm-category"));
 
 function gaugeColor(value) {
   if (value >= 75) return "#00ffc6";

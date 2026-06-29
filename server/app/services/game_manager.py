@@ -238,6 +238,52 @@ class GameManager:
             return
         self._enter_countdown(time.monotonic())
 
+    def skip_intro(self) -> None:
+        """Skip the MC explanation and go straight to the category picker.
+        Triggered by a held T-pose during the intro, or the on-screen button."""
+        if self._state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):
+            self._enter_category(time.monotonic())
+
+    def _check_intro_skip_pose(self, now: float) -> None:
+        """Hold a T-pose during the explanation to skip straight to category."""
+        poses = [self._stream_manager.get_pose(cid) for cid in self._camera_ids]
+        present = [p for p in poses if p and p.get("person_detected")]
+        if present and any(detect_ready_pose(p) for p in present):
+            self._state.ready_pose_last_seen = now
+            if self._state.ready_pose_hold_since == 0.0:
+                self._state.ready_pose_hold_since = now
+            elif now - self._state.ready_pose_hold_since >= READY_POSE_HOLD_SECONDS:
+                self.skip_intro()
+        elif self._state.ready_pose_hold_since > 0.0:
+            if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
+                self._state.ready_pose_hold_since = 0.0
+
+
+    def confirm_category(self) -> None:
+        """Lock in the highlighted category and start the confirm → countdown
+        sequence. Shared by the T-pose gesture and the manual button."""
+        if self._state.phase != PHASE_CATEGORY:
+            return
+        themes = list(narrator.THEMES)
+        if not themes:
+            self.start(self._pending_theme, self._pending_team_name)
+            return
+        chosen = themes[self._state.category_index % len(themes)]
+        self._state.theme = chosen
+        self._state.prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
+        self._state.prompt_source = "category_random_in_theme"
+        self._enter_confirm(time.monotonic(), chosen)
+
+    def step_category(self, direction: int) -> None:
+        """Move the category highlight (manual button fallback for hand-raise)."""
+        if self._state.phase != PHASE_CATEGORY:
+            return
+        n = len(narrator.THEMES)
+        if n:
+            self._state.category_index = (self._state.category_index + direction) % n
+            self._state.category_armed = True
+
+
     def _enter_waiting_pose(self, now: float) -> None:
         self._state.phase = PHASE_WAITING_POSE
         self._state.phase_started_at = now
@@ -412,6 +458,7 @@ class GameManager:
             # The MC plays the opening; the browser signals when speech ends
             # (intro_done). intro_seconds is only a fallback cap so it can never
             # get stuck if the audio fails.
+            self._check_intro_skip_pose(now)
             if elapsed >= state.intro_seconds:
                 self.intro_done()
         elif state.phase == PHASE_CONFIRM:
@@ -479,13 +526,7 @@ class GameManager:
             if self._state.category_confirm_since == 0.0:
                 self._state.category_confirm_since = now
             elif now - self._state.category_confirm_since >= CATEGORY_CONFIRM_SECONDS:
-                chosen = themes[self._state.category_index]
-                self._state.theme = chosen
-                self._state.prompts = list(
-                    narrator.default_prompts(theme=chosen, n=self._total_rounds)
-                )
-                self._state.prompt_source = "category_random_in_theme"
-                self._enter_confirm(now, chosen)
+                self.confirm_category()
             return
         self._state.category_confirm_since = 0.0
         self._state.category_armed = True

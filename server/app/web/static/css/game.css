@@ -1796,6 +1796,13 @@ body {
   background: linear-gradient(90deg, var(--accent), #45ffd0);
   transition: width 0.1s linear;
 }
+.cat-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 18px;
+}
 
 /* ---------- Intro guided-tour demo board ---------- */
 .intro-demo {

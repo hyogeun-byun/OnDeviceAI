@@ -70,6 +70,31 @@ async def begin_game(request: Request) -> dict[str, object]:
     return game_manager.snapshot()
 
 
+@router.post("/skip-intro")
+async def skip_intro(request: Request) -> dict[str, object]:
+    """Manual fallback for the T-pose skip: jump from the explanation to the
+    category picker."""
+    game_manager = get_game_manager(request)
+    game_manager.skip_intro()
+    return game_manager.snapshot()
+
+
+@router.post("/confirm-category")
+async def confirm_category(request: Request) -> dict[str, object]:
+    """Manual fallback for the T-pose confirm: lock in the highlighted category."""
+    game_manager = get_game_manager(request)
+    game_manager.confirm_category()
+    return game_manager.snapshot()
+
+
+@router.post("/category-step/{direction}")
+async def category_step(direction: str, request: Request) -> dict[str, object]:
+    """Manual fallback for the hand-raise: step the highlighted category."""
+    game_manager = get_game_manager(request)
+    game_manager.step_category(1 if direction == "next" else -1)
+    return game_manager.snapshot()
+
+
 @router.post("/intro-done")
 async def intro_done(request: Request) -> dict[str, object]:
     """Browser reports the MC finished reading the opening line, so the

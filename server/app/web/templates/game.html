@@ -61,6 +61,7 @@
           <p class="tpose-sub">양팔을 옆으로 쭉 펴면 게임이 시작됩니다.</p>
           <div class="tpose-progress"><span id="tpose-progress-fill"></span></div>
         </div>
+        <button class="cta" id="manual-start-btn" type="button">▶ 바로 시작 (버튼)</button>
         <p class="idle-hint">시작하면 AI MC 민수가 룰을 설명하고, 카테고리를 고른 뒤 5문제(라운드당 10초)!</p>
 
 
@@ -103,7 +104,8 @@
         </div>
 
         <div class="player-dots" id="intro-players"></div>
-        <p class="idle-hint">민수의 설명이 끝나면 바로 카운트다운이 시작됩니다!</p>
+        <p class="idle-hint">🙆 <em>T자 포즈</em>를 만들면 설명을 건너뛰어요! (한 번 참여해 본 팀은 바로 스킵)</p>
+        <button class="cta ghost" id="skip-intro-btn" type="button">⏭ 설명 건너뛰기 (버튼)</button>
       </section>
 
 
@@ -119,6 +121,11 @@
           <span class="cat-help-item">🙆 T자 <small>확정</small></span>
         </div>
         <div class="cat-confirm"><span id="cat-confirm-fill"></span></div>
+        <div class="cat-buttons">
+          <button class="cta ghost" id="cat-prev-btn" type="button">⬅ 이전</button>
+          <button class="cta" id="cat-confirm-btn" type="button">✅ 이 카테고리로 시작 (버튼)</button>
+          <button class="cta ghost" id="cat-next-btn" type="button">다음 ➡</button>
+        </div>
       </section>
 
       <!-- COUNTDOWN -->
