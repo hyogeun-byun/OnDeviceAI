@@ -54,6 +54,7 @@ const el = {
   tposeCue: document.getElementById("tpose-cue"),
   tposeProgressFill: document.getElementById("tpose-progress-fill"),
   catCards: document.getElementById("cat-cards"),
+  catSpeech: document.getElementById("cat-speech"),
   catConfirmFill: document.getElementById("cat-confirm-fill"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
 };
@@ -100,8 +101,9 @@ if (tts.supported) {
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
-  // 인트로 투어에선 위쪽 글자가 멘트를 보여주므로 말풍선이 게이지·데모를 가리지 않게 숨긴다.
-  const suppressBubble = currentPhase === "finished" || currentPhase === "intro";
+  // 인트로 투어·카테고리 화면에선 아래 글자로 대사가 나오므로 말풍선을 숨겨 데모를 안 가리게 한다.
+  const suppressBubble =
+    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -439,6 +441,7 @@ function renderCategory(state) {
     const pct = Math.round((state.category_confirm_progress || 0) * 100);
     el.catConfirmFill.style.width = `${pct}%`;
   }
+  if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
 }
 
 // --- Final telepathy report (best / worst rounds) ---

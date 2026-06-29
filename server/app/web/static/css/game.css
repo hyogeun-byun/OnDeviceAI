@@ -1732,6 +1732,14 @@ body {
   font-size: clamp(30px, 6vw, 54px);
   margin: 10px 0 22px;
 }
+.cat-speech {
+  max-width: min(560px, 86vw);
+  margin: -8px auto 18px;
+  font-size: clamp(14px, 2.2vw, 18px);
+  line-height: 1.55;
+  color: var(--ink);
+  font-weight: 600;
+}
 .cat-cards {
   display: flex;
   flex-wrap: wrap;
@@ -1825,9 +1833,9 @@ body {
 .demo-skel-c { margin-left: -16px; opacity: 0.5; }
 
 /* MC flies to the part it is explaining (relative to centred content column) */
-.mc-stage.tour-prompt { right: calc(50% + 200px); bottom: 62%; width: 150px; }
-.mc-stage.tour-gauge  { right: calc(50% + 200px); bottom: 42%; width: 150px; }
-.mc-stage.tour-hint   { right: calc(50% + 200px); bottom: 26%; width: 150px; }
+.mc-stage.tour-prompt { right: calc(50% + 200px); bottom: 50%; width: 140px; }
+.mc-stage.tour-gauge  { right: calc(50% + 200px); bottom: 40%; width: 140px; }
+.mc-stage.tour-hint   { right: calc(50% + 200px); bottom: 24%; width: 140px; }
 .mc-stage.tour-ready,
 .mc-stage.tour-intro  { right: calc(50% + 280px); bottom: clamp(150px, 30vh, 380px); width: 200px; }
 
