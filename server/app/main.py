@@ -68,7 +68,7 @@ async def _game_loop() -> None:
     interval = 1.0 / GAME_TICK_HZ
     while True:
         await asyncio.sleep(interval)
-        game_manager.tick()
+        await game_manager.tick()
         await game_hub.broadcast(game_manager.snapshot())
 
 

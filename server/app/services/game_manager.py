@@ -277,7 +277,7 @@ class GameManager:
         self._speak(report)
 
 
-    def tick(self) -> None:
+    async def tick(self) -> None:
         state = self._state
         now = time.monotonic()
         elapsed = now - state.phase_started_at
@@ -291,7 +291,7 @@ class GameManager:
             if elapsed >= COUNTDOWN_SECONDS:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
-            self._update_gauge(now)
+            await self._update_gauge(now)
             if elapsed >= PLAY_SECONDS:
                 self._finish_round(now)
         elif state.phase == PHASE_RESULT:
@@ -337,9 +337,10 @@ class GameManager:
         self._state.coach_key = ""
         self._state.coach_changed_at = 0.0
 
-    def _update_gauge(self, now: float) -> None:
+    async def _update_gauge(self, now: float) -> None:
         poses = [self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids]
-        analysis = analyze_group(poses)
+        loop = asyncio.get_event_loop()
+        analysis = await loop.run_in_executor(None, analyze_group, poses)
         self._state.raw_gauge = analysis["score"]
         self._state.ready_count = analysis["ready_count"]
         self._state.expressiveness = analysis["expressiveness"]
