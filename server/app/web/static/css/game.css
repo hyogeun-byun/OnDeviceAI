@@ -1718,7 +1718,8 @@ body {
   font-size: 14px;
 }
 .cat-title {
-  font-family: "Black Han Sans", Inter, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   font-size: clamp(30px, 6vw, 54px);
   margin: 10px 0 22px;
 }

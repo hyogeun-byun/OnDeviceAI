@@ -99,9 +99,10 @@ if (tts.supported) {
 
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
-  // 인트로·결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
+  // 인트로·결산·카테고리 화면에선 같은 멘트가 이미 화면에 떠 있거나 제목을 가리므로 말풍선은 띄우지 않는다.
   // (민수는 입만 움직이며 읽어주는 듯한 연출)
-  const suppressBubble = currentPhase === "intro" || currentPhase === "finished";
+  const suppressBubble =
+    currentPhase === "intro" || currentPhase === "finished" || currentPhase === "category";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -165,8 +166,9 @@ function playServerAudio(id, text, attempt) {
       audio.play().catch(() => speakLine(text));
     })
     .catch(() => {
-      // edge-tts generation takes ~1s; retry a few times then fall back.
-      if (attempt < 10 && !tts.muted && id === tts.lastSpokenId) {
+      // edge-tts generation takes ~1s; retry a while so the natural (server)
+      // voice is used instead of falling back to the browser voice mid-intro.
+      if (attempt < 30 && !tts.muted && id === tts.lastSpokenId) {
         setTimeout(() => playServerAudio(id, text, attempt + 1), 400);
       } else if (!tts.muted && id === tts.lastSpokenId) {
         speakLine(text);

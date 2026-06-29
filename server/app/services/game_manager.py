@@ -24,7 +24,7 @@ INTRO_SECONDS = 6.0
 # line (instead of cutting off). Duration scales with the line length, clamped.
 INTRO_CHAR_SECONDS = 0.19
 INTRO_MIN_SECONDS = 6.0
-INTRO_MAX_SECONDS = 25.0
+INTRO_MAX_SECONDS = 50.0
 
 TOTAL_ROUNDS = 5
 
