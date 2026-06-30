@@ -140,8 +140,6 @@
 
       <!-- COUNTDOWN -->
       <section class="screen screen-countdown" id="screen-countdown">
-        <p class="prompt-label">제시어</p>
-        <h2 class="prompt-word" id="cd-prompt">제시어</h2>
         <div class="count-number" id="cd-number">3</div>
         <p class="count-hint">자세 준비!</p>
       </section>
@@ -186,17 +184,19 @@
         </div>
 
         <!-- Timeout notice: shown for ~2s when a prompt runs out (20s), while the
-             sprint clock is paused, right before the next prompt loads. -->
+             sprint clock is paused, right before the next prompt loads. Shows the
+             3 camera shots so the team can see why it didn't match. -->
         <div class="giveup-overlay" id="giveup-overlay" aria-hidden="true">
-          <p class="giveup-emoji">⏭️</p>
-          <p class="giveup-title">시간 초과!</p>
+          <p class="giveup-title">⏱️ 시간 초과! 아쉬운네요</p>
+          <p class="giveup-prompt" id="giveup-prompt">제시어</p>
+          <div class="giveup-shots" id="giveup-shots"></div>
           <p class="giveup-sub">다음 제시어로 넘어갈게요…</p>
         </div>
 
         <!-- Prompt reveal: shows the new prompt big while the MC announces it
              ("이번 제시어는 …"), clock paused, before the gauge game appears. -->
         <div class="reveal-overlay" id="reveal-overlay" aria-hidden="true">
-          <p class="reveal-label">이번 제시어는</p>
+          <p class="reveal-label">이번 제시어는!</p>
           <p class="reveal-word" id="reveal-word">제시어</p>
         </div>
       </section>
@@ -271,5 +271,8 @@
     </div>
 
     <script src="/static/js/game.js?v={{ asset_version }}"></script>
+    <!-- DEMO OVERLAY (remove this one line to delete): shows 3 small camera+skeleton
+         feeds top-right of /game. Active only when opened as /game?demo=1 -->
+    <script src="/static/js/demo-overlay.js?v={{ asset_version }}"></script>
   </body>
 </html>

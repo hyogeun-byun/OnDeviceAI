@@ -197,8 +197,9 @@ def category_confirmed_line(theme: str = "") -> str:
 
 
 def category_confirm_lines(theme: str = "") -> list[str]:
-    """Spoken after the camera test passes, just before the countdown."""
-    return ["카메라 테스트를 완료했습니다! 이제 진짜 게임을 시작합니다!"]
+    """Spoken by the MC (centre stage) after the camera test passes, just
+    before the 3-2-1 countdown."""
+    return ["카메라 테스트 완료! 이제 진짜 게임을 시작할게요!"]
 
 
 def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") -> str:
@@ -249,10 +250,10 @@ def start_line(mc_name: str = "민수") -> str:
 
 
 _GIVE_UP_LINES = (
-    "아쉽네요! 이번 제시어는 넘어가고, 다음 제시어 갑니다!",
-    "시간 초과! 다음 제시어로 넘어갈게요!",
-    "괜찮아요, 다음 제시어로 바로 가봅시다!",
-    "이번 건 패스! 다음 제시어 나갑니다!",
+    "아쉽네요! 다음 제시어로 갑니다!",
+    "시간 초과! 다음 제시어로!",
+    "괜찮아요, 다음 제시어로!",
+    "패스! 다음 제시어 나갑니다!",
 )
 
 

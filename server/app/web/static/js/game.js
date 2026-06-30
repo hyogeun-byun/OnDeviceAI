@@ -20,7 +20,6 @@ const el = {
   roundPill: document.getElementById("round-pill"),
   restartBtn: document.getElementById("restart-btn"),
   idlePlayers: document.getElementById("idle-players"),
-  cdPrompt: document.getElementById("cd-prompt"),
   cdNumber: document.getElementById("cd-number"),
   playPrompt: document.getElementById("play-prompt"),
   playTagline: document.getElementById("play-tagline"),
@@ -73,6 +72,8 @@ const el = {
   camHintOverlay: document.getElementById("cam-hint-overlay"),
   camHintCams: document.getElementById("cam-hint-cams"),
   giveupOverlay: document.getElementById("giveup-overlay"),
+  giveupPrompt: document.getElementById("giveup-prompt"),
+  giveupShots: document.getElementById("giveup-shots"),
   revealOverlay: document.getElementById("reveal-overlay"),
   revealWord: document.getElementById("reveal-word"),
 };
@@ -157,7 +158,7 @@ function setMcTalking(on, text) {
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
   // 인트로 투어·카테고리 화면에선 아래 글자로 대사가 나오므로 말풍선을 숨겨 데모를 안 가리게 한다.
   const suppressBubble =
-    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "catpick" || currentPhase === "confirm" || currentPhase === "camtest";
+    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "catpick" || currentPhase === "confirm" || currentPhase === "camtest" || currentPhase === "reveal";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -307,6 +308,7 @@ const introDots = el.introPlayers ? buildPlayerDots(el.introPlayers) : [];
 const roundCaptures = {};
 let currentRoundMeta = null;
 let lastResultPoseRound = 0;
+let lastGiveupRound = 0;
 let lastFinalState = null;
 
 function updatePlayerDots(dots, players) {
@@ -344,6 +346,7 @@ function render(state) {
     introDoneSent = false;
     lastResultRound = 0;
     lastResultPoseRound = 0;
+    lastGiveupRound = 0;
     currentRoundMeta = null;
     Object.keys(roundCaptures).forEach((k) => delete roundCaptures[k]);
   }
@@ -377,12 +380,18 @@ function render(state) {
     //  - finished: 중앙의 최종 리포트 옆으로 날아가 그 문구를 읽어주는 자리 (is-final)
     //  - 그 외 진행 중: 옆에서 귀신처럼 둥둥 떠다닌다 (is-side)
     const mcHidden = state.phase === "idle";
-    const mcCenter = state.phase === "intro";
+    const mcCenter = state.phase === "intro" || state.phase === "confirm";
     const mcFinal = state.phase === "finished";
+    const mcReveal = state.phase === "reveal";
+    const mcGiveup = state.phase === "giveup";
+    const mcHint = Boolean(state.show_hint_cams);
     el.mcStage.classList.toggle("is-hidden", mcHidden);
     el.mcStage.classList.toggle("is-center", !mcHidden && mcCenter);
     el.mcStage.classList.toggle("is-final", !mcHidden && mcFinal);
-    el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter && !mcFinal);
+    el.mcStage.classList.toggle("is-reveal", !mcHidden && mcReveal);
+    el.mcStage.classList.toggle("is-giveup", !mcHidden && mcGiveup);
+    el.mcStage.classList.toggle("is-hint", !mcHidden && mcHint);
+    el.mcStage.classList.toggle("is-side", !mcHidden && !mcCenter && !mcFinal && !mcReveal && !mcGiveup);
     el.mcStage.classList.toggle("is-category", state.phase === "category");
     // Guided intro tour: fly to the demo element the MC is explaining.
     const tour = state.phase === "intro" ? (state.tour_target || "intro") : "";
@@ -433,15 +442,8 @@ function render(state) {
   else teardownCamtestStreams();
 
   if (state.phase === "countdown") {
-    el.cdPrompt.textContent = state.prompt || "";
-    // The very first word eases in slowly (re-trigger the CSS reveal once).
-    if (prevPhase !== "countdown" && state.round_number === 1) {
-      el.cdPrompt.classList.remove("is-reveal");
-      void el.cdPrompt.offsetWidth;
-      el.cdPrompt.classList.add("is-reveal");
-    } else if (state.round_number !== 1) {
-      el.cdPrompt.classList.remove("is-reveal");
-    }
+    // The prompt is intentionally hidden during 3-2-1 so the first reveal
+    // ("이번 제시어는!") stays a surprise.
     const left = state.time_left == null ? 0 : state.time_left;
     el.cdNumber.textContent = String(Math.min(3, Math.max(1, Math.ceil(left))));
   }
@@ -477,6 +479,16 @@ function render(state) {
     const left = state.game_time_left == null ? total : state.game_time_left;
     el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / total) * 100))}%`;
     el.timerText.textContent = left.toFixed(1);
+    if (el.giveupPrompt) el.giveupPrompt.textContent = state.prompt || "";
+    // Show the frames the server captured at timeout so the team can see why it
+    // didn't match. Build them once per round (broken frames remove themselves).
+    const round = (state.round_scores || []).length;
+    if (el.giveupShots && round && round !== lastGiveupRound) {
+      lastGiveupRound = round;
+      el.giveupShots.innerHTML = PLAYER_INDICES.map(
+        (i) => `<img src="/api/game/result-frame/${round}/${i}.jpg" alt="" onerror="this.remove()" />`
+      ).join("");
+    }
   }
   if (el.giveupOverlay) {
     const showGiveup = state.phase === "giveup";
@@ -562,11 +574,15 @@ function render(state) {
       el.finalReport.classList.remove("is-pending");
     }
     el.finalBreakdown.innerHTML = "";
-    (state.round_scores || []).forEach((score, index) => {
+    const results = state.round_results || [];
+    const breakdownPrompts = state.prompts || [];
+    results.forEach((passed, index) => {
+      const word = breakdownPrompts[index] || `R${index + 1}`;
       const li = document.createElement("li");
-      li.innerHTML = `<span class="fb-round">R${index + 1}</span><span class="fb-score">${Math.round(
-        score,
-      )}</span>`;
+      li.className = passed ? "fb-pass" : "fb-fail";
+      li.innerHTML =
+        `<span class="fb-word">${word}</span>` +
+        `<span class="fb-result">${passed ? "✅ 통과" : "❌ 실패"}</span>`;
       el.finalBreakdown.appendChild(li);
     });
     renderReport(state);
@@ -722,22 +738,21 @@ function teardownCamtestStreams() {
   el.camtestCams.innerHTML = "";
 }
 
-// --- Final telepathy report (best / worst rounds) ---
-function bestWorstRounds(scores) {
-  if (!scores.length) return null;
-  let best = 0;
-  let worst = 0;
-  scores.forEach((s, i) => {
-    if (s > scores[best]) best = i;
-    if (s < scores[worst]) worst = i;
+// --- Final telepathy report (one cleared / one missed keyword) ---
+function passFailRounds(results) {
+  if (!results.length) return null;
+  let pass = -1;
+  let fail = -1;
+  results.forEach((ok, i) => {
+    if (ok && pass < 0) pass = i;
+    if (!ok && fail < 0) fail = i;
   });
-  return { best: best + 1, worst: worst + 1 };
+  return { pass: pass < 0 ? null : pass + 1, fail: fail < 0 ? null : fail + 1 };
 }
 
-function reportCardEl(kind, roundNo, scores, prompts) {
+function reportCardEl(kind, roundNo, prompts) {
   const cap = roundCaptures[roundNo] || {};
   const word = cap.prompt || prompts[roundNo - 1] || "—";
-  const score = Math.round(scores[roundNo - 1] || 0);
   const div = document.createElement("div");
   div.className = `report-card report-${kind}`;
   let shots = (cap.images || [])
@@ -754,32 +769,30 @@ function reportCardEl(kind, roundNo, scores, prompts) {
   }
   div.innerHTML =
     `<div class="report-badge">${
-      kind === "best" ? "🏆 베스트 호흡" : "💥 텔레파시 대참사"
+      kind === "pass" ? "✅ 통과한 키워드" : "❌ 놓친 키워드"
     }</div>` +
     `<div class="report-shots">${
       shots || '<span class="report-noshot">스냅샷 없음</span>'
     }</div>` +
     `<div class="report-word">'${word}'</div>` +
-    `<div class="report-score">${score}점</div>` +
+    `<div class="report-result">${kind === "pass" ? "통과" : "실패"}</div>` +
     `<div class="report-caption">${
-      kind === "best"
-        ? "이 단어에서 모두 같은 동작! 환상의 호흡이었어요."
-        : "이 단어에선 제각각… 서로 다른 우주에 다녀왔네요 ㅋㅋ"
+      kind === "pass"
+        ? "이 단어에서 모두 같은 동작! 호흡이 척척 맞았어요."
+        : "이 단어는 시간 안에 못 맞췄어요. 다음엔 분명 가능!"
     }</div>`;
   return div;
 }
 
 function renderReport(state) {
   if (!el.reportCards) return;
-  const scores = state.round_scores || [];
+  const results = state.round_results || [];
   const prompts = state.prompts || [];
   el.reportCards.innerHTML = "";
-  const bw = bestWorstRounds(scores);
-  if (!bw) return;
-  el.reportCards.appendChild(reportCardEl("best", bw.best, scores, prompts));
-  if (bw.worst !== bw.best) {
-    el.reportCards.appendChild(reportCardEl("worst", bw.worst, scores, prompts));
-  }
+  const pf = passFailRounds(results);
+  if (!pf) return;
+  if (pf.pass) el.reportCards.appendChild(reportCardEl("pass", pf.pass, prompts));
+  if (pf.fail) el.reportCards.appendChild(reportCardEl("fail", pf.fail, prompts));
 }
 
 function loadImage(src) {

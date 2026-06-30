@@ -19,12 +19,14 @@ GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you 
 CLEAR_TARGET = 5             # clear this many prompts and the game ends (win condition)
 PROMPT_POOL_LIMIT = 99       # pull the whole category pool so prompts never repeat in a game
 PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next one loads
-CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
+CLEAR_FLASH_SECONDS = 3.0    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
 PROMPT_MAX_SECONDS = 20.0    # give up on a prompt after this long and load a fresh one
 GIVEUP_FLASH_SECONDS = 1.6   # "time's up" notice after a timeout (clock paused)
+GIVEUP_MAX_SECONDS = 4.5     # cap so the timeout line still can't drag the game
 REVEAL_SECONDS = 2.6         # show + announce the new prompt big before the gauge screen
-PEEK_DURATION_SECONDS = 1.5  # how long the camera-image hint stays on screen
+REVEAL_MAX_SECONDS = 9.0      # cap so a very long prompt reveal still can't drag
+PEEK_DURATION_SECONDS = 2.5  # how long the camera-image hint stays on screen
 RESULT_SECONDS = 6.0
 PLAY_MAX_SECONDS = GAME_TOTAL_SECONDS  # legacy alias for hint timing math
 
@@ -114,6 +116,7 @@ class GameState:
     coach_changed_at: float = 0.0
     players_analysis: list[dict] = field(default_factory=list)
     round_scores: list[float] = field(default_factory=list)
+    round_results: list[bool] = field(default_factory=list)  # True = 통과(cleared), False = 실패(timeout)
     result_poses: list[dict[str, object] | None] = field(default_factory=list)
     # --- 60s sprint state ---
     game_started_at: float = 0.0        # monotonic time the sprint clock started
@@ -136,6 +139,8 @@ class GameState:
     leaderboard_id: int = 0
     recorded: bool = False
     intro_seconds: float = INTRO_SECONDS  # how long the intro waits (set per-line)
+    reveal_seconds: float = REVEAL_SECONDS  # how long the prompt reveal waits (per-line)
+    giveup_seconds: float = GIVEUP_FLASH_SECONDS  # how long the timeout notice waits (per-line)
     # Guided intro tour state
     tour_steps: list[dict[str, str]] = field(default_factory=list)
     tour_index: int = 0
@@ -468,11 +473,15 @@ class GameManager:
             self._speak(narrator.ready_pose_detected_line())
 
     def _enter_confirm(self, now: float, theme: str) -> None:
-        """Play the two confirm lines one after another, then count down."""
-        self._state.phase = PHASE_CONFIRM
-        self._state.phase_started_at = now
+        """Play the confirm lines one after another, then count down. With no
+        confirm ment configured, jump straight into the countdown."""
         self._state.confirm_lines = narrator.category_confirm_lines(theme)
         self._state.confirm_index = 0
+        if not self._state.confirm_lines:
+            self._enter_countdown(now, speak=False)
+            return
+        self._state.phase = PHASE_CONFIRM
+        self._state.phase_started_at = now
         line = self._state.confirm_lines[0]
         self._state.intro_seconds = max(
             INTRO_MIN_SECONDS, min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.0)
@@ -596,7 +605,7 @@ class GameManager:
         elif state.phase == PHASE_REVEAL:
             # Big prompt card + MC announcement; sprint clock is paused here so
             # the reveal never eats into the 60s. Then drop into the gauge game.
-            if elapsed >= REVEAL_SECONDS:
+            if elapsed >= state.reveal_seconds:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
             await self._update_gauge(now)
@@ -622,7 +631,7 @@ class GameManager:
                 # paused), then reveal the next prompt big before playing.
                 self._enter_giveup(now)
         elif state.phase == PHASE_GIVEUP:
-            if elapsed >= GIVEUP_FLASH_SECONDS:
+            if elapsed >= state.giveup_seconds:
                 # Clock stays paused through the prompt reveal that follows; it
                 # resumes only when playing actually begins (_enter_playing).
                 self._next_prompt(now)
@@ -765,7 +774,14 @@ class GameManager:
         self._state.hint_cam_shown = False
         self._state.peek_until = 0.0
         self._pause_clock(now)
-        self._speak(narrator.prompt_reveal_line(self._current_prompt() or ""))
+        line = narrator.prompt_reveal_line(self._current_prompt() or "")
+        # Hold the reveal until the MC actually finishes saying the prompt so the
+        # screen never flips mid-sentence (longer prompts get proportionally
+        # more time, capped so it can't drag).
+        self._state.reveal_seconds = max(
+            REVEAL_SECONDS, min(REVEAL_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.2)
+        )
+        self._speak(line)
 
     def _enter_playing(self, now: float) -> None:
         self._state.phase = PHASE_PLAYING
@@ -811,6 +827,7 @@ class GameManager:
         # final report can still pick a true "worst" round (lowest score) — even
         # for prompts the team never cleared.
         self._state.round_scores.append(round(self._state.gauge, 1))
+        self._state.round_results.append(False)  # timed out -> 실패
         round_number = len(self._state.round_scores)
         self._result_frames[round_number] = [
             self._stream_manager.get_frame(camera_id) for camera_id in self._camera_ids
@@ -819,7 +836,13 @@ class GameManager:
         self._state.phase_started_at = now
         self._pause_clock(now)
         self._state.peek_until = 0.0
-        self._speak(narrator.give_up_line())
+        line = narrator.give_up_line()
+        # Hold the notice until the MC finishes the line so it's never cut off
+        # mid-sentence by the next prompt's reveal.
+        self._state.giveup_seconds = max(
+            GIVEUP_FLASH_SECONDS, min(GIVEUP_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 0.9)
+        )
+        self._speak(line)
 
 
     async def _update_gauge(self, now: float) -> None:
@@ -950,6 +973,7 @@ class GameManager:
 
     def _finish_round(self, now: float) -> None:
         self._state.round_scores.append(round(self._state.gauge, 1))
+        self._state.round_results.append(True)  # cleared -> 통과
         # A prompt was cleared: count it and remember how fast (sprint clock).
         self._state.cleared_count += 1
         self._state.clear_times.append(round(now - self._state.game_started_at, 1))
@@ -1096,6 +1120,7 @@ class GameManager:
             "show_hint_cams": show_hint_cams,
             "phase_duration": _PHASE_DURATIONS.get(state.phase),
             "round_scores": list(state.round_scores),
+            "round_results": list(state.round_results),
             "result_poses": list(state.result_poses) if state.phase == PHASE_RESULT else [],
             "total_score": total_score,
             "theme": state.theme,
