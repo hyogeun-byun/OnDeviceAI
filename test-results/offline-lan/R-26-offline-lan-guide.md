@@ -12,7 +12,7 @@
 - 대시보드에서 카메라 Online, pose_fps, frame_fps가 표시된다.
 - `/game`과 `/stage`가 같은 게임 상태를 표시한다.
 - edge-tts 등 외부 TTS가 없어도 정적 텍스트 또는 브라우저 폴백으로 게임이 멈추지 않는다.
-- 5라운드 게임이 끝까지 완료된다.
+- 60초 스프린트 1회가 종료 화면까지 완료된다.
 
 ## 권장 오프라인 설정
 
@@ -50,7 +50,7 @@ POSE_ENABLED=true
 5. 카메라 워커를 실행하고 WebSocket 연결 및 metrics 로그를 보여준다.
 6. 브라우저에서 `http://<SERVER_LAN_IP>:8000`, `/game`, `/stage`에 접속한다.
 7. 대시보드에서 카메라 Online, keypoint count, pose_fps를 보여준다.
-8. 게임을 시작해 5라운드가 끝까지 완료되는 장면을 보여준다.
+8. 게임을 시작해 60초 스프린트 1회가 종료 화면까지 완료되는 장면을 보여준다.
 9. 결과 화면과 최종 점수가 표시되는 장면을 보여준다.
 
 ## 영상에 넣으면 좋은 명령
@@ -75,17 +75,28 @@ python -m app.main
 - `ping 8.8.8.8` 실패: 외부 인터넷 차단 증거
 - `ping <SERVER_LAN_IP>` 성공: 내부 LAN 통신 증거
 - 카메라 워커 로그에 frame_fps, pose_fps, failed_frames, failed_poses 표시
-- 게임 화면에서 5라운드 완주
+- 게임 화면에서 60초 스프린트 1회 완료
 
 ## 제출 증빙 위치
 
 실제 시연 후 아래 파일을 추가하면 R-26 증빙이 더 강해진다.
 
 ```text
-test-results/offline-lan/server-offline-lan.log
-test-results/offline-lan/camera-01-offline-lan.log
-test-results/offline-lan/camera-02-offline-lan.log
-test-results/offline-lan/camera-03-offline-lan.log
+test-results/requirements/R-26-offline-lan-server.log
+test-results/requirements/R-26-offline-lan-server-health.log
+test-results/requirements/R-26-offline-lan-checklist.log
+test-results/requirements/R-26-offline-lan-camera-01.log
+test-results/requirements/R-26-offline-lan-camera-02.log
+test-results/requirements/R-26-offline-lan-camera-03.log
+```
+
+실제 카메라 워커가 기본 생성하는 `log/camera-worker-<CAMERA_ID>.log`와 `log/camera-worker-<CAMERA_ID>-metrics.jsonl`은 제출 전 아래처럼 요구사항 ID가 붙은 이름으로 복사한다.
+
+```text
+test-results/requirements/R-03-pose-fps-33-landmarks-camera-<번호>.log
+test-results/requirements/R-03-pose-fps-33-landmarks-camera-<번호>-metrics.jsonl
+test-results/requirements/R-04-threaded-capture-frame-pose-camera-<번호>.log
+test-results/requirements/R-04-threaded-capture-frame-pose-camera-<번호>-metrics.jsonl
 ```
 
 최종 평가는 시연영상의 R-26 구간과 위 로그를 평가자가 함께 확인한다.

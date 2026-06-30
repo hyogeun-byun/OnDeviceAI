@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -58,3 +59,22 @@ def function_body(source: str, function_name: str) -> str:
     if next_def == -1:
         return source[start:]
     return source[start:next_def]
+
+
+def write_requirement_log(requirement_id: str, slug: str, *lines: str) -> Path:
+    """Write a requirement-named evidence log for later Agent analysis.
+
+    These logs intentionally separate static unittest evidence from field
+    evidence that needs real cameras, LAN, browser, or server runtime.
+    """
+    output_dir = path("test-results/requirements")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    log_path = output_dir / f"{requirement_id}-{slug}.log"
+    content = [
+        f"requirement_id={requirement_id}",
+        f"evidence_slug={slug}",
+        f"generated_at={datetime.now(timezone.utc).isoformat()}",
+        *lines,
+    ]
+    log_path.write_text("\n".join(content) + "\n", encoding="utf-8")
+    return log_path
