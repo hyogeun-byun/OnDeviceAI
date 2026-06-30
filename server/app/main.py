@@ -88,16 +88,37 @@ async def _warmup_llm() -> None:
     print(f"[llm] warmup {'ready' if ok else 'failed (will retry on first use)'}")
 
 
+async def _warmup_speech() -> None:
+    """Pre-render every static MC line into the neural-TTS cache at startup so
+    short phases (camera test, confirm, give-up) never wait on a runtime
+    synthesis round-trip. Best-effort: any failure is non-fatal (the browser
+    falls back to its own Web Speech voice).
+    """
+    if not speech_audio.enabled:
+        return
+    try:
+        count = await speech_audio.prewarm(game_narrator.prewarm_lines())
+        print(f"[speech] prewarmed {count} MC lines")
+    except Exception as exc:  # pragma: no cover - best-effort warmup
+        print(f"[speech] prewarm failed (will synthesize on demand): {exc}")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     loop_task = asyncio.create_task(_game_loop())
     warmup_task = asyncio.create_task(_warmup_llm())
+    speech_task = asyncio.create_task(_warmup_speech())
     try:
         yield
     finally:
         warmup_task.cancel()
         try:
             await warmup_task
+        except asyncio.CancelledError:
+            pass
+        speech_task.cancel()
+        try:
+            await speech_task
         except asyncio.CancelledError:
             pass
         loop_task.cancel()

@@ -88,6 +88,42 @@ const tts = {
 };
 let currentAudio = null;
 
+// --- Autoplay unlock -------------------------------------------------------
+// The game can auto-start from a T-pose (computer vision) with no DOM click, so
+// the browser may block the first audio.play(). We prime the media + speech +
+// WebAudio engines on the first real user interaction (typing the team name,
+// tapping anywhere, clicking start) so the MC voice is never silenced.
+let audioPrimed = false;
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRiwAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQgAAAAAAAAAAAAAAA==";
+function primeAudio() {
+  // Always nudge the chime context back to life (it can get suspended).
+  try {
+    const ctx = chime.ctx || (chime.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    if (ctx.state === "suspended") ctx.resume();
+  } catch (e) { /* ignore */ }
+  if (audioPrimed) return;
+  audioPrimed = true;
+  // Unlock <audio> element autoplay by playing a silent clip from the gesture.
+  try {
+    const a = new Audio(SILENT_WAV);
+    a.volume = 0;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) { /* ignore */ }
+  // Warm the Web Speech engine so the fallback voice is ready instantly.
+  try {
+    if (tts.supported) {
+      const u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
+  } catch (e) { /* ignore */ }
+}
+["pointerdown", "touchstart", "keydown", "click"].forEach((evt) =>
+  window.addEventListener(evt, primeAudio, { passive: true })
+);
+
 // Tell the server the MC opening finished so the countdown starts exactly when
 // speech ends (never cut off, never too early). Fires once per intro.
 let introDoneSent = false;

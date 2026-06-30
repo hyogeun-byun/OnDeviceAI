@@ -427,6 +427,44 @@ def hint_group_low() -> str:
     ))
 
 
+def prewarm_lines() -> list[str]:
+    """Every static (non-personalized) MC line, so the neural-TTS cache can be
+    rendered at startup. This guarantees the audio is ready the instant a short
+    phase (camera test, confirm, give-up) needs it — no runtime network race
+    that would otherwise leave the MC silent mid-demo.
+    """
+    lines: list[str] = []
+    # Short/critical phase lines (these are the ones that used to go silent).
+    lines.append(camtest_intro_line())
+    lines.extend(category_confirm_lines())
+    lines.append(category_select_line())
+    lines.append(category_picked_line())      # generic (no theme name) fallback
+    lines.append(category_confirmed_line())   # generic fallback
+    lines.extend(_GIVE_UP_LINES)
+    lines.extend(_START_LINES)
+    lines.extend(_READY_POSE_WAIT)
+    lines.extend(_READY_POSE_DETECTED)
+    lines.append(report_wait_line())
+    # Result reactions + idle wait.
+    lines.append("플레이어를 기다리는 중… 다 같이 동작을 취해주세요!")
+    for bucket in _STATIC_MC.values():
+        lines.extend(bucket)
+    # Guided-tour explanation steps (text is the same regardless of theme).
+    for step in intro_tour():
+        text = step.get("text")
+        if text:
+            lines.append(text)
+    # De-duplicate while preserving order.
+    seen: set[str] = set()
+    unique: list[str] = []
+    for line in lines:
+        key = (line or "").strip()
+        if key and key not in seen:
+            seen.add(key)
+            unique.append(key)
+    return unique
+
+
 async def generate_mc_comment(
     llm: LLMClient,
     prompt: str,
