@@ -153,19 +153,22 @@ RECREATE_VENV=1 bash scripts/verify_devops.sh
 
 | 로그 | 내용 |
 |---|---|
-| `log/00-environment.log` | Python, pip, OS, Git 정보 |
-| `log/server-install.log` | 서버 venv 생성, requirements 설치, `pip check` |
-| `log/camera-worker-install.log` | 카메라 워커 venv 생성, requirements 설치, `pip check` |
-| `log/requirements-unittest.log` | R-01~R-27 요구사항 unittest 실행 결과 |
-| `log/server-run.log` | FastAPI 서버 실기동 로그 |
-| `log/server-health.log` | `/health` 응답 확인 |
-| `log/server-game-state.log` | `/api/game/state` 응답 확인 |
-| `log/camera-worker-run.log` | 카메라 워커 WebSocket smoke 실행 로그 |
+| `test-results/requirements/R-27-configuration-environment.log` | Python, pip, OS, Git 정보 |
+| `test-results/requirements/R-27-server-install.log` | 서버 venv 생성, requirements 설치, `pip check` |
+| `test-results/requirements/R-27-camera-worker-install.log` | 카메라 워커 venv 생성, requirements 설치, `pip check` |
+| `test-results/requirements/R-01-R-27-requirements-unittest.log` | R-01~R-27 요구사항 unittest 실행 결과 |
+| `test-results/requirements/R-26-offline-lan-server.log` | FastAPI 서버 실기동 로그 |
+| `test-results/requirements/R-26-offline-lan-server-health.log` | `/health` 응답 확인 |
+| `test-results/requirements/R-11-game-state-api.log` | `/api/game/state` 응답 확인 |
+| `test-results/requirements/R-01-multi-camera-websocket-camera-01.log` | 카메라 워커 WebSocket smoke 실행 로그 |
 | `log/camera-worker-<CAMERA_ID>.log` | 실제 카메라 워커 실행 시 frame_fps/pose_fps 포함 |
 | `log/camera-worker-<CAMERA_ID>-metrics.jsonl` | 실제 카메라 FPS/포즈 FPS 검증용 JSONL |
-| `log/camera-api-smoke.log` | 서버가 smoke pose/metrics를 수신했는지 확인 |
-| `log/offline-lan-checklist.log` | R-26 오프라인 LAN 현장 검증 체크리스트 |
-| `log/devops-summary.log` | DevOps 6~8 기준 충족 근거 요약 |
+| `test-results/requirements/R-05-dashboard-camera-api.log` | 서버가 smoke pose/metrics를 수신했는지 확인 |
+| `test-results/requirements/R-26-offline-lan-checklist.log` | R-26 오프라인 LAN 현장 검증 체크리스트 |
+| `test-results/requirements/R-26-offline-lan-summary.log` | DevOps 6~8 기준 충족 근거 요약 |
+
+위 로그는 요구사항 ID 기준의 평가용 원본이며, 호환을 위해 동일 내용이 `log/*.log`에도 복사된다.
+실제 카메라 워커 로그가 `log/camera-worker-camera_01.log`처럼 이미 존재하면, 스크립트가 `test-results/requirements/R-03-pose-fps-33-landmarks-camera-01.log`처럼 요구사항 ID 기준 이름으로도 복사한다.
 
 ## 8. R-26 오프라인 LAN 검증
 
@@ -180,7 +183,7 @@ RECREATE_VENV=1 bash scripts/verify_devops.sh
 5. 카메라 워커 `.env`의 `SERVER_URL=http://<SERVER_LAN_IP>:8000`을 보여준다.
 6. 서버와 카메라 워커를 실행한다.
 7. 대시보드에서 카메라 Online, keypoint count, pose_fps를 보여준다.
-8. `/game`, `/stage`에서 5라운드가 끝까지 진행되는 것을 보여준다.
+8. `/game`, `/stage`에서 60초 스프린트 1회가 종료 화면까지 진행되는 것을 보여준다.
 9. edge-tts/Ollama를 끈 상태에서도 게임이 멈추지 않고 텍스트/브라우저 폴백으로 진행됨을 보여준다.
 
 상세 체크리스트는 다음 파일에 있다.

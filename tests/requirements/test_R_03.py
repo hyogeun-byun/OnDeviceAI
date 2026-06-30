@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from _helpers import assert_contains, load_path_module
+from _helpers import assert_contains, load_path_module, write_requirement_log
 
 
 class TestR03MediaPipePose(unittest.TestCase):
@@ -57,6 +57,17 @@ class TestR03MediaPipePose(unittest.TestCase):
             self.assertGreater(record["frame_fps"], 0)
             self.assertGreater(record["pose_fps"], 0)
             self.assertIn("timestamp", record)
+            write_requirement_log(
+                "R-03",
+                "pose-fps-33-landmarks",
+                "unit_status=metrics_jsonl_writer_verified",
+                "unit_generated_metrics_jsonl=true",
+                "field_evidence_required=true",
+                "field_success_criteria=pose_fps>=9 and keypoints=33 in dashboard/server pose payload",
+                "expected_runtime_logs=test-results/requirements/R-03-pose-fps-33-landmarks-camera-<CAMERA_NO>.log",
+                "expected_metric_logs=test-results/requirements/R-03-pose-fps-33-landmarks-camera-<CAMERA_NO>-metrics.jsonl",
+                "sample_existing_logs=log/camera-worker-camera_02-metrics.jsonl, log/camera-worker-camera_03-metrics.jsonl",
+            )
 
 
 if __name__ == "__main__":

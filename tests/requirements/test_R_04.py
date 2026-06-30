@@ -1,6 +1,6 @@
 import unittest
 
-from _helpers import assert_contains
+from _helpers import assert_contains, write_requirement_log
 
 
 class TestR04ThreadSeparation(unittest.TestCase):
@@ -15,6 +15,16 @@ class TestR04ThreadSeparation(unittest.TestCase):
             'name="camera-capture"',
             'name="frame-sender"',
             'name="pose-inference"',
+        )
+        write_requirement_log(
+            "R-04",
+            "threaded-capture-frame-pose",
+            "unit_status=thread_structure_verified",
+            "field_evidence_required=true",
+            "field_success_criteria=frame_fps stays near target while pose_fps is recorded and failed_frames does not accumulate",
+            "expected_runtime_logs=test-results/requirements/R-04-threaded-capture-frame-pose-camera-<CAMERA_NO>.log",
+            "expected_metric_logs=test-results/requirements/R-04-threaded-capture-frame-pose-camera-<CAMERA_NO>-metrics.jsonl",
+            "sample_existing_logs=log/camera-worker-camera_02.log, log/camera-worker-camera_03.log",
         )
 
 
