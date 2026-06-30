@@ -62,7 +62,7 @@
           <div class="tpose-progress"><span id="tpose-progress-fill"></span></div>
         </div>
         <button class="cta" id="manual-start-btn" type="button">▶ 바로 시작 (버튼)</button>
-        <p class="idle-hint">시작하면 AI MC 민수가 룰을 설명하고, 카테고리를 고른 뒤 5문제(라운드당 10초)!</p>
+        <p class="idle-hint">시작하면 AI MC 민수가 룰을 설명하고, 카테고리를 고른 뒤 ⏱ 단 1분 동안 제시어를 최대한 많이 맞혀요! (90점 통과)</p>
 
 
         <section class="leaderboard-panel" id="leaderboard-panel">
@@ -133,6 +133,7 @@
         <p class="cat-eyebrow">📷 카메라 테스트</p>
         <h2 class="cat-title">이 포즈를 따라 해주세요!</h2>
         <p class="camtest-sub">🙌 양손을 머리 위로 번쩍! · 접속된 카메라가 모두 통과하면 시작합니다</p>
+        <p class="camtest-mc" id="camtest-mc"></p>
         <div class="camtest-cams" id="camtest-cams"></div>
         <button class="cta ghost" id="camtest-skip-btn" type="button">⏭ 카메라 테스트 건너뛰기 (버튼)</button>
       </section>
@@ -176,11 +177,11 @@
           <span class="coach-text" id="coach-text">AI MC 민수가 코칭합니다…</span>
         </div>
 
-        <p class="play-secret">🙈 서로의 동작은 보이지 않아요 — 게이지와 민수의 코칭만 믿으세요!</p>
+        <p class="play-secret">🙈 서로의 동작은 보이지 않아요 — 하지만 10초 동안 못 맞히면 카메라 화면을 잠깐 보여드려요!</p>
 
         <div class="play-foot">
           <div class="timer-bar"><span id="timer-fill"></span></div>
-          <div class="timer-text"><span id="timer-text">10.0</span>s</div>
+          <div class="timer-text"><span id="timer-text">60.0</span>s</div>
         </div>
 
         <!-- Camera-image hint: flashes the live camera feeds big when a team is

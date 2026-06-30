@@ -66,6 +66,7 @@ const el = {
   catConfirmBtn: document.getElementById("cat-confirm-btn"),
   camtestCams: document.getElementById("camtest-cams"),
   camtestSkipBtn: document.getElementById("camtest-skip-btn"),
+  camtestMc: document.getElementById("camtest-mc"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
   camHintOverlay: document.getElementById("cam-hint-overlay"),
   camHintCams: document.getElementById("cam-hint-cams"),
@@ -370,6 +371,15 @@ function render(state) {
   }
   // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 카드 화면을 유지하며 대사를 보여준다.
   if (state.phase === "confirm" && el.catSpeech) el.catSpeech.textContent = state.speech || "";
+
+  // camtest/confirm 화면(둘 다 screen-camtest)에서 민수의 멘트를 글자로도 보여준다.
+  if (el.camtestMc) {
+    if (state.phase === "camtest" || state.phase === "confirm") {
+      el.camtestMc.textContent = state.speech || "";
+    } else {
+      el.camtestMc.textContent = "";
+    }
+  }
 
   if (state.phase === "camtest") renderCamtest(state, prevPhase);
 

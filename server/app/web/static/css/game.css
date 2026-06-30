@@ -1833,6 +1833,15 @@ body {
   font-weight: 700;
   opacity: 0.85;
 }
+.camtest-mc {
+  min-height: 1.4em;
+  margin: 0 auto 18px;
+  max-width: 760px;
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.5);
+}
 .camtest-cams {
   display: flex;
   gap: 18px;
