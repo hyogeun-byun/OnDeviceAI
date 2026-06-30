@@ -940,9 +940,17 @@ body {
 }
 
 .final-title {
-  margin: 4px 0 24px;
+  margin: 4px 0 8px;
   font-size: clamp(26px, 4vw, 44px);
   font-family: "Black Han Sans", sans-serif;
+}
+
+.final-summary {
+  margin: 0 0 22px;
+  font-size: clamp(18px, 2.8vw, 26px);
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.3px;
 }
 
 .final-report {
@@ -1035,12 +1043,12 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   margin: 16px auto;
-  max-width: 760px;
+  max-width: 900px;
 }
 
 .report-card {
-  flex: 1 1 280px;
-  max-width: 340px;
+  flex: 1 1 360px;
+  max-width: 430px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
@@ -1072,17 +1080,17 @@ body {
 
 .report-shots {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
-  min-height: 92px;
+  min-height: 168px;
   align-items: center;
 }
 
 .report-shots img {
-  width: 70px;
-  height: 92px;
+  width: 128px;
+  height: 168px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #0d1230;
   border: 1px solid var(--glass-border);
 }

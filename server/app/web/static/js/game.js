@@ -34,6 +34,7 @@ const el = {
   resultComment: document.getElementById("result-comment"),
   mcText: document.getElementById("mc-text"),
   finalScore: document.getElementById("final-score"),
+  finalSummary: document.getElementById("final-summary"),
   finalTitle: document.getElementById("final-title"),
   finalReport: document.getElementById("final-report"),
   finalBreakdown: document.getElementById("final-breakdown"),
@@ -543,6 +544,10 @@ function render(state) {
     lastFinalState = state;
     el.finalScore.textContent = String(Math.round(state.total_score || 0));
     el.finalTitle.textContent = state.final_title || "";
+    if (el.finalSummary) {
+      const secs = Number(state.final_seconds || 0);
+      el.finalSummary.textContent = `⏱ ${secs.toFixed(1)}초 동안 ${state.cleared_count || 0}개 클리어!`;
+    }
     if (el.finalTeam) {
       el.finalTeam.textContent = state.team_name ? `🏷 ${state.team_name}` : "";
     }
@@ -735,10 +740,18 @@ function reportCardEl(kind, roundNo, scores, prompts) {
   const score = Math.round(scores[roundNo - 1] || 0);
   const div = document.createElement("div");
   div.className = `report-card report-${kind}`;
-  const shots = (cap.images || [])
+  let shots = (cap.images || [])
     .filter(Boolean)
     .map((src) => `<img src="${src}" alt="" />`)
     .join("");
+  // Fallback: a round with no client-captured composite (e.g. a timed-out round,
+  // which has no result screen) still has the real frames the server stored for
+  // it — use those directly. Broken/missing frames remove themselves on error.
+  if (!shots) {
+    shots = PLAYER_INDICES.map(
+      (i) => `<img src="/api/game/result-frame/${roundNo}/${i}.jpg" alt="" onerror="this.remove()" />`
+    ).join("");
+  }
   div.innerHTML =
     `<div class="report-badge">${
       kind === "best" ? "🏆 베스트 호흡" : "💥 텔레파시 대참사"
@@ -1094,12 +1107,17 @@ function renderLeaderboard(data, meId, listEl, emptyEl) {
 }
 
 async function refreshLeaderboardIdle() {
-  renderLeaderboard(await fetchLeaderboard(), null);
+  const data = await fetchLeaderboard();
+  // On a transient fetch error keep whatever's on screen instead of flashing the
+  // empty "아직 기록이 없습니다" state.
+  if (!data) return;
+  renderLeaderboard(data, null);
 }
 
 async function refreshLeaderboardFinal(state) {
   const meId = state.leaderboard_id || null;
   const data = await fetchLeaderboard();
+  if (!data) return;
   renderLeaderboard(data, meId, el.finalLeaderboardList, el.finalLeaderboardEmpty);
   if (el.finalRank) {
     const me = data && (data.entries || []).find((e) => e.id === meId);

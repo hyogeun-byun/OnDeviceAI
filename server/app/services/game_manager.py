@@ -17,6 +17,7 @@ from app.services.tts import Speaker
 COUNTDOWN_SECONDS = 3.0
 GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you can
 CLEAR_TARGET = 5             # clear this many prompts and the game ends (win condition)
+PROMPT_POOL_LIMIT = 99       # pull the whole category pool so prompts never repeat in a game
 PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next one loads
 CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
@@ -118,6 +119,7 @@ class GameState:
     game_started_at: float = 0.0        # monotonic time the sprint clock started
     cleared_count: int = 0              # how many prompts matched (90+) so far
     clear_times: list[float] = field(default_factory=list)  # elapsed at each clear
+    final_seconds: float = 0.0          # how long the game lasted (set at finish)
     peek_until: float = 0.0             # while now < this, flash the big camera-image hint
     hint_cam_shown: bool = False        # camera-image hint already fired for this prompt
     clock_paused_at: float = 0.0        # monotonic time the sprint clock was paused (0 = running)
@@ -249,7 +251,7 @@ class GameManager:
         self._generation += 1
         chosen = theme if theme in narrator.THEMES else self._default_theme
         team = (team_name or "").strip() or self._team_name
-        selected_prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
+        selected_prompts = list(narrator.default_prompts(theme=chosen, n=PROMPT_POOL_LIMIT))
         self._result_frames = {}
         self._state = GameState(
             phase=PHASE_INTRO,
@@ -323,7 +325,7 @@ class GameManager:
             return
         chosen = themes[self._state.category_index % len(themes)]
         self._state.theme = chosen
-        self._state.prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
+        self._state.prompts = list(narrator.default_prompts(theme=chosen, n=PROMPT_POOL_LIMIT))
         self._state.prompt_source = "category_random_in_theme"
         self._enter_catpick(time.monotonic(), chosen)
 
@@ -524,10 +526,10 @@ class GameManager:
             self._state.prompts = prompts
             self._state.prompt_source = "llm"
 
-    async def _build_mc_comment(self, generation: int, round_index: int) -> None:
+    async def _build_mc_comment(self, generation: int, score_index: int) -> None:
         state = self._state
-        prompt = state.prompts[round_index] if round_index < len(state.prompts) else ""
-        score = state.round_scores[round_index] if round_index < len(state.round_scores) else 0.0
+        prompt = self._current_prompt() or ""
+        score = state.round_scores[score_index] if score_index < len(state.round_scores) else 0.0
         comment = await narrator.generate_mc_comment(
             self._llm,
             prompt=prompt,
@@ -539,7 +541,7 @@ class GameManager:
         # result. We do NOT re-speak: the static line was already spoken at
         # round end, and a late LLM line could otherwise bleed into the next
         # round's playing phase.
-        if generation != self._generation or self._state.round_index != round_index:
+        if generation != self._generation or score_index != len(self._state.round_scores) - 1:
             return
         if self._state.phase != PHASE_RESULT:
             return
@@ -805,6 +807,14 @@ class GameManager:
         """A prompt ran out of time (20s). Pause the sprint clock and show a
         short 'time's up' notice so the swap isn't jarring; the next prompt is
         then revealed big before play resumes."""
+        # Record the failed attempt (its best gauge) and snapshot the frame so the
+        # final report can still pick a true "worst" round (lowest score) — even
+        # for prompts the team never cleared.
+        self._state.round_scores.append(round(self._state.gauge, 1))
+        round_number = len(self._state.round_scores)
+        self._result_frames[round_number] = [
+            self._stream_manager.get_frame(camera_id) for camera_id in self._camera_ids
+        ]
         self._state.phase = PHASE_GIVEUP
         self._state.phase_started_at = now
         self._pause_clock(now)
@@ -948,8 +958,9 @@ class GameManager:
         ]
         # Freeze the live camera frame at the scored instant so the result screen
         # can reveal the real photo (the pose snapshot above was taken from the
-        # same frame, so the overlaid skeleton lines up exactly).
-        round_number = self._state.round_index + 1
+        # same frame, so the overlaid skeleton lines up exactly). Keyed by the
+        # position in round_scores so it matches what the client requests.
+        round_number = len(self._state.round_scores)
         self._result_frames[round_number] = [
             self._stream_manager.get_frame(camera_id) for camera_id in self._camera_ids
         ]
@@ -959,18 +970,25 @@ class GameManager:
         # never empty and the audio lands inside the result phase (CPU LLM is
         # too slow to reliably finish within the 6s window). If the LLM comment
         # arrives in time, it upgrades the on-screen text silently.
-        score = self._state.round_scores[self._state.round_index]
+        score = self._state.round_scores[-1]
         static = narrator.static_mc_comment(score, self._state.ready_count)
         self._state.mc_comment = static
         self._state.mc_status = "ready"
         self._speak(static)
         if self._llm.enabled:
-            self._spawn(self._build_mc_comment(self._generation, self._state.round_index))
+            self._spawn(self._build_mc_comment(self._generation, len(self._state.round_scores) - 1))
 
     def _advance_round(self, now: float) -> None:
-        # In sprint mode this is only called when the 60s clock runs out.
+        # Called when the 60s clock runs out OR the clear target is reached.
         self._state.phase = PHASE_FINISHED
         self._state.phase_started_at = now
+        # Record how long the game lasted for the final summary (seconds to hit
+        # the clear target, otherwise the full sprint clock).
+        if self._state.cleared_count >= CLEAR_TARGET and self._state.clear_times:
+            self._state.final_seconds = self._state.clear_times[-1]
+        elif self._state.game_started_at > 0.0:
+            elapsed = now - self._state.game_started_at
+            self._state.final_seconds = round(min(GAME_TOTAL_SECONDS, max(0.0, elapsed)), 1)
         # Persist the final team score to the leaderboard (once per game).
         self._record_result()
         # C. Final telepathy report — generated in the background.
@@ -1074,6 +1092,7 @@ class GameManager:
             "game_time_left": game_time_left,
             "game_total": GAME_TOTAL_SECONDS,
             "cleared_count": state.cleared_count,
+            "final_seconds": round(state.final_seconds, 1),
             "show_hint_cams": show_hint_cams,
             "phase_duration": _PHASE_DURATIONS.get(state.phase),
             "round_scores": list(state.round_scores),
@@ -1081,7 +1100,7 @@ class GameManager:
             "total_score": total_score,
             "theme": state.theme,
             "prompt_source": state.prompt_source,
-            "prompts": list(state.prompts[: self._total_rounds]),
+            "prompts": list(state.prompts),
             "mc_comment": state.mc_comment,
             "mc_status": state.mc_status,
             "final_report": state.final_report,
