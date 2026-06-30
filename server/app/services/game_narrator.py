@@ -248,6 +248,19 @@ def start_line(mc_name: str = "민수") -> str:
     return random.choice(_START_LINES)
 
 
+_GIVE_UP_LINES = (
+    "아쉽네요! 이번 제시어는 넘어가고, 다음 제시어 갑니다!",
+    "시간 초과! 다음 제시어로 넘어갈게요!",
+    "괜찮아요, 다음 제시어로 바로 가봅시다!",
+    "이번 건 패스! 다음 제시어 나갑니다!",
+)
+
+
+def give_up_line() -> str:
+    """Spoken when a prompt times out (20s) and the next one is loading."""
+    return random.choice(_GIVE_UP_LINES)
+
+
 # --------------------------------------------------------------------------- #
 # B. Dynamic prompt generation
 # --------------------------------------------------------------------------- #

@@ -20,6 +20,7 @@ PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next on
 CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
 PROMPT_MAX_SECONDS = 20.0    # give up on a prompt after this long and load a fresh one
+GIVEUP_FLASH_SECONDS = 2.0   # "next prompt coming" notice after a timeout (clock paused)
 PEEK_DURATION_SECONDS = 1.5  # how long the camera-image hint stays on screen
 RESULT_SECONDS = 6.0
 PLAY_MAX_SECONDS = GAME_TOTAL_SECONDS  # legacy alias for hint timing math
@@ -83,6 +84,7 @@ PHASE_CONFIRM = "confirm"          # spoken category-confirm lines before countd
 PHASE_WAITING_POSE = "waiting_pose"   # new: wait for T-pose gesture
 PHASE_COUNTDOWN = "countdown"
 PHASE_PLAYING = "playing"
+PHASE_GIVEUP = "giveup"            # brief "next prompt!" notice after a 20s timeout
 PHASE_RESULT = "result"
 PHASE_FINISHED = "finished"
 
@@ -115,6 +117,7 @@ class GameState:
     clear_times: list[float] = field(default_factory=list)  # elapsed at each clear
     peek_until: float = 0.0             # while now < this, flash the big camera-image hint
     hint_cam_shown: bool = False        # camera-image hint already fired for this prompt
+    giveup_started_at: float = 0.0      # monotonic time the timeout notice began (clock paused)
     theme: str = narrator.THEMES[0]
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
@@ -599,8 +602,16 @@ class GameManager:
             elif state.gauge >= PLAY_PASS_SCORE:
                 self._finish_round(now)
             elif prompt_elapsed >= PROMPT_MAX_SECONDS:
-                # Couldn't match within 20s — give up and load a fresh prompt
-                # (not counted as a clear) so the sprint keeps moving.
+                # Couldn't match within 20s — don't snap to the next prompt
+                # abruptly. Show a brief "next prompt coming" notice (sprint
+                # clock paused) and only then load a fresh prompt.
+                self._enter_giveup(now)
+        elif state.phase == PHASE_GIVEUP:
+            if elapsed >= GIVEUP_FLASH_SECONDS:
+                # Give the paused seconds back so the notice didn't eat the clock.
+                if state.giveup_started_at > 0.0:
+                    state.game_started_at += now - state.giveup_started_at
+                    state.giveup_started_at = 0.0
                 self._next_prompt(now)
         elif state.phase == PHASE_RESULT:
             if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
@@ -742,6 +753,15 @@ class GameManager:
         self._state.hint_given_late = False
         self._state.hint_changed_at = 0.0
         self._enter_playing(now)
+
+    def _enter_giveup(self, now: float) -> None:
+        """A prompt ran out of time (20s). Pause the sprint clock and show a
+        short 'next prompt coming' notice so the swap isn't jarring."""
+        self._state.phase = PHASE_GIVEUP
+        self._state.phase_started_at = now
+        self._state.giveup_started_at = now
+        self._state.peek_until = 0.0
+        self._speak(narrator.give_up_line())
 
 
     async def _update_gauge(self, now: float) -> None:
@@ -937,7 +957,7 @@ class GameManager:
             print(f"[leaderboard] failed to record result: {exc}")
 
     def _current_prompt(self) -> str | None:
-        if self._state.phase in {PHASE_COUNTDOWN, PHASE_PLAYING, PHASE_RESULT}:
+        if self._state.phase in {PHASE_COUNTDOWN, PHASE_PLAYING, PHASE_GIVEUP, PHASE_RESULT}:
             prompts = self._state.prompts
             if self._state.round_index < len(prompts):
                 return prompts[self._state.round_index]
@@ -974,7 +994,13 @@ class GameManager:
         # 60s sprint clock (only meaningful once playing has started).
         game_time_left: float | None = None
         if state.game_started_at > 0.0:
-            game_time_left = max(0.0, GAME_TOTAL_SECONDS - (now - state.game_started_at))
+            # During the timeout notice the clock is frozen at the moment it began.
+            ref = (
+                state.giveup_started_at
+                if state.phase == PHASE_GIVEUP and state.giveup_started_at > 0.0
+                else now
+            )
+            game_time_left = max(0.0, GAME_TOTAL_SECONDS - (ref - state.game_started_at))
         show_hint_cams = state.phase == PHASE_PLAYING and now < state.peek_until
 
         return {

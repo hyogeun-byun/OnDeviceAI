@@ -9,6 +9,7 @@ const screens = {
   intro: document.getElementById("screen-intro"),
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
+  giveup: document.getElementById("screen-playing"),
   result: document.getElementById("screen-result"),
   finished: document.getElementById("screen-final"),
 };
@@ -69,6 +70,7 @@ const el = {
   camtestMc: document.getElementById("camtest-mc"),
   camHintOverlay: document.getElementById("cam-hint-overlay"),
   camHintCams: document.getElementById("cam-hint-cams"),
+  giveupOverlay: document.getElementById("giveup-overlay"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
@@ -416,6 +418,21 @@ function render(state) {
     camHintShown = false;
     el.camHintOverlay.classList.remove("is-visible");
     el.camHintOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  // Timeout notice: keep the (failed) prompt + frozen clock on screen and pop
+  // the "next prompt coming" overlay until the server swaps in a fresh prompt.
+  if (state.phase === "giveup") {
+    el.playPrompt.textContent = state.prompt || "";
+    const total = state.game_total || 60;
+    const left = state.game_time_left == null ? total : state.game_time_left;
+    el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / total) * 100))}%`;
+    el.timerText.textContent = left.toFixed(1);
+  }
+  if (el.giveupOverlay) {
+    const showGiveup = state.phase === "giveup";
+    el.giveupOverlay.classList.toggle("is-visible", showGiveup);
+    el.giveupOverlay.setAttribute("aria-hidden", showGiveup ? "false" : "true");
   }
 
   if (state.phase === "result") {

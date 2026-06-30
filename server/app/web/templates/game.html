@@ -184,6 +184,14 @@
           <p class="cam-hint-title">👀 힌트! 서로의 모습을 잠깐 보여드릴게요</p>
           <div class="cam-hint-cams" id="cam-hint-cams"></div>
         </div>
+
+        <!-- Timeout notice: shown for ~2s when a prompt runs out (20s), while the
+             sprint clock is paused, right before the next prompt loads. -->
+        <div class="giveup-overlay" id="giveup-overlay" aria-hidden="true">
+          <p class="giveup-emoji">⏭️</p>
+          <p class="giveup-title">시간 초과!</p>
+          <p class="giveup-sub">다음 제시어로 넘어갈게요…</p>
+        </div>
       </section>
 
       <!-- RESULT -->
