@@ -49,6 +49,9 @@ CATEGORY_CONFIRM_SECONDS = 1.2
 # Camera test (PHASE_CAMTEST): each player holds the test pose so they can see
 # they're framed before the game. Hold this long per camera to mark it OK.
 CAMTEST_HOLD_SECONDS = 0.8
+# After every connected camera has passed, linger this long so the green
+# "통과!" overlay is actually visible before moving on to the completion line.
+CAMTEST_REVEAL_SECONDS = 1.4
 
 # Hint thresholds
 # Low-score hint: shown once at the START of a round when gauge <= this value
@@ -72,6 +75,7 @@ COACH_MIN_HOLD_SECONDS = 4.0
 
 PHASE_IDLE = "idle"
 PHASE_CATEGORY = "category"          # body-controlled category picker
+PHASE_CATPICK = "catpick"           # spoken "you picked X" line before camtest
 PHASE_INTRO = "intro"
 PHASE_CAMTEST = "camtest"            # 3-camera framing check before the game
 PHASE_CONFIRM = "confirm"          # spoken category-confirm lines before countdown
@@ -141,6 +145,7 @@ class GameState:
     camtest_pass: list[str] = field(default_factory=list)  # camera_ids that passed
     camtest_chime: int = 0                                 # bumps on each new pass (chime cue)
     camtest_hold: dict[str, float] = field(default_factory=dict)  # camera_id -> hold-start time
+    camtest_all_passed_at: float = 0.0  # monotonic time every connected cam passed (0 = not yet)
     # Ready-pose detection state (used in PHASE_WAITING_POSE)
     ready_pose_hold_since: float = 0.0   # monotonic time when hold started (0 = not holding)
     ready_pose_last_seen: float = 0.0    # monotonic time of last successful T-pose detection
@@ -308,7 +313,19 @@ class GameManager:
         self._state.theme = chosen
         self._state.prompts = list(narrator.default_prompts(theme=chosen, n=self._total_rounds))
         self._state.prompt_source = "category_random_in_theme"
-        self._enter_camtest(time.monotonic(), chosen)
+        self._enter_catpick(time.monotonic(), chosen)
+
+    def _enter_catpick(self, now: float, theme: str) -> None:
+        """Announce the chosen category and wait for the line to finish before
+        moving to the camera test (so the MC isn't cut off mid-sentence)."""
+        self._state.phase = PHASE_CATPICK
+        self._state.phase_started_at = now
+        self._state.theme = theme
+        line = narrator.category_picked_line(theme)
+        self._state.intro_seconds = max(
+            INTRO_MIN_SECONDS, min(INTRO_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.0)
+        )
+        self._speak(line)
 
     def step_category(self, direction: int) -> None:
         """Move the category highlight (manual button fallback for hand-raise)."""
@@ -381,6 +398,7 @@ class GameManager:
         self._state.camtest_pass = []
         self._state.camtest_chime = 0
         self._state.camtest_hold = {}
+        self._state.camtest_all_passed_at = 0.0
         self._speak(narrator.camtest_intro_line(theme))
 
     def _check_camtest(self, now: float) -> None:
@@ -405,9 +423,17 @@ class GameManager:
                     self._state.camtest_chime += 1
             else:
                 self._state.camtest_hold.pop(cid, None)
-        # Proceed once every currently-connected camera has passed (at least 1).
+        # Proceed once every currently-connected camera has passed (at least 1),
+        # but linger briefly first so the green "통과!" overlay is actually seen
+        # (otherwise the phase would flip in the same tick the last cam passes).
         if connected and all(cid in self._state.camtest_pass for cid in connected):
-            self._enter_confirm(now, self._state.theme)
+            if self._state.camtest_all_passed_at <= 0.0:
+                self._state.camtest_all_passed_at = now
+            elif now - self._state.camtest_all_passed_at >= CAMTEST_REVEAL_SECONDS:
+                self._enter_confirm(now, self._state.theme)
+        else:
+            # A camera dropped out before the reveal finished — reset the timer.
+            self._state.camtest_all_passed_at = 0.0
 
     def skip_camtest(self) -> None:
         """Manual fallback: mark all cameras OK and move straight to countdown."""
@@ -534,6 +560,10 @@ class GameManager:
             self._check_idle_ready_pose(now)
         elif state.phase == PHASE_CATEGORY:
             self._check_category_gesture(now)
+        elif state.phase == PHASE_CATPICK:
+            # Hold on the category screen until the "you picked X" line finishes.
+            if elapsed >= state.intro_seconds:
+                self._enter_camtest(now, state.theme)
         elif state.phase == PHASE_CAMTEST:
             self._check_camtest(now)
         elif state.phase in (PHASE_INTRO, PHASE_WAITING_POSE):

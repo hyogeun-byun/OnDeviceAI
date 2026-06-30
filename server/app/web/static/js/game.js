@@ -3,6 +3,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * 104;
 const screens = {
   idle: document.getElementById("screen-idle"),
   category: document.getElementById("screen-category"),
+  catpick: document.getElementById("screen-category"),
   confirm: document.getElementById("screen-camtest"),
   camtest: document.getElementById("screen-camtest"),
   intro: document.getElementById("screen-intro"),
@@ -112,7 +113,7 @@ function setMcTalking(on, text) {
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
   // 인트로 투어·카테고리 화면에선 아래 글자로 대사가 나오므로 말풍선을 숨겨 데모를 안 가리게 한다.
   const suppressBubble =
-    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "confirm" || currentPhase === "camtest";
+    currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "catpick" || currentPhase === "confirm" || currentPhase === "camtest";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
     el.mcLiveText.textContent = text;
     el.mcLiveBubble.classList.add("is-visible");
@@ -360,6 +361,11 @@ function render(state) {
 
   if (state.phase === "category" && prevPhase !== "category") lastCatIndex = -1;
   if (state.phase === "category") renderCategory(state);
+  // 카테고리 확정 직후(catpick) 같은 화면에서 "선택하셨네요" 멘트가 끝나길 기다린다.
+  if (state.phase === "catpick") {
+    renderCategory(state);
+    if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+  }
   // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 카드 화면을 유지하며 대사를 보여준다.
   if (state.phase === "confirm" && el.catSpeech) el.catSpeech.textContent = state.speech || "";
 

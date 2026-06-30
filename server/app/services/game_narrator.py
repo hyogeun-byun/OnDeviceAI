@@ -163,14 +163,21 @@ def report_wait_line() -> str:
 
 def camtest_intro_line(theme: str = "") -> str:
     """Spoken when the 3-camera framing test opens, before the game starts."""
-    name = theme.strip()
-    head = f"오, '{name}' 카테고리를 선택하셨네요! " if name else "좋아요! "
     return (
-        head
-        + "해당 카테고리로 게임 진행 전, 카메라 테스트를 진행할게요! "
-        + "양손을 머리 위로 번쩍 든 만세 포즈를 모두 따라 해 주세요. "
-        + "접속된 카메라가 모두 통과하면 시작합니다!"
+        "이제 카메라 테스트를 진행할게요! "
+        "양손을 머리 위로 번쩍 든 만세 포즈를 모두 따라 해 주세요. "
+        "접속된 카메라가 모두 통과하면 시작합니다!"
     )
+
+
+def category_picked_line(theme: str = "") -> str:
+    """Spoken on the category screen right after a pick is locked in, before
+    moving on to the camera test."""
+    name = theme.strip()
+    if name:
+        return f"오, '{name}' 카테고리를 선택하셨네요! 멋진 선택이에요!"
+    return "좋아요, 카테고리를 선택하셨네요!"
+
 
 
 def category_select_line() -> str:
@@ -191,7 +198,7 @@ def category_confirmed_line(theme: str = "") -> str:
 
 def category_confirm_lines(theme: str = "") -> list[str]:
     """Spoken after the camera test passes, just before the countdown."""
-    return ["카메라 테스트가 모두 완료되었습니다! 이제 게임을 시작할게요!"]
+    return ["카메라 테스트를 완료했습니다! 이제 진짜 게임을 시작합니다!"]
 
 
 def intro_line(mc_name: str = "민수", team_name: str = "", theme: str = "") -> str:
