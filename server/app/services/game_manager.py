@@ -20,7 +20,8 @@ PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next on
 CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
 PROMPT_MAX_SECONDS = 20.0    # give up on a prompt after this long and load a fresh one
-GIVEUP_FLASH_SECONDS = 2.0   # "next prompt coming" notice after a timeout (clock paused)
+GIVEUP_FLASH_SECONDS = 1.6   # "time's up" notice after a timeout (clock paused)
+REVEAL_SECONDS = 2.6         # show + announce the new prompt big before the gauge screen
 PEEK_DURATION_SECONDS = 1.5  # how long the camera-image hint stays on screen
 RESULT_SECONDS = 6.0
 PLAY_MAX_SECONDS = GAME_TOTAL_SECONDS  # legacy alias for hint timing math
@@ -84,7 +85,8 @@ PHASE_CONFIRM = "confirm"          # spoken category-confirm lines before countd
 PHASE_WAITING_POSE = "waiting_pose"   # new: wait for T-pose gesture
 PHASE_COUNTDOWN = "countdown"
 PHASE_PLAYING = "playing"
-PHASE_GIVEUP = "giveup"            # brief "next prompt!" notice after a 20s timeout
+PHASE_GIVEUP = "giveup"            # brief "time's up!" notice after a 20s timeout
+PHASE_REVEAL = "reveal"            # show + MC-announce the new prompt big before playing
 PHASE_RESULT = "result"
 PHASE_FINISHED = "finished"
 
@@ -117,7 +119,7 @@ class GameState:
     clear_times: list[float] = field(default_factory=list)  # elapsed at each clear
     peek_until: float = 0.0             # while now < this, flash the big camera-image hint
     hint_cam_shown: bool = False        # camera-image hint already fired for this prompt
-    giveup_started_at: float = 0.0      # monotonic time the timeout notice began (clock paused)
+    clock_paused_at: float = 0.0        # monotonic time the sprint clock was paused (0 = running)
     theme: str = narrator.THEMES[0]
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
@@ -268,6 +270,11 @@ class GameManager:
         self._speak(opening)
         if self._llm.enabled and chosen != "기본":
             self._spawn(self._build_prompts(self._generation, chosen))
+        # Pre-render the per-prompt "이번 제시어는 …" announcements so the MC's
+        # reveal voice is ready instantly (no mid-game synthesis stall).
+        if self._speech_audio is not None and self._speech_audio.enabled:
+            reveal_lines = [narrator.prompt_reveal_line(p) for p in selected_prompts]
+            self._spawn(self._speech_audio.prewarm(reveal_lines))
 
     def stage(self, team_name: str | None = None, theme: str | None = None) -> None:
         """Remember the team name / theme entered on the idle screen so the
@@ -582,6 +589,11 @@ class GameManager:
                 self._advance_confirm(now)
         elif state.phase == PHASE_COUNTDOWN:
             if elapsed >= COUNTDOWN_SECONDS:
+                self._enter_reveal(now)
+        elif state.phase == PHASE_REVEAL:
+            # Big prompt card + MC announcement; sprint clock is paused here so
+            # the reveal never eats into the 60s. Then drop into the gauge game.
+            if elapsed >= REVEAL_SECONDS:
                 self._enter_playing(now)
         elif state.phase == PHASE_PLAYING:
             await self._update_gauge(now)
@@ -603,15 +615,13 @@ class GameManager:
                 self._finish_round(now)
             elif prompt_elapsed >= PROMPT_MAX_SECONDS:
                 # Couldn't match within 20s — don't snap to the next prompt
-                # abruptly. Show a brief "next prompt coming" notice (sprint
-                # clock paused) and only then load a fresh prompt.
+                # abruptly. Show a brief "time's up" notice (sprint clock
+                # paused), then reveal the next prompt big before playing.
                 self._enter_giveup(now)
         elif state.phase == PHASE_GIVEUP:
             if elapsed >= GIVEUP_FLASH_SECONDS:
-                # Give the paused seconds back so the notice didn't eat the clock.
-                if state.giveup_started_at > 0.0:
-                    state.game_started_at += now - state.giveup_started_at
-                    state.giveup_started_at = 0.0
+                # Clock stays paused through the prompt reveal that follows; it
+                # resumes only when playing actually begins (_enter_playing).
                 self._next_prompt(now)
         elif state.phase == PHASE_RESULT:
             if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
@@ -723,6 +733,32 @@ class GameManager:
                 if (now - self._state.ready_pose_last_seen) > READY_POSE_GAP_TOLERANCE:
                     self._state.ready_pose_hold_since = 0.0
 
+    def _pause_clock(self, now: float) -> None:
+        """Freeze the 60s sprint clock (idempotent) for a notice/reveal."""
+        if self._state.clock_paused_at <= 0.0:
+            self._state.clock_paused_at = now
+
+    def _resume_clock(self, now: float) -> None:
+        """Give back the time spent paused so notices/reveals don't eat the clock."""
+        if self._state.clock_paused_at > 0.0:
+            self._state.game_started_at += now - self._state.clock_paused_at
+            self._state.clock_paused_at = 0.0
+
+    def _enter_reveal(self, now: float) -> None:
+        """Show the new prompt big while the MC announces it, before the gauge
+        game. The sprint clock is paused for the whole reveal."""
+        self._state.phase = PHASE_REVEAL
+        self._state.phase_started_at = now
+        self._state.gauge = 0.0
+        self._state.raw_gauge = 0.0
+        self._state.coach = ""
+        self._state.coach_key = ""
+        self._state.coach_changed_at = 0.0
+        self._state.hint_cam_shown = False
+        self._state.peek_until = 0.0
+        self._pause_clock(now)
+        self._speak(narrator.prompt_reveal_line(self._current_prompt() or ""))
+
     def _enter_playing(self, now: float) -> None:
         self._state.phase = PHASE_PLAYING
         self._state.phase_started_at = now
@@ -739,9 +775,14 @@ class GameManager:
             self._state.game_started_at = now
             self._state.cleared_count = 0
             self._state.clear_times = []
+            self._state.clock_paused_at = 0.0
+        else:
+            # Resume the clock that was paused during the reveal/timeout notice.
+            self._resume_clock(now)
 
     def _next_prompt(self, now: float) -> None:
-        """After clearing a prompt, advance to the next one and resume playing."""
+        """Advance to the next prompt and reveal it (announce + big card)
+        before dropping back into the gauge game."""
         next_index = self._state.round_index + 1
         # Cycle prompts so the 60s sprint never runs out of cards.
         if self._state.prompts and next_index >= len(self._state.prompts):
@@ -752,14 +793,15 @@ class GameManager:
         self._state.hint_given_early = False
         self._state.hint_given_late = False
         self._state.hint_changed_at = 0.0
-        self._enter_playing(now)
+        self._enter_reveal(now)
 
     def _enter_giveup(self, now: float) -> None:
         """A prompt ran out of time (20s). Pause the sprint clock and show a
-        short 'next prompt coming' notice so the swap isn't jarring."""
+        short 'time's up' notice so the swap isn't jarring; the next prompt is
+        then revealed big before play resumes."""
         self._state.phase = PHASE_GIVEUP
         self._state.phase_started_at = now
-        self._state.giveup_started_at = now
+        self._pause_clock(now)
         self._state.peek_until = 0.0
         self._speak(narrator.give_up_line())
 
@@ -957,7 +999,7 @@ class GameManager:
             print(f"[leaderboard] failed to record result: {exc}")
 
     def _current_prompt(self) -> str | None:
-        if self._state.phase in {PHASE_COUNTDOWN, PHASE_PLAYING, PHASE_GIVEUP, PHASE_RESULT}:
+        if self._state.phase in {PHASE_COUNTDOWN, PHASE_PLAYING, PHASE_GIVEUP, PHASE_REVEAL, PHASE_RESULT}:
             prompts = self._state.prompts
             if self._state.round_index < len(prompts):
                 return prompts[self._state.round_index]
@@ -994,10 +1036,10 @@ class GameManager:
         # 60s sprint clock (only meaningful once playing has started).
         game_time_left: float | None = None
         if state.game_started_at > 0.0:
-            # During the timeout notice the clock is frozen at the moment it began.
+            # While a notice/reveal pauses the clock, freeze the displayed time.
             ref = (
-                state.giveup_started_at
-                if state.phase == PHASE_GIVEUP and state.giveup_started_at > 0.0
+                state.clock_paused_at
+                if state.phase in (PHASE_GIVEUP, PHASE_REVEAL) and state.clock_paused_at > 0.0
                 else now
             )
             game_time_left = max(0.0, GAME_TOTAL_SECONDS - (ref - state.game_started_at))

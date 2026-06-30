@@ -10,6 +10,7 @@ const screens = {
   countdown: document.getElementById("screen-countdown"),
   playing: document.getElementById("screen-playing"),
   giveup: document.getElementById("screen-playing"),
+  reveal: document.getElementById("screen-playing"),
   result: document.getElementById("screen-result"),
   finished: document.getElementById("screen-final"),
 };
@@ -71,6 +72,8 @@ const el = {
   camHintOverlay: document.getElementById("cam-hint-overlay"),
   camHintCams: document.getElementById("cam-hint-cams"),
   giveupOverlay: document.getElementById("giveup-overlay"),
+  revealOverlay: document.getElementById("reveal-overlay"),
+  revealWord: document.getElementById("reveal-word"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
@@ -469,6 +472,29 @@ function render(state) {
     const showGiveup = state.phase === "giveup";
     el.giveupOverlay.classList.toggle("is-visible", showGiveup);
     el.giveupOverlay.setAttribute("aria-hidden", showGiveup ? "false" : "true");
+  }
+
+  // Prompt reveal: show the new prompt big (clock frozen) while the MC reads it,
+  // then the gauge game appears behind once the overlay fades.
+  if (state.phase === "reveal") {
+    el.playPrompt.textContent = state.prompt || "";
+    if (el.revealWord) el.revealWord.textContent = state.prompt || "";
+    // Replay the pop-in animation each time a new prompt is revealed.
+    if (prevPhase !== "reveal" && el.revealWord) {
+      el.revealWord.style.animation = "none";
+      void el.revealWord.offsetWidth;
+      el.revealWord.style.animation = "";
+    }
+    setGauge(0);
+    const total = state.game_total || 60;
+    const left = state.game_time_left == null ? total : state.game_time_left;
+    el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / total) * 100))}%`;
+    el.timerText.textContent = left.toFixed(1);
+  }
+  if (el.revealOverlay) {
+    const showReveal = state.phase === "reveal";
+    el.revealOverlay.classList.toggle("is-visible", showReveal);
+    el.revealOverlay.setAttribute("aria-hidden", showReveal ? "false" : "true");
   }
 
   if (state.phase === "result") {

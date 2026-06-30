@@ -261,6 +261,15 @@ def give_up_line() -> str:
     return random.choice(_GIVE_UP_LINES)
 
 
+def prompt_reveal_line(prompt: str) -> str:
+    """Spoken when a new prompt is revealed big, just before the gauge game.
+    Deterministic per prompt so the neural-TTS audio can be pre-rendered."""
+    word = (prompt or "").strip()
+    if not word:
+        return "다음 제시어, 갑니다!"
+    return f"이번 제시어는, '{word}', 입니다!"
+
+
 # --------------------------------------------------------------------------- #
 # B. Dynamic prompt generation
 # --------------------------------------------------------------------------- #
