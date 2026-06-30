@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+import traceback
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -66,10 +67,24 @@ game_hub = GameHub()
 
 async def _game_loop() -> None:
     interval = 1.0 / GAME_TICK_HZ
+    consecutive_errors = 0
     while True:
         await asyncio.sleep(interval)
-        await game_manager.tick()
-        await game_hub.broadcast(game_manager.snapshot())
+        try:
+            await game_manager.tick()
+            await game_hub.broadcast(game_manager.snapshot())
+            consecutive_errors = 0
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            # A single bad tick (e.g. a malformed pose frame) must NEVER kill
+            # the loop — that would freeze the whole game: no phase progress,
+            # frozen skeleton, and a silent MC. Log it and keep ticking so the
+            # game always recovers on the next frame.
+            consecutive_errors += 1
+            if consecutive_errors <= 5 or consecutive_errors % 50 == 0:
+                print(f"[game_loop] tick error (continuing): {exc!r}")
+                traceback.print_exc()
 
 
 async def _warmup_llm() -> None:

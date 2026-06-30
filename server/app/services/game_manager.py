@@ -807,9 +807,16 @@ class GameManager:
 
 
     async def _update_gauge(self, now: float) -> None:
-        poses = [self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids]
-        loop = asyncio.get_event_loop()
-        analysis = await loop.run_in_executor(None, analyze_group, poses)
+        try:
+            poses = [self._stream_manager.get_pose(camera_id) for camera_id in self._camera_ids]
+            loop = asyncio.get_event_loop()
+            analysis = await loop.run_in_executor(None, analyze_group, poses)
+        except Exception as exc:
+            # A malformed/partial pose frame must not raise out of the tick: keep
+            # the last gauge value and recover on the next frame instead of
+            # freezing the game. (Logged once-ish via the game loop guard.)
+            print(f"[game] gauge update skipped (bad frame): {exc!r}")
+            return
         self._state.raw_gauge = analysis["score"]
         self._state.ready_count = analysis["ready_count"]
         self._state.expressiveness = analysis["expressiveness"]

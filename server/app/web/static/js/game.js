@@ -402,15 +402,22 @@ function render(state) {
     el.introSpeech.textContent = state.speech || "민수가 인사 중…";
   }
 
-  if (state.phase === "category" && prevPhase !== "category") lastCatIndex = -1;
+  if (state.phase === "category" && prevPhase !== "category") {
+    lastCatIndex = -1;
+    lastCatConfirmed = "";
+  }
   if (state.phase === "category") renderCategory(state);
   // 카테고리 확정 직후(catpick) 같은 화면에서 "선택하셨네요" 멘트가 끝나길 기다린다.
+  // 이때는 고른 카테고리 하나만 크게 남겨서 무엇이 선택됐는지 확실히 보여준다.
   if (state.phase === "catpick") {
-    renderCategory(state);
+    renderCategoryConfirmed(state);
     if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
   }
-  // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 카드 화면을 유지하며 대사를 보여준다.
-  if (state.phase === "confirm" && el.catSpeech) el.catSpeech.textContent = state.speech || "";
+  // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 선택된 카테고리만 크게 유지한다.
+  if (state.phase === "confirm") {
+    renderCategoryConfirmed(state);
+    if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+  }
 
   // camtest/confirm 화면(둘 다 screen-camtest)에서 민수의 멘트를 글자로도 보여준다.
   if (el.camtestMc) {
@@ -561,9 +568,11 @@ function render(state) {
 
 // --- Body-controlled category picker ---
 let lastCatIndex = -1;
+let lastCatConfirmed = "";
 function renderCategory(state) {
   const options = state.category_options || [];
   const index = state.category_index || 0;
+  if (screens.category) screens.category.classList.remove("is-confirmed");
   if (el.catCards && lastCatIndex !== index) {
     el.catCards.innerHTML = "";
     options.forEach((name, i) => {
@@ -579,6 +588,24 @@ function renderCategory(state) {
     el.catConfirmFill.style.width = `${pct}%`;
   }
   if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+}
+
+// 카테고리 확정 후: 고른 카테고리 하나만 큼지막하게 남겨 "이게 선택됐다"를 확실히 보여준다.
+function renderCategoryConfirmed(state) {
+  const options = state.category_options || [];
+  const index = state.category_index || 0;
+  const chosen = state.theme || options[index] || "";
+  if (screens.category) screens.category.classList.add("is-confirmed");
+  if (el.catCards && lastCatConfirmed !== chosen) {
+    el.catCards.innerHTML = "";
+    const card = document.createElement("div");
+    card.className = "cat-card cat-card-chosen";
+    card.innerHTML = `<span class="cat-chosen-check">✅</span><span class="cat-chosen-name">${chosen}</span><span class="cat-chosen-tag">선택 완료!</span>`;
+    el.catCards.appendChild(card);
+    lastCatConfirmed = chosen;
+    lastCatIndex = -1;
+  }
+  if (el.catConfirmFill) el.catConfirmFill.style.width = "100%";
 }
 
 // --- Camera test: 3 large live feeds; each turns green + chimes when its

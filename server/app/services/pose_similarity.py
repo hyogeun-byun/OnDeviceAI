@@ -230,6 +230,12 @@ def detect_ready_pose(pose_result: dict[str, object] | None) -> bool:
 # to count as "arm raised". Image y grows downward, so raised = smaller y.
 _ARM_RAISE_MARGIN = 0.05
 
+# Easier threshold for the category-menu step gesture: a partially raised arm
+# (wrist around shoulder height, even slightly below) is enough to flip the
+# category. Negative margin means the wrist may sit a little below the shoulder
+# line and still count, so players don't have to lift their arm all the way up.
+_ARM_STEP_MARGIN = -0.07
+
 
 def detect_arm_raised(pose_result: dict[str, object] | None) -> str | None:
     """Return 'left'/'right' when exactly one hand is raised above the shoulder.
@@ -249,7 +255,7 @@ def detect_arm_raised(pose_result: dict[str, object] | None) -> str | None:
             return False
         if not (_is_visible(wrist) and _is_visible(shoulder)):
             return False
-        return float(wrist["y"]) < float(shoulder["y"]) - _ARM_RAISE_MARGIN
+        return float(wrist["y"]) < float(shoulder["y"]) - _ARM_STEP_MARGIN
 
     left = raised("left")
     right = raised("right")
