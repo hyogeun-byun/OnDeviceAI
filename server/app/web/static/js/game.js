@@ -67,6 +67,8 @@ const el = {
   camtestCams: document.getElementById("camtest-cams"),
   camtestSkipBtn: document.getElementById("camtest-skip-btn"),
   mergedSkel: document.getElementById("merged-skel-canvas"),
+  camHintOverlay: document.getElementById("cam-hint-overlay"),
+  camHintCams: document.getElementById("cam-hint-cams"),
 };
 
 const playerCount = Number(document.body.dataset.playerCount || "3");
@@ -399,7 +401,12 @@ function render(state) {
     const left = state.game_time_left == null ? total : state.game_time_left;
     el.timerFill.style.width = `${Math.max(0, Math.min(100, (left / total) * 100))}%`;
     el.timerText.textContent = left.toFixed(1);
-    peekHint = Boolean(state.show_hint_skel);
+    renderCamHint(state);
+  }
+  if (state.phase !== "playing" && camHintShown && el.camHintOverlay) {
+    camHintShown = false;
+    el.camHintOverlay.classList.remove("is-visible");
+    el.camHintOverlay.setAttribute("aria-hidden", "true");
   }
 
   if (state.phase === "result") {
@@ -531,6 +538,32 @@ function renderCamtest(state, prevPhase) {
   const chimeCount = state.camtest_chime || 0;
   if (chimeCount > camtestLastChime) chime();
   camtestLastChime = chimeCount;
+}
+
+// Camera-image hint: when the server flags show_hint_cams (stuck on a prompt for
+// 10s), flash the live camera feeds big for ~1.5s, then fade out.
+let camHintShown = false;
+function renderCamHint(state) {
+  if (!el.camHintOverlay || !el.camHintCams) return;
+  const players = Array.isArray(state.players) ? state.players : [];
+  // Build the camera tiles once (or when the player count changes).
+  if (el.camHintCams.childElementCount !== players.length) {
+    el.camHintCams.innerHTML = "";
+    players.forEach((p, i) => {
+      const cam = document.createElement("div");
+      cam.className = "cam-hint-cam";
+      cam.innerHTML =
+        `<img src="/api/cameras/${p.camera_id}/stream" alt="" />` +
+        `<div class="cam-hint-badge">${i + 1}</div>`;
+      el.camHintCams.appendChild(cam);
+    });
+  }
+  const show = Boolean(state.show_hint_cams);
+  if (show !== camHintShown) {
+    camHintShown = show;
+    el.camHintOverlay.classList.toggle("is-visible", show);
+    el.camHintOverlay.setAttribute("aria-hidden", show ? "false" : "true");
+  }
 }
 
 // --- Final telepathy report (best / worst rounds) ---
@@ -1060,7 +1093,6 @@ const POSE_CONNECTIONS = [
 ];
 const SKELETON_VISIBILITY = 0.5;
 let latestPlayers = [];
-let peekHint = false;  // 10s skeleton-overlay hint flash (sprint mode)
 let currentPhase = "idle";
 let latestGauge = 0;
 let skeletonBusy = false;
@@ -1184,9 +1216,8 @@ function skeletonPrefix() {
 async function refreshSkeletons() {
   const prefix = skeletonPrefix();
   // The merged "포즈 싱크" overlay is a hint, shown only when the score is low
-  // (≤40) or during the 10s skeleton-peek flash. Above that, show a teaser.
-  const shouldDrawMerged =
-    currentPhase === "playing" && el.mergedSkel && (latestGauge <= 40 || peekHint);
+  // (≤40). Above that, show a teaser instead of fetching poses every tick.
+  const shouldDrawMerged = currentPhase === "playing" && el.mergedSkel && latestGauge <= 40;
   if (!prefix && !shouldDrawMerged) {
     if (currentPhase === "playing" && el.mergedSkel) {
       const c = el.mergedSkel;

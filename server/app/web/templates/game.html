@@ -182,6 +182,13 @@
           <div class="timer-bar"><span id="timer-fill"></span></div>
           <div class="timer-text"><span id="timer-text">10.0</span>s</div>
         </div>
+
+        <!-- Camera-image hint: flashes the live camera feeds big when a team is
+             stuck on a prompt for 10s, then fades out. -->
+        <div class="cam-hint-overlay" id="cam-hint-overlay" aria-hidden="true">
+          <p class="cam-hint-title">👀 힌트! 서로의 모습을 잠깐 보여드릴게요</p>
+          <div class="cam-hint-cams" id="cam-hint-cams"></div>
+        </div>
       </section>
 
       <!-- RESULT -->

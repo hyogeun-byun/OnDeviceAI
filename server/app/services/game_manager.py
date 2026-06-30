@@ -16,10 +16,11 @@ from app.services.tts import Speaker
 # --- Game timing (seconds) ---
 COUNTDOWN_SECONDS = 3.0
 GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you can
-PLAY_PASS_SCORE = 95.0       # reach this and the current prompt clears; next one loads
+PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next one loads
 CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
-PEEK_INTERVAL_SECONDS = 10.0 # every 10s, flash a 1s skeleton-overlay hint
-PEEK_DURATION_SECONDS = 1.0
+PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
+PROMPT_MAX_SECONDS = 20.0    # give up on a prompt after this long and load a fresh one
+PEEK_DURATION_SECONDS = 1.5  # how long the camera-image hint stays on screen
 RESULT_SECONDS = 6.0
 PLAY_MAX_SECONDS = GAME_TOTAL_SECONDS  # legacy alias for hint timing math
 
@@ -110,10 +111,10 @@ class GameState:
     result_poses: list[dict[str, object] | None] = field(default_factory=list)
     # --- 60s sprint state ---
     game_started_at: float = 0.0        # monotonic time the sprint clock started
-    cleared_count: int = 0              # how many prompts matched (95+) so far
+    cleared_count: int = 0              # how many prompts matched (90+) so far
     clear_times: list[float] = field(default_factory=list)  # elapsed at each clear
-    peek_until: float = 0.0             # while now < this, flash skeleton hint
-    next_peek_at: float = 0.0           # monotonic time of the next peek flash
+    peek_until: float = 0.0             # while now < this, flash the big camera-image hint
+    hint_cam_shown: bool = False        # camera-image hint already fired for this prompt
     theme: str = narrator.THEMES[0]
     prompts: list[str] = field(default_factory=lambda: list(DEFAULT_PROMPTS))
     prompt_source: str = "default"
@@ -582,15 +583,25 @@ class GameManager:
         elif state.phase == PHASE_PLAYING:
             await self._update_gauge(now)
             game_elapsed = now - state.game_started_at
-            # Schedule a 1s skeleton-overlay "peek" hint every 10s.
-            if now >= state.next_peek_at and game_elapsed < GAME_TOTAL_SECONDS:
+            prompt_elapsed = now - state.phase_started_at
+            # Stuck on this prompt for 10s? Flash the big camera images once as a
+            # hint so the team can see each other and sync up.
+            if (
+                not state.hint_cam_shown
+                and prompt_elapsed >= PROMPT_HINT_SECONDS
+                and game_elapsed < GAME_TOTAL_SECONDS
+            ):
+                state.hint_cam_shown = True
                 state.peek_until = now + PEEK_DURATION_SECONDS
-                state.next_peek_at = now + PEEK_INTERVAL_SECONDS
             # 60s sprint clock: when it runs out, the game is over.
             if game_elapsed >= GAME_TOTAL_SECONDS:
                 self._advance_round(now)
             elif state.gauge >= PLAY_PASS_SCORE:
                 self._finish_round(now)
+            elif prompt_elapsed >= PROMPT_MAX_SECONDS:
+                # Couldn't match within 20s — give up and load a fresh prompt
+                # (not counted as a clear) so the sprint keeps moving.
+                self._next_prompt(now)
         elif state.phase == PHASE_RESULT:
             if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
                 self._advance_round(now)
@@ -709,13 +720,14 @@ class GameManager:
         self._state.coach = ""
         self._state.coach_key = ""
         self._state.coach_changed_at = 0.0
+        # Each prompt gets a fresh camera-hint timer.
+        self._state.hint_cam_shown = False
+        self._state.peek_until = 0.0
         # Kick off the 60s sprint clock the first time we start playing.
         if self._state.game_started_at <= 0.0:
             self._state.game_started_at = now
             self._state.cleared_count = 0
             self._state.clear_times = []
-            self._state.next_peek_at = now + PEEK_INTERVAL_SECONDS
-            self._state.peek_until = 0.0
 
     def _next_prompt(self, now: float) -> None:
         """After clearing a prompt, advance to the next one and resume playing."""
@@ -963,7 +975,7 @@ class GameManager:
         game_time_left: float | None = None
         if state.game_started_at > 0.0:
             game_time_left = max(0.0, GAME_TOTAL_SECONDS - (now - state.game_started_at))
-        show_hint_skel = state.phase == PHASE_PLAYING and now < state.peek_until
+        show_hint_cams = state.phase == PHASE_PLAYING and now < state.peek_until
 
         return {
             "phase": state.phase,
@@ -981,7 +993,7 @@ class GameManager:
             "game_time_left": game_time_left,
             "game_total": GAME_TOTAL_SECONDS,
             "cleared_count": state.cleared_count,
-            "show_hint_skel": show_hint_skel,
+            "show_hint_cams": show_hint_cams,
             "phase_duration": _PHASE_DURATIONS.get(state.phase),
             "round_scores": list(state.round_scores),
             "result_poses": list(state.result_poses) if state.phase == PHASE_RESULT else [],
