@@ -429,6 +429,7 @@ function render(state) {
   }
 
   if (state.phase === "camtest") renderCamtest(state, prevPhase);
+  else teardownCamtestStreams();
 
   if (state.phase === "countdown") {
     el.cdPrompt.textContent = state.prompt || "";
@@ -462,6 +463,7 @@ function render(state) {
   }
   if (state.phase !== "playing" && camHintShown && el.camHintOverlay) {
     camHintShown = false;
+    setCamStreams(el.camHintCams, false);
     el.camHintOverlay.classList.remove("is-visible");
     el.camHintOverlay.setAttribute("aria-hidden", "true");
   }
@@ -638,13 +640,15 @@ function renderCamtest(state, prevPhase) {
       cam.className = "camtest-cam";
       cam.dataset.cameraId = p.camera_id;
       cam.innerHTML =
-        `<img src="/api/cameras/${p.camera_id}/stream" alt="" />` +
+        `<img alt="" />` +
         `<div class="camtest-badge">카메라 ${i + 1}</div>` +
         `<div class="camtest-pose">🙌</div>` +
         `<div class="camtest-ok">통과!</div>`;
       el.camtestCams.appendChild(cam);
     });
   }
+  // Attach the live MJPEG streams only while the camtest screen is on (idempotent).
+  setCamStreams(el.camtestCams, true);
   if (el.camtestCams) {
     el.camtestCams.querySelectorAll(".camtest-cam").forEach((cam) =>
       cam.classList.toggle("is-pass", passed.has(cam.dataset.cameraId))
@@ -661,14 +665,20 @@ let camHintShown = false;
 function renderCamHint(state) {
   if (!el.camHintOverlay || !el.camHintCams) return;
   const players = Array.isArray(state.players) ? state.players : [];
-  // Build the camera tiles once (or when the player count changes).
+  // Build the camera tiles once (or when the player count changes). The live
+  // MJPEG <img> src is left EMPTY here: it is attached only while the overlay is
+  // actually visible and cleared again when hidden. A persistent MJPEG stream
+  // holds an HTTP connection open forever, and the browser allows only ~6 per
+  // host — leaked streams starve the pose/audio/result fetches (skeleton + MC
+  // freeze, missing report images).
   if (el.camHintCams.childElementCount !== players.length) {
     el.camHintCams.innerHTML = "";
     players.forEach((p, i) => {
       const cam = document.createElement("div");
       cam.className = "cam-hint-cam";
+      cam.dataset.cameraId = p.camera_id;
       cam.innerHTML =
-        `<img src="/api/cameras/${p.camera_id}/stream" alt="" />` +
+        `<img alt="" />` +
         `<div class="cam-hint-badge">${i + 1}</div>`;
       el.camHintCams.appendChild(cam);
     });
@@ -676,9 +686,35 @@ function renderCamHint(state) {
   const show = Boolean(state.show_hint_cams);
   if (show !== camHintShown) {
     camHintShown = show;
+    setCamStreams(el.camHintCams, show);
     el.camHintOverlay.classList.toggle("is-visible", show);
     el.camHintOverlay.setAttribute("aria-hidden", show ? "false" : "true");
   }
+}
+
+// Attach (active=true) or release (active=false) the live MJPEG <img> streams in
+// a container. Releasing clears the src so the persistent connection closes and
+// stops consuming the browser's per-host connection budget.
+function setCamStreams(container, active) {
+  if (!container) return;
+  container.querySelectorAll(".cam-hint-cam, .camtest-cam").forEach((cam) => {
+    const img = cam.querySelector("img");
+    if (!img) return;
+    if (active) {
+      const id = cam.dataset.cameraId;
+      if (id && !img.getAttribute("src")) img.src = `/api/cameras/${id}/stream`;
+    } else {
+      img.removeAttribute("src");
+    }
+  });
+}
+
+// Fully release the camtest MJPEG streams when leaving the camera-test screen so
+// they don't keep eating connections for the rest of the game.
+function teardownCamtestStreams() {
+  if (!el.camtestCams || el.camtestCams.childElementCount === 0) return;
+  setCamStreams(el.camtestCams, false);
+  el.camtestCams.innerHTML = "";
 }
 
 // --- Final telepathy report (best / worst rounds) ---

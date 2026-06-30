@@ -16,6 +16,7 @@ from app.services.tts import Speaker
 # --- Game timing (seconds) ---
 COUNTDOWN_SECONDS = 3.0
 GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you can
+CLEAR_TARGET = 5             # clear this many prompts and the game ends (win condition)
 PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next one loads
 CLEAR_FLASH_SECONDS = 1.6    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
@@ -627,7 +628,12 @@ class GameManager:
             if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
                 self._advance_round(now)
             elif elapsed >= CLEAR_FLASH_SECONDS:
-                self._next_prompt(now)
+                # Show the cleared result briefly, then either end the game (the
+                # team hit the clear target) or reveal the next prompt.
+                if state.cleared_count >= CLEAR_TARGET:
+                    self._advance_round(now)
+                else:
+                    self._next_prompt(now)
 
 
     def _check_idle_ready_pose(self, now: float) -> None:
