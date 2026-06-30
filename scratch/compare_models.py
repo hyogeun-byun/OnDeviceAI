@@ -32,6 +32,7 @@ Output
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 import urllib.request
@@ -118,6 +119,7 @@ _MP_TO_COCO: list[int] = [
 ]
 
 SCORE_THRESHOLD = 0.3
+QUALITY_PCK_THRESHOLDS = (0.02, 0.05, 0.10)
 
 # BGR display colours per model
 _MODEL_COLORS: dict[str, tuple[int, int, int]] = {
@@ -125,6 +127,7 @@ _MODEL_COLORS: dict[str, tuple[int, int, int]] = {
     "movenet_thunder":   (30,  200, 255),   # amber
     "mediapipe_lite":    (200, 100, 255),   # violet
     "mediapipe_full":    (50,  180, 255),   # sky-blue
+    "mediapipe_heavy":   (80,  220, 80),    # green
 }
 
 # MoveNet Thunder int8 – auto-downloaded when missing
@@ -227,6 +230,8 @@ class MediaPipeRunner:
 
         try:
             import mediapipe as mp
+            if not hasattr(mp, "solutions"):
+                raise AttributeError("mediapipe.solutions is not available")
             self._pose = mp.solutions.pose.Pose(
                 static_image_mode=False,
                 model_complexity=model_complexity,
@@ -239,6 +244,8 @@ class MediaPipeRunner:
         except ImportError:
             print(f"  [SKIP] {model_key}: mediapipe not installed  "
                   "(pip install mediapipe)")
+        except AttributeError as exc:
+            print(f"  [SKIP] {model_key}: unsupported mediapipe API ({exc})")
 
     @property
     def available(self) -> bool:
@@ -320,11 +327,83 @@ def draw_hud(
 
 # ── Per-model video processing ────────────────────────────────────────────────
 
+def _new_quality_acc() -> dict[str, Any]:
+    return {
+        "frames_with_teacher": 0,
+        "teacher_visible_keypoints": 0,
+        "matched_keypoints": 0,
+        "sum_px_error": 0.0,
+        "sum_norm_error": 0.0,
+        "pck_hits": {thr: 0 for thr in QUALITY_PCK_THRESHOLDS},
+    }
+
+
+def _update_quality_acc(
+    acc: dict[str, Any],
+    pred_kp: KeypointArray | None,
+    teacher_kp: KeypointArray | None,
+    frame_shape: tuple[int, int, int],
+) -> None:
+    if teacher_kp is None:
+        return
+
+    teacher_visible = teacher_kp[:, 2] >= SCORE_THRESHOLD
+    teacher_count = int(np.count_nonzero(teacher_visible))
+    if teacher_count == 0:
+        return
+
+    acc["frames_with_teacher"] += 1
+    acc["teacher_visible_keypoints"] += teacher_count
+
+    if pred_kp is None:
+        return
+
+    pred_visible = pred_kp[:, 2] >= SCORE_THRESHOLD
+    matched = teacher_visible & pred_visible
+    matched_count = int(np.count_nonzero(matched))
+    if matched_count == 0:
+        return
+
+    h, w = frame_shape[:2]
+    scale = float(np.hypot(w, h))
+    image_scale = np.array([w, h], dtype=np.float32)
+    teacher_xy = teacher_kp[matched][:, [1, 0]] * image_scale
+    pred_xy = pred_kp[matched][:, [1, 0]] * image_scale
+    errors = np.linalg.norm(pred_xy - teacher_xy, axis=1)
+    norm_errors = errors / scale if scale > 0 else errors
+
+    acc["matched_keypoints"] += matched_count
+    acc["sum_px_error"] += float(np.sum(errors))
+    acc["sum_norm_error"] += float(np.sum(norm_errors))
+    for thr in QUALITY_PCK_THRESHOLDS:
+        acc["pck_hits"][thr] += int(np.count_nonzero(norm_errors <= thr))
+
+
+def _finalize_quality(acc: dict[str, Any]) -> dict[str, float | int]:
+    teacher_count = int(acc["teacher_visible_keypoints"])
+    matched_count = int(acc["matched_keypoints"])
+    quality: dict[str, float | int] = {
+        "teacher_frames": int(acc["frames_with_teacher"]),
+        "teacher_keypoints": teacher_count,
+        "matched_keypoints": matched_count,
+        "detect_rate": matched_count / teacher_count if teacher_count else 0.0,
+        "mean_px_error": acc["sum_px_error"] / matched_count if matched_count else 0.0,
+        "mean_norm_error": acc["sum_norm_error"] / matched_count if matched_count else 0.0,
+    }
+    for thr in QUALITY_PCK_THRESHOLDS:
+        quality[f"pck@{int(thr * 100)}"] = (
+            acc["pck_hits"][thr] / teacher_count if teacher_count else 0.0
+        )
+    return quality
+
+
 def process_video(
     runner: MoveNetRunner | MediaPipeRunner,
     video_path: Path,
     output_dir: Path,
-) -> dict[str, float]:
+    teacher_keypoints: list[KeypointArray | None] | None = None,
+    collect_keypoints: bool = False,
+) -> dict[str, Any]:
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
@@ -337,6 +416,8 @@ def process_video(
 
     times:  list[float]      = []
     frames: list[np.ndarray] = []
+    collected_keypoints: list[KeypointArray | None] = []
+    quality_acc = _new_quality_acc() if teacher_keypoints is not None else None
 
     idx = 0
     while True:
@@ -346,6 +427,11 @@ def process_video(
 
         kp, ms = runner.run(frame)
         times.append(ms)
+        if collect_keypoints:
+            collected_keypoints.append(kp.copy() if kp is not None else None)
+        if quality_acc is not None:
+            teacher_kp = teacher_keypoints[idx] if idx < len(teacher_keypoints) else None
+            _update_quality_acc(quality_acc, kp, teacher_kp, frame.shape)
         avg = sum(times) / len(times)
 
         if kp is not None:
@@ -360,7 +446,7 @@ def process_video(
     cap.release()
 
     avg_ms = sum(times) / len(times) if times else 0.0
-    print(f"    {runner.name}  {idx:>5}/{total}  avg {avg_ms:.1f}ms  ✓        ")
+    print(f"    {runner.name}  {idx:>5}/{total}  avg {avg_ms:.1f}ms  [done]        ")
 
     # Save annotated video
     out_name = f"{runner.name}_{avg_ms:.0f}ms.mp4"
@@ -370,9 +456,18 @@ def process_video(
     for f in frames:
         writer.write(f)
     writer.release()
-    print(f"    → {out_path}")
+    print(f"    saved: {out_path}")
 
-    return {"avg_ms": avg_ms, "fps_eq": 1000.0 / avg_ms if avg_ms > 0 else 0.0, "frames": idx}
+    result: dict[str, Any] = {
+        "avg_ms": avg_ms,
+        "fps_eq": 1000.0 / avg_ms if avg_ms > 0 else 0.0,
+        "frames": idx,
+    }
+    if collect_keypoints:
+        result["keypoints"] = collected_keypoints
+    if quality_acc is not None:
+        result["quality"] = _finalize_quality(quality_acc)
+    return result
 
 
 # ── TFLite loader + Thunder auto-download ────────────────────────────────────
@@ -392,7 +487,7 @@ def _load_tflite(model_path: Path, num_threads: int) -> Any | None:
 
 
 def _try_download_thunder(dest: Path) -> bool:
-    print(f"  MoveNet Thunder not found. Attempting download → {dest}")
+    print(f"  MoveNet Thunder not found. Attempting download: {dest}")
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         req = urllib.request.Request(
@@ -429,6 +524,8 @@ def parse_args() -> argparse.Namespace:
                    help="TFLite CPU threads (default: 4)")
     p.add_argument("--no-download", action="store_true",
                    help="Skip auto-download of Thunder model")
+    p.add_argument("--teacher", default="mediapipe_heavy",
+                   help="Teacher model for pseudo-labels (default: mediapipe_heavy)")
     return p.parse_args()
 
 
@@ -449,6 +546,7 @@ def main() -> None:
     print(f"  input  : {args.video}")
     print(f"  output : {args.output_dir.resolve()}")
     print(f"  threads: {args.threads}")
+    print(f"  teacher: {args.teacher}")
     print("=" * 65)
 
     # Try to download Thunder if missing
@@ -468,13 +566,99 @@ def main() -> None:
         print("\nNo models available. Install tflite-runtime and/or mediapipe.")
         return
 
-    print(f"\nRunning {len(active)} model(s) on {args.video.name}...\n")
+    active_by_name = {r.name: r for r in active}
+    if args.teacher == "mediapipe_heavy":
+        teacher: MoveNetRunner | MediaPipeRunner = MediaPipeRunner(
+            "mediapipe_heavy", model_complexity=2
+        )
+    elif args.teacher in active_by_name:
+        teacher = active_by_name[args.teacher]
+    else:
+        available = ", ".join(sorted([*active_by_name, "mediapipe_heavy"]))
+        raise ValueError(f"Teacher model '{args.teacher}' is not available. Available: {available}")
 
-    results: dict[str, dict] = {}
-    for runner in active:
+    if not teacher.available:
+        raise RuntimeError(f"Teacher model '{teacher.name}' is not available.")
+
+    comparison = [r for r in active if r.name != teacher.name]
+    ordered = [teacher] + comparison
+
+    print(f"\nRunning teacher + {len(comparison)} comparison model(s) on {args.video.name}...")
+    print(f"Using [{teacher.name}] as pseudo-label teacher for quality metrics.\n")
+
+    results: dict[str, dict[str, Any]] = {}
+    teacher_result: dict[str, Any] = {}
+    teacher_keypoints: list[KeypointArray | None] = []
+    for runner in ordered:
         print(f"[{runner.name}]")
-        results[runner.name] = process_video(runner, args.video, args.output_dir)
+        if runner.name == teacher.name:
+            result = process_video(
+                runner,
+                args.video,
+                args.output_dir,
+                collect_keypoints=True,
+            )
+            teacher_keypoints = result.pop("keypoints")
+            result["teacher"] = True
+            teacher_result = result
+            runner.close()
+            continue
+        else:
+            result = process_video(
+                runner,
+                args.video,
+                args.output_dir,
+                teacher_keypoints=teacher_keypoints,
+            )
+            result["teacher"] = False
+        results[runner.name] = result
         runner.close()
+
+    print("\n" + "=" * 105)
+    print(
+        f"  {'Model':<25} {'Avg ms':>9} {'FPS':>8} {'Frames':>8} "
+        f"{'PCK@5':>8} {'Err px':>8} {'Detect':>8}"
+    )
+    print("  " + "-" * 100)
+    best = min(results, key=lambda k: results[k]["avg_ms"])
+    for name, r in results.items():
+        tags = []
+        if name == best:
+            tags.append("fastest")
+        if r.get("teacher"):
+            tags.append("teacher")
+        tag = f" ({', '.join(tags)})" if tags else ""
+        q = r.get("quality")
+        if isinstance(q, dict):
+            pck5 = f"{float(q['pck@5']) * 100:>7.1f}%"
+            err_px = f"{float(q['mean_px_error']):>7.1f}"
+            detect = f"{float(q['detect_rate']) * 100:>7.1f}%"
+        else:
+            pck5 = f"{'N/A':>8}"
+            err_px = f"{'N/A':>8}"
+            detect = f"{'N/A':>8}"
+        print(
+            f"  {name:<25} {r['avg_ms']:>8.1f}ms {r['fps_eq']:>7.1f} "
+            f"{r['frames']:>8} {pck5} {err_px} {detect}{tag}"
+        )
+    print("=" * 105)
+
+    json_path = args.output_dir / f"{log_path.stem}.json"
+    report = {
+        "benchmark": "pose_speed_quality",
+        "video": str(args.video),
+        "teacher": teacher.name,
+        "teacher_result": teacher_result,
+        "score_threshold": SCORE_THRESHOLD,
+        "pck_thresholds": list(QUALITY_PCK_THRESHOLDS),
+        "models": results,
+    }
+    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nOutput videos: {args.output_dir.resolve()}/")
+    print(f"JSON saved to : {json_path.resolve()}")
+    print(f"Log saved to : {log_path.resolve()}")
+    tee.close()
+    return
 
     # ── Summary table ──────────────────────────────────────────────────────
     print("\n" + "=" * 65)

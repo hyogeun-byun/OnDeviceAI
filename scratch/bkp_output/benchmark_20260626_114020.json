@@ -1,0 +1,70 @@
+{
+  "benchmark": "pose_speed_quality",
+  "video": "scratch\\test.mp4",
+  "teacher": "movenet_thunder",
+  "score_threshold": 0.3,
+  "pck_thresholds": [
+    0.02,
+    0.05,
+    0.1
+  ],
+  "models": {
+    "movenet_thunder": {
+      "avg_ms": 14.36394469688325,
+      "fps_eq": 69.61875871166396,
+      "frames": 132,
+      "teacher": true
+    },
+    "movenet_lightning": {
+      "avg_ms": 5.438651515085054,
+      "fps_eq": 183.8691074848838,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 132,
+        "teacher_keypoints": 1214,
+        "matched_keypoints": 1083,
+        "detect_rate": 0.8920922570016474,
+        "mean_px_error": 7.6029531211624075,
+        "mean_norm_error": 0.009503691387341279,
+        "pck@2": 0.8294892915980231,
+        "pck@5": 0.8896210873146623,
+        "pck@10": 0.8920922570016474
+      },
+      "teacher": false
+    },
+    "mediapipe_lite": {
+      "avg_ms": 13.50769242432734,
+      "fps_eq": 74.0318900213482,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 132,
+        "teacher_keypoints": 1214,
+        "matched_keypoints": 1190,
+        "detect_rate": 0.9802306425041186,
+        "mean_px_error": 19.931211192667984,
+        "mean_norm_error": 0.024914013876133605,
+        "pck@2": 0.5593080724876441,
+        "pck@5": 0.9011532125205931,
+        "pck@10": 0.9637561779242174
+      },
+      "teacher": false
+    },
+    "mediapipe_full": {
+      "avg_ms": 19.55583257575089,
+      "fps_eq": 51.13563925884668,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 132,
+        "teacher_keypoints": 1214,
+        "matched_keypoints": 1173,
+        "detect_rate": 0.9662273476112027,
+        "mean_px_error": 19.52405592649286,
+        "mean_norm_error": 0.024405069827067985,
+        "pck@2": 0.585667215815486,
+        "pck@5": 0.9102141680395387,
+        "pck@10": 0.9464579901153213
+      },
+      "teacher": false
+    }
+  }
+}

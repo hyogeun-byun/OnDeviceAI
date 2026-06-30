@@ -1,0 +1,87 @@
+{
+  "benchmark": "pose_speed_quality",
+  "video": "scratch\\test.mp4",
+  "teacher": "mediapipe_heavy",
+  "teacher_result": {
+    "avg_ms": 68.48676439395521,
+    "fps_eq": 14.601361428723914,
+    "frames": 132,
+    "teacher": true
+  },
+  "score_threshold": 0.3,
+  "pck_thresholds": [
+    0.02,
+    0.05,
+    0.1
+  ],
+  "models": {
+    "movenet_lightning": {
+      "avg_ms": 4.89080454551158,
+      "fps_eq": 204.4653370819585,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 124,
+        "teacher_keypoints": 1386,
+        "matched_keypoints": 1082,
+        "detect_rate": 0.7806637806637806,
+        "mean_px_error": 25.10028237379853,
+        "mean_norm_error": 0.03137535297237819,
+        "pck@2": 0.44516594516594515,
+        "pck@5": 0.7287157287157288,
+        "pck@10": 0.7474747474747475
+      },
+      "teacher": false
+    },
+    "movenet_thunder": {
+      "avg_ms": 13.760442424248168,
+      "fps_eq": 72.67208198464863,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 124,
+        "teacher_keypoints": 1386,
+        "matched_keypoints": 1127,
+        "detect_rate": 0.8131313131313131,
+        "mean_px_error": 27.574642164472362,
+        "mean_norm_error": 0.03446830222721955,
+        "pck@2": 0.49422799422799424,
+        "pck@5": 0.7496392496392497,
+        "pck@10": 0.7756132756132756
+      },
+      "teacher": false
+    },
+    "mediapipe_lite": {
+      "avg_ms": 13.687557575725474,
+      "fps_eq": 73.05905341165277,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 124,
+        "teacher_keypoints": 1386,
+        "matched_keypoints": 1386,
+        "detect_rate": 1.0,
+        "mean_px_error": 40.80609482053726,
+        "mean_norm_error": 0.05100761870027105,
+        "pck@2": 0.7496392496392497,
+        "pck@5": 0.8578643578643579,
+        "pck@10": 0.8867243867243867
+      },
+      "teacher": false
+    },
+    "mediapipe_full": {
+      "avg_ms": 20.46501590903614,
+      "fps_eq": 48.86387601382021,
+      "frames": 132,
+      "quality": {
+        "teacher_frames": 124,
+        "teacher_keypoints": 1386,
+        "matched_keypoints": 1360,
+        "detect_rate": 0.9812409812409812,
+        "mean_px_error": 43.03603999474469,
+        "mean_norm_error": 0.05379504960797289,
+        "pck@2": 0.7496392496392497,
+        "pck@5": 0.8434343434343434,
+        "pck@10": 0.8650793650793651
+      },
+      "teacher": false
+    }
+  }
+}

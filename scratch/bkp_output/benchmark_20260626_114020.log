@@ -1,0 +1,43 @@
+  log    : C:\Users\USER\OnDeviceAI\scratch\bkp_output\benchmark_20260626_114020.log
+=================================================================
+  Pose Model Comparison
+  input  : scratch\test.mp4
+  output : C:\Users\USER\OnDeviceAI\scratch\bkp_output
+  threads: 4
+  teacher: movenet_thunder
+=================================================================
+
+Initialising models...
+  [OK]   movenet_lightning: input [1, 192, 192, 3] uint8
+  [OK]   movenet_thunder: input [1, 256, 256, 3] uint8
+  [OK]   mediapipe_lite: MediaPipe model_complexity=0
+  [OK]   mediapipe_full: MediaPipe model_complexity=1
+
+Running 4 model(s) on test.mp4...
+Using [movenet_thunder] as pseudo-label teacher for quality metrics.
+
+[movenet_thunder]
+    movenet_thunder     30/132  avg 14.8ms    movenet_thunder     60/132  avg 14.3ms    movenet_thunder     90/132  avg 14.4ms    movenet_thunder    120/132  avg 14.3ms    movenet_thunder    132/132  avg 14.4ms    movenet_thunder    132/132  avg 14.4ms  [done]        
+    saved: scratch\bkp_output\movenet_thunder_14ms.mp4
+[movenet_lightning]
+    movenet_lightning     30/132  avg 5.6ms    movenet_lightning     60/132  avg 5.5ms    movenet_lightning     90/132  avg 5.5ms    movenet_lightning    120/132  avg 5.4ms    movenet_lightning    132/132  avg 5.4ms    movenet_lightning    132/132  avg 5.4ms  [done]        
+    saved: scratch\bkp_output\movenet_lightning_5ms.mp4
+[mediapipe_lite]
+    mediapipe_lite     30/132  avg 14.6ms    mediapipe_lite     60/132  avg 14.2ms    mediapipe_lite     90/132  avg 13.8ms    mediapipe_lite    120/132  avg 13.5ms    mediapipe_lite    132/132  avg 13.5ms    mediapipe_lite    132/132  avg 13.5ms  [done]        
+    saved: scratch\bkp_output\mediapipe_lite_14ms.mp4
+[mediapipe_full]
+    mediapipe_full     30/132  avg 20.0ms    mediapipe_full     60/132  avg 19.5ms    mediapipe_full     90/132  avg 19.5ms    mediapipe_full    120/132  avg 19.5ms    mediapipe_full    132/132  avg 19.6ms    mediapipe_full    132/132  avg 19.6ms  [done]        
+    saved: scratch\bkp_output\mediapipe_full_20ms.mp4
+
+=========================================================================================================
+  Model                        Avg ms      FPS   Frames    PCK@5   Err px   Detect
+  ----------------------------------------------------------------------------------------------------
+  movenet_thunder               14.4ms    69.6      132      N/A      N/A      N/A (teacher)
+  movenet_lightning              5.4ms   183.9      132    89.0%     7.6    89.2% (fastest)
+  mediapipe_lite                13.5ms    74.0      132    90.1%    19.9    98.0%
+  mediapipe_full                19.6ms    51.1      132    91.0%    19.5    96.6%
+=========================================================================================================
+
+Output videos: C:\Users\USER\OnDeviceAI\scratch\bkp_output/
+JSON saved to : C:\Users\USER\OnDeviceAI\scratch\bkp_output\benchmark_20260626_114020.json
+Log saved to : C:\Users\USER\OnDeviceAI\scratch\bkp_output\benchmark_20260626_114020.log
