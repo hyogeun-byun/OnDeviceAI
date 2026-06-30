@@ -705,6 +705,20 @@ body {
   gap: 16px;
 }
 
+.play-foot-top {
+  width: min(620px, 100%);
+  margin-bottom: 4px;
+}
+
+.play-foot-top .timer-bar {
+  height: 16px;
+}
+
+.play-foot-top .timer-text {
+  font-size: 20px;
+  color: var(--ink);
+}
+
 /* ---------- In-round coaching ---------- */
 .coach-panel {
   display: flex;

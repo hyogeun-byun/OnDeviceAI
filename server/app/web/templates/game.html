@@ -148,6 +148,11 @@
 
       <!-- PLAYING -->
       <section class="screen screen-playing" id="screen-playing">
+        <div class="play-foot play-foot-top">
+          <div class="timer-bar"><span id="timer-fill"></span></div>
+          <div class="timer-text"><span id="timer-text">60.0</span>s</div>
+        </div>
+
         <div class="play-head">
           <p class="prompt-label">제시어</p>
           <h2 class="prompt-word small" id="play-prompt">제시어</h2>
@@ -172,11 +177,6 @@
         </div>
 
         <p class="play-secret">🙈 서로의 동작은 보이지 않아요 — 하지만 10초 동안 못 맞히면 카메라 화면을 잠깐 보여드려요!</p>
-
-        <div class="play-foot">
-          <div class="timer-bar"><span id="timer-fill"></span></div>
-          <div class="timer-text"><span id="timer-text">60.0</span>s</div>
-        </div>
 
         <!-- Camera-image hint: flashes the live camera feeds big when a team is
              stuck on a prompt for 10s, then fades out. -->
