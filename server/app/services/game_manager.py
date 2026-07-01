@@ -46,11 +46,14 @@ INTRO_MAX_SECONDS = 50.0
 TOTAL_ROUNDS = 5  # not used as a hard cap anymore; sprint runs until time is up
 
 # How long (seconds) a player must hold the T pose (within the tolerance window)
-# before the game auto-starts (prevents accidental triggers).
-READY_POSE_HOLD_SECONDS = 1.5
+# before the game auto-starts. Kept short so the trigger feels near-instant: the
+# on-screen progress ring starts filling the moment the server first detects the
+# pose (10 Hz), so a short hold reads as "responded immediately" instead of a lag.
+READY_POSE_HOLD_SECONDS = 0.7
 # Keypoint jitter tolerance: brief dropouts shorter than this are ignored so
-# intermittent keypoint loss does not reset the hold timer.
-READY_POSE_GAP_TOLERANCE = 0.8
+# intermittent keypoint loss does not reset the hold timer. Widened to cover the
+# now-shorter hold, so board/camera lag spikes can't reset the timer mid-hold.
+READY_POSE_GAP_TOLERANCE = 1.2
 
 # Body-controlled category picker: raise one hand to step, hold T-pose to confirm.
 # Cooldown between hand-raise steps so one raise = one move (not a fast scroll).
@@ -634,18 +637,12 @@ class GameManager:
             elif state.gauge >= PLAY_PASS_SCORE:
                 self._finish_round(now)
             elif prompt_elapsed >= PROMPT_MAX_SECONDS:
-                # Couldn't match within 20s. But board lag/freeze can keep the
-                # smoothed gauge low even while the team is clearly in sync (the
-                # three result photos would show identical poses). Don't punish
-                # them for hardware delay: if the LIVE score at the deadline is
-                # actually high, award the clear instead of an unfair 실패.
-                if state.raw_gauge >= GIVEUP_GRACE_SCORE:
-                    self._finish_round(now)
-                else:
-                    # Don't snap to the next prompt abruptly — show a brief
-                    # "time's up" notice (sprint clock paused), then reveal the
-                    # next prompt big before playing.
-                    self._enter_giveup(now)
+                # Couldn't match within 20s → a 실패. A prompt is only ever a
+                # 통과 when the gauge actually reaches the pass score above; the
+                # deadline is always a fail so the final report never labels an
+                # unmatched prompt as a success. Show a brief "time's up" notice
+                # (sprint clock paused), then reveal the next prompt big.
+                self._enter_giveup(now)
         elif state.phase == PHASE_GIVEUP:
             if elapsed >= state.giveup_seconds:
                 # Clock stays paused through the prompt reveal that follows; it
@@ -1024,6 +1021,17 @@ class GameManager:
     def _enter_timeup(self, now: float) -> None:
         """The 60s sprint clock ran out. Flash a big '1분 시간 종료!' screen for a
         beat so the game rolls into the final report instead of cutting off."""
+        # If the clock ran out mid-attempt (still PLAYING), the current prompt
+        # was never resolved — record it as a 실패 (with its best gauge + a
+        # snapshot) so the final report can surface it as the 'worst' round and
+        # the breakdown lists it correctly.
+        if self._state.phase == PHASE_PLAYING:
+            self._state.round_scores.append(round(self._state.gauge, 1))
+            self._state.round_results.append(False)
+            round_number = len(self._state.round_scores)
+            self._result_frames[round_number] = [
+                self._stream_manager.get_frame(camera_id) for camera_id in self._camera_ids
+            ]
         self._state.phase = PHASE_TIMEUP
         self._state.phase_started_at = now
         self._state.peek_until = 0.0

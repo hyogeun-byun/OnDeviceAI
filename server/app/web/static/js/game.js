@@ -818,18 +818,35 @@ function stopCamtestSnapshots() {
   }
 }
 
-// --- Final telepathy report (best + worst keyword by sync score) ---
-// Picks the highest-scoring and lowest-scoring rounds so the report ALWAYS shows
-// both a best and a worst card (even when every round was cleared).
-function bestWorstRounds(scores) {
-  if (!scores.length) return null;
-  let best = 0;
-  let worst = 0;
-  scores.forEach((s, i) => {
-    if (s > scores[best]) best = i;
-    if (s < scores[worst]) worst = i;
-  });
-  return { best: best + 1, worst: worst + 1 }; // 1-based round numbers
+// --- Final telepathy report (best + worst keyword) ---
+// BEST  = the highest-scoring CLEARED (통과) round.
+// WORST = a FAILED (실패) round (lowest score); if nothing failed but more than
+//         one round cleared, the lowest-scoring clear stands in as "아쉬웠던 순간".
+// If nothing was cleared at all, only a single worst card is shown (no best).
+// Returns 1-based round numbers; best/worst may be null.
+function bestWorstRounds(scores, results) {
+  const n = scores.length;
+  if (!n) return null;
+  results = results || [];
+  const cleared = [];
+  const failed = [];
+  for (let i = 0; i < n; i++) {
+    (results[i] ? cleared : failed).push(i);
+  }
+  const best = cleared.length
+    ? cleared.reduce((a, b) => (scores[b] > scores[a] ? b : a))
+    : null;
+  let worst = null;
+  if (failed.length) {
+    worst = failed.reduce((a, b) => (scores[b] < scores[a] ? b : a));
+  } else if (cleared.length > 1) {
+    worst = cleared.reduce((a, b) => (scores[b] < scores[a] ? b : a));
+  }
+  if (best === null && worst === null) return null;
+  return {
+    best: best === null ? null : best + 1,
+    worst: worst === null ? null : worst + 1,
+  };
 }
 
 function reportCardEl(kind, roundNo, prompts, passed) {
@@ -872,12 +889,14 @@ function renderReport(state) {
   const results = state.round_results || [];
   const prompts = state.prompts || [];
   el.reportCards.innerHTML = "";
-  const bw = bestWorstRounds(scores);
+  const bw = bestWorstRounds(scores, results);
   if (!bw) return;
-  el.reportCards.appendChild(
-    reportCardEl("best", bw.best, prompts, results[bw.best - 1])
-  );
-  if (bw.worst !== bw.best) {
+  if (bw.best) {
+    el.reportCards.appendChild(
+      reportCardEl("best", bw.best, prompts, results[bw.best - 1])
+    );
+  }
+  if (bw.worst && bw.worst !== bw.best) {
     el.reportCards.appendChild(
       reportCardEl("worst", bw.worst, prompts, results[bw.worst - 1])
     );
@@ -948,6 +967,25 @@ function wrapText(ctx, text, cx, top, maxWidth, lineHeight) {
     }
   });
   if (line) ctx.fillText(line, cx, y);
+  return y;
+}
+
+// Same line-break logic as wrapText but WITHOUT drawing — used to size the
+// export canvas before anything is painted, so a long report never pushes the
+// cards under the footer.
+function measureWrapHeight(ctx, text, maxWidth, lineHeight, top) {
+  const words = (text || "").split(/\s+/);
+  let line = "";
+  let y = top;
+  words.forEach((word) => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      line = word;
+      y += lineHeight;
+    } else {
+      line = test;
+    }
+  });
   return y;
 }
 
@@ -1030,11 +1068,38 @@ async function buildReportImage() {
   const scores = state.round_scores || [];
   const results = state.round_results || [];
   const prompts = state.prompts || [];
-  const bw = bestWorstRounds(scores);
+  const bw = bestWorstRounds(scores, results);
   if (!bw) return;
 
   const W = 1080;
-  const H = 1350;
+  const cardH = 360;
+  const showBest = !!bw.best;
+  const showWorst = !!bw.worst && bw.worst !== bw.best;
+
+  // --- Measure pass: figure out where the LLM report text ends (and thus where
+  // the cards start) BEFORE creating the canvas, so we can grow the height to
+  // fit every card. Otherwise a long report pushes the last card under the
+  // footer / MC avatar and they overlap in the saved PNG.
+  const team = state.team_name ? `🏷 ${state.team_name}` : "";
+  const titleY = team ? 348 : 322;
+  const measure = document.createElement("canvas").getContext("2d");
+  measure.font = "26px Inter, 'Noto Sans KR', sans-serif";
+  const reportEndY = measureWrapHeight(
+    measure,
+    toCaption(state.final_report) || "",
+    W - 200,
+    36,
+    titleY + 52,
+  );
+  const firstTop = Math.max(titleY + 96, reportEndY + 40);
+  let contentBottom = firstTop;
+  if (showBest) contentBottom = firstTop + cardH;
+  if (showWorst) {
+    const worstTop = showBest ? firstTop + 400 : firstTop;
+    contentBottom = worstTop + cardH;
+  }
+  // Leave room below the last card for the footer line + MC avatar.
+  const H = Math.max(1350, Math.round(contentBottom + 260));
   const cv = document.createElement("canvas");
   cv.width = W;
   cv.height = H;
@@ -1053,7 +1118,6 @@ async function buildReportImage() {
   ctx.fillText("이구동성 · 텔레파시 결과", W / 2, 78);
 
   // Team name up top.
-  const team = state.team_name ? `🏷 ${state.team_name}` : "";
   if (team) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "900 46px Inter, 'Noto Sans KR', sans-serif";
@@ -1074,14 +1138,13 @@ async function buildReportImage() {
   // MC title line.
   ctx.fillStyle = "#cfd8ff";
   ctx.font = "bold 40px Inter, 'Noto Sans KR', sans-serif";
-  const titleY = team ? 348 : 322;
   ctx.fillText(toCaption(state.final_title) || "", W / 2, titleY);
 
-  // LLM telepathy report (wrapped). Track where it ends so the keyword cards
-  // start below it and never overlap.
+  // LLM telepathy report (wrapped). Drawn from the same start as the measure
+  // pass above, so the cards land exactly where the canvas was sized for.
   ctx.fillStyle = "#aab4e0";
   ctx.font = "26px Inter, 'Noto Sans KR', sans-serif";
-  const reportEndY = wrapText(
+  wrapText(
     ctx,
     toCaption(state.final_report) || "",
     W / 2,
@@ -1090,8 +1153,8 @@ async function buildReportImage() {
     36,
   );
 
-  let sectionTop = Math.max(titleY + 96, reportEndY + 40);
-  {
+  let sectionTop = firstTop;
+  if (showBest) {
     const cap = roundCaptures[bw.best] || {};
     await drawReportSection(
       ctx,
@@ -1104,7 +1167,7 @@ async function buildReportImage() {
     );
     sectionTop += 400;
   }
-  if (bw.worst !== bw.best) {
+  if (showWorst) {
     const cap = roundCaptures[bw.worst] || {};
     await drawReportSection(
       ctx,
