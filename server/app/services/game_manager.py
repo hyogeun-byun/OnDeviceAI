@@ -19,11 +19,16 @@ GAME_TOTAL_SECONDS = 60.0    # whole game is a 60s sprint: clear as many as you 
 CLEAR_TARGET = 5             # clear this many prompts and the game ends (win condition)
 PROMPT_POOL_LIMIT = 99       # pull the whole category pool so prompts never repeat in a game
 PLAY_PASS_SCORE = 90.0       # reach this and the current prompt clears; next one loads
+GIVEUP_GRACE_SCORE = 70.0    # at the 20s deadline, if the LIVE poses are actually this
+                             # in-sync, award the clear anyway — board lag/freeze can keep
+                             # the smoothed gauge low even while the team clearly matches
 CLEAR_FLASH_SECONDS = 3.0    # brief celebration of the cleared prompt before the next
 PROMPT_HINT_SECONDS = 10.0   # stuck on a prompt this long -> flash the big camera images
 PROMPT_MAX_SECONDS = 20.0    # give up on a prompt after this long and load a fresh one
 GIVEUP_FLASH_SECONDS = 1.6   # "time's up" notice after a timeout (clock paused)
 GIVEUP_MAX_SECONDS = 4.5     # cap so the timeout line still can't drag the game
+TIMEUP_FLASH_SECONDS = 2.8   # big "1분 시간 종료!" screen shown before the final report
+TIMEUP_MAX_SECONDS = 6.0     # cap so the time-up line can't drag the finish forever
 REVEAL_SECONDS = 2.6         # show + announce the new prompt big before the gauge screen
 REVEAL_MAX_SECONDS = 9.0      # cap so a very long prompt reveal still can't drag
 PEEK_DURATION_SECONDS = 2.5  # how long the camera-image hint stays on screen
@@ -92,6 +97,7 @@ PHASE_PLAYING = "playing"
 PHASE_GIVEUP = "giveup"            # brief "time's up!" notice after a 20s timeout
 PHASE_REVEAL = "reveal"            # show + MC-announce the new prompt big before playing
 PHASE_RESULT = "result"
+PHASE_TIMEUP = "timeup"            # big "1분 시간 종료!" flash before the final report
 PHASE_FINISHED = "finished"
 
 _PHASE_DURATIONS = {
@@ -141,6 +147,7 @@ class GameState:
     intro_seconds: float = INTRO_SECONDS  # how long the intro waits (set per-line)
     reveal_seconds: float = REVEAL_SECONDS  # how long the prompt reveal waits (per-line)
     giveup_seconds: float = GIVEUP_FLASH_SECONDS  # how long the timeout notice waits (per-line)
+    timeup_seconds: float = TIMEUP_FLASH_SECONDS  # how long the '1분 시간 종료!' flash waits (per-line)
     # Guided intro tour state
     tour_steps: list[dict[str, str]] = field(default_factory=list)
     tour_index: int = 0
@@ -620,24 +627,36 @@ class GameManager:
             ):
                 state.hint_cam_shown = True
                 state.peek_until = now + PEEK_DURATION_SECONDS
-            # 60s sprint clock: when it runs out, the game is over.
+            # 60s sprint clock: when it runs out, flash a "time's up" screen
+            # before rolling into the final report (never a jarring cut-off).
             if game_elapsed >= GAME_TOTAL_SECONDS:
-                self._advance_round(now)
+                self._enter_timeup(now)
             elif state.gauge >= PLAY_PASS_SCORE:
                 self._finish_round(now)
             elif prompt_elapsed >= PROMPT_MAX_SECONDS:
-                # Couldn't match within 20s — don't snap to the next prompt
-                # abruptly. Show a brief "time's up" notice (sprint clock
-                # paused), then reveal the next prompt big before playing.
-                self._enter_giveup(now)
+                # Couldn't match within 20s. But board lag/freeze can keep the
+                # smoothed gauge low even while the team is clearly in sync (the
+                # three result photos would show identical poses). Don't punish
+                # them for hardware delay: if the LIVE score at the deadline is
+                # actually high, award the clear instead of an unfair 실패.
+                if state.raw_gauge >= GIVEUP_GRACE_SCORE:
+                    self._finish_round(now)
+                else:
+                    # Don't snap to the next prompt abruptly — show a brief
+                    # "time's up" notice (sprint clock paused), then reveal the
+                    # next prompt big before playing.
+                    self._enter_giveup(now)
         elif state.phase == PHASE_GIVEUP:
             if elapsed >= state.giveup_seconds:
                 # Clock stays paused through the prompt reveal that follows; it
                 # resumes only when playing actually begins (_enter_playing).
                 self._next_prompt(now)
+        elif state.phase == PHASE_TIMEUP:
+            if elapsed >= state.timeup_seconds:
+                self._advance_round(now)
         elif state.phase == PHASE_RESULT:
             if (now - state.game_started_at) >= GAME_TOTAL_SECONDS:
-                self._advance_round(now)
+                self._enter_timeup(now)
             elif elapsed >= CLEAR_FLASH_SECONDS:
                 # Show the cleared result briefly, then either end the game (the
                 # team hit the clear target) or reveal the next prompt.
@@ -1001,6 +1020,20 @@ class GameManager:
         self._speak(static)
         if self._llm.enabled:
             self._spawn(self._build_mc_comment(self._generation, len(self._state.round_scores) - 1))
+
+    def _enter_timeup(self, now: float) -> None:
+        """The 60s sprint clock ran out. Flash a big '1분 시간 종료!' screen for a
+        beat so the game rolls into the final report instead of cutting off."""
+        self._state.phase = PHASE_TIMEUP
+        self._state.phase_started_at = now
+        self._state.peek_until = 0.0
+        line = "일 분, 시간 종료! 결과를 확인해 볼게요."
+        # Hold the flash until the MC finishes the line so it's never cut off
+        # mid-sentence by the final report that follows.
+        self._state.timeup_seconds = max(
+            TIMEUP_FLASH_SECONDS, min(TIMEUP_MAX_SECONDS, len(line) * INTRO_CHAR_SECONDS + 1.2)
+        )
+        self._speak(line)
 
     def _advance_round(self, now: float) -> None:
         # Called when the 60s clock runs out OR the clear target is reached.

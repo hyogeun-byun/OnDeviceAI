@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@700;800;900&family=Inter:wght@400;600;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@700;800;900&family=Inter:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}" />
@@ -198,6 +198,14 @@
         <div class="reveal-overlay" id="reveal-overlay" aria-hidden="true">
           <p class="reveal-label">이번 제시어는!</p>
           <p class="reveal-word" id="reveal-word">제시어</p>
+        </div>
+      </section>
+
+      <!-- TIME UP -->
+      <section class="screen screen-timeup" id="screen-timeup">
+        <div class="timeup-flash">
+          <p class="timeup-big">⏱️ 1분 시간 종료!</p>
+          <p class="timeup-sub">결과를 확인해볼까요?</p>
         </div>
       </section>
 

@@ -11,6 +11,7 @@ const screens = {
   playing: document.getElementById("screen-playing"),
   giveup: document.getElementById("screen-playing"),
   reveal: document.getElementById("screen-playing"),
+  timeup: document.getElementById("screen-timeup"),
   result: document.getElementById("screen-result"),
   finished: document.getElementById("screen-final"),
 };
@@ -153,6 +154,20 @@ if (tts.supported) {
   };
 }
 
+// Speech/MC lines are written phonetically in Korean so the TTS voice pronounces
+// English acronyms correctly ("에이아이 엠씨"). On-screen captions read nicer with
+// the real English, so swap the common ones back for DISPLAY ONLY — the text sent
+// to the voice engine is never touched.
+const CAPTION_REPLACEMENTS = [
+  [/에이아이/g, "AI"],
+  [/엠\s*씨/g, "MC"],
+];
+function toCaption(text) {
+  let out = text || "";
+  for (const [re, rep] of CAPTION_REPLACEMENTS) out = out.replace(re, rep);
+  return out;
+}
+
 function setMcTalking(on, text) {
   if (el.mcStage) el.mcStage.classList.toggle("is-talking", Boolean(on));
   // 결산 화면에선 같은 멘트가 이미 화면 가운데에 떠 있으므로 말풍선은 띄우지 않는다.
@@ -160,7 +175,7 @@ function setMcTalking(on, text) {
   const suppressBubble =
     currentPhase === "finished" || currentPhase === "intro" || currentPhase === "category" || currentPhase === "catpick" || currentPhase === "confirm" || currentPhase === "camtest" || currentPhase === "reveal";
   if (on && text && !suppressBubble && el.mcLiveText && el.mcLiveBubble) {
-    el.mcLiveText.textContent = text;
+    el.mcLiveText.textContent = toCaption(text);
     el.mcLiveBubble.classList.add("is-visible");
   } else if ((!on || suppressBubble) && el.mcLiveBubble) {
     el.mcLiveBubble.classList.remove("is-visible");
@@ -409,7 +424,7 @@ function render(state) {
   currentPhase = state.phase;
 
   if (state.phase === "intro") {
-    el.introSpeech.textContent = state.speech || "민수가 인사 중…";
+    el.introSpeech.textContent = toCaption(state.speech) || "민수가 인사 중…";
   }
 
   if (state.phase === "category" && prevPhase !== "category") {
@@ -421,18 +436,18 @@ function render(state) {
   // 이때는 고른 카테고리 하나만 크게 남겨서 무엇이 선택됐는지 확실히 보여준다.
   if (state.phase === "catpick") {
     renderCategoryConfirmed(state);
-    if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+    if (el.catSpeech) el.catSpeech.textContent = toCaption(state.speech);
   }
   // 카테고리 확정 후 안내 멘트(확정 → 시작) 동안 선택된 카테고리만 크게 유지한다.
   if (state.phase === "confirm") {
     renderCategoryConfirmed(state);
-    if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+    if (el.catSpeech) el.catSpeech.textContent = toCaption(state.speech);
   }
 
   // camtest/confirm 화면(둘 다 screen-camtest)에서 민수의 멘트를 글자로도 보여준다.
   if (el.camtestMc) {
     if (state.phase === "camtest" || state.phase === "confirm") {
-      el.camtestMc.textContent = state.speech || "";
+      el.camtestMc.textContent = toCaption(state.speech);
     } else {
       el.camtestMc.textContent = "";
     }
@@ -544,7 +559,7 @@ function render(state) {
       el.mcText.textContent = "🎤 AI MC가 멘트를 준비 중…";
       el.resultComment.classList.add("is-pending");
     } else if (state.mc_comment) {
-      el.mcText.textContent = state.mc_comment;
+      el.mcText.textContent = toCaption(state.mc_comment);
       el.resultComment.classList.remove("is-pending");
     } else {
       el.mcText.textContent = taglineFor(roundScore, 2);
@@ -567,7 +582,7 @@ function render(state) {
       el.finalReport.textContent = "📜 AI가 텔레파시 궤합을 분석 중…";
       el.finalReport.classList.add("is-pending");
     } else if (state.final_report) {
-      el.finalReport.textContent = state.final_report;
+      el.finalReport.textContent = toCaption(state.final_report);
       el.finalReport.classList.remove("is-pending");
     } else {
       el.finalReport.textContent = "";
@@ -610,7 +625,7 @@ function renderCategory(state) {
     const pct = Math.round((state.category_confirm_progress || 0) * 100);
     el.catConfirmFill.style.width = `${pct}%`;
   }
-  if (el.catSpeech) el.catSpeech.textContent = state.speech || "";
+  if (el.catSpeech) el.catSpeech.textContent = toCaption(state.speech);
 }
 
 // 카테고리 확정 후: 고른 카테고리 하나만 큼지막하게 남겨 "이게 선택됐다"를 확실히 보여준다.
@@ -668,8 +683,11 @@ function renderCamtest(state, prevPhase) {
       el.camtestCams.appendChild(cam);
     });
   }
-  // Attach the live MJPEG streams only while the camtest screen is on (idempotent).
-  setCamStreams(el.camtestCams, true);
+  // Show the LATEST camera frame via snapshot polling instead of a persistent
+  // MJPEG stream. MJPEG decode/network buffers make the video fall further and
+  // further behind real time (you 만세 but the tile is still frozen); snapshots
+  // always fetch the newest stored frame, so the tile stays current.
+  startCamtestSnapshots();
   if (el.camtestCams) {
     el.camtestCams.querySelectorAll(".camtest-cam").forEach((cam) =>
       cam.classList.toggle("is-pass", passed.has(cam.dataset.cameraId))
@@ -681,17 +699,49 @@ function renderCamtest(state, prevPhase) {
 }
 
 // Camera-image hint: when the server flags show_hint_cams (stuck on a prompt for
-// 10s), flash the live camera feeds big for ~1.5s, then fade out.
+// 10s), flash the live camera feeds big for ~2.5s, then fade out.
 let camHintShown = false;
+let camHintTimer = null;
+
+// Refresh the hint tiles from the single-frame snapshot endpoint. Unlike a fresh
+// MJPEG <img> (which shows BLACK until its first frame boundary arrives — the
+// cause of the occasional black tile), the snapshot returns the latest stored
+// frame immediately, so every tile shows a real image right away. Polling keeps
+// it near-live without holding persistent connections open.
+function refreshCamHintSnapshots() {
+  if (!el.camHintCams) return;
+  const stamp = Date.now();
+  el.camHintCams.querySelectorAll(".cam-hint-cam").forEach((cam) => {
+    const img = cam.querySelector("img");
+    const id = cam.dataset.cameraId;
+    if (img && id) img.src = `/api/cameras/${id}/snapshot?t=${stamp}`;
+  });
+}
+
+function startCamHintSnapshots() {
+  if (camHintTimer) return;
+  refreshCamHintSnapshots();
+  camHintTimer = setInterval(refreshCamHintSnapshots, 150);
+}
+
+function stopCamHintSnapshots() {
+  if (camHintTimer) {
+    clearInterval(camHintTimer);
+    camHintTimer = null;
+  }
+  if (el.camHintCams) {
+    el.camHintCams.querySelectorAll(".cam-hint-cam img").forEach((img) =>
+      img.removeAttribute("src")
+    );
+  }
+}
+
 function renderCamHint(state) {
   if (!el.camHintOverlay || !el.camHintCams) return;
   const players = Array.isArray(state.players) ? state.players : [];
-  // Build the camera tiles once (or when the player count changes). The live
-  // MJPEG <img> src is left EMPTY here: it is attached only while the overlay is
-  // actually visible and cleared again when hidden. A persistent MJPEG stream
-  // holds an HTTP connection open forever, and the browser allows only ~6 per
-  // host — leaked streams starve the pose/audio/result fetches (skeleton + MC
-  // freeze, missing report images).
+  // Build the camera tiles once (or when the player count changes). The <img>
+  // src is left EMPTY here and only filled (via snapshot polling) while the
+  // overlay is actually visible, then cleared again when hidden.
   if (el.camHintCams.childElementCount !== players.length) {
     el.camHintCams.innerHTML = "";
     players.forEach((p, i) => {
@@ -707,7 +757,8 @@ function renderCamHint(state) {
   const show = Boolean(state.show_hint_cams);
   if (show !== camHintShown) {
     camHintShown = show;
-    setCamStreams(el.camHintCams, show);
+    if (show) startCamHintSnapshots();
+    else stopCamHintSnapshots();
     el.camHintOverlay.classList.toggle("is-visible", show);
     el.camHintOverlay.setAttribute("aria-hidden", show ? "false" : "true");
   }
@@ -730,27 +781,58 @@ function setCamStreams(container, active) {
   });
 }
 
-// Fully release the camtest MJPEG streams when leaving the camera-test screen so
-// they don't keep eating connections for the rest of the game.
+// Fully release the camtest feeds when leaving the camera-test screen so they
+// don't keep polling for the rest of the game.
 function teardownCamtestStreams() {
   if (!el.camtestCams || el.camtestCams.childElementCount === 0) return;
-  setCamStreams(el.camtestCams, false);
+  stopCamtestSnapshots();
   el.camtestCams.innerHTML = "";
 }
 
-// --- Final telepathy report (one cleared / one missed keyword) ---
-function passFailRounds(results) {
-  if (!results.length) return null;
-  let pass = -1;
-  let fail = -1;
-  results.forEach((ok, i) => {
-    if (ok && pass < 0) pass = i;
-    if (!ok && fail < 0) fail = i;
+// Camtest live view via latest-frame snapshot polling (no persistent MJPEG, so
+// it can never fall behind real time — worst case it skips frames, staying live).
+let camtestSnapTimer = null;
+function refreshCamtestSnapshots() {
+  if (!el.camtestCams) return;
+  const stamp = Date.now();
+  el.camtestCams.querySelectorAll(".camtest-cam").forEach((cam) => {
+    const img = cam.querySelector("img");
+    const id = cam.dataset.cameraId;
+    if (img && id) img.src = `/api/cameras/${id}/snapshot?t=${stamp}`;
   });
-  return { pass: pass < 0 ? null : pass + 1, fail: fail < 0 ? null : fail + 1 };
+}
+function startCamtestSnapshots() {
+  if (camtestSnapTimer) return;
+  refreshCamtestSnapshots();
+  camtestSnapTimer = setInterval(refreshCamtestSnapshots, 100);
+}
+function stopCamtestSnapshots() {
+  if (camtestSnapTimer) {
+    clearInterval(camtestSnapTimer);
+    camtestSnapTimer = null;
+  }
+  if (el.camtestCams) {
+    el.camtestCams.querySelectorAll(".camtest-cam img").forEach((img) =>
+      img.removeAttribute("src")
+    );
+  }
 }
 
-function reportCardEl(kind, roundNo, prompts) {
+// --- Final telepathy report (best + worst keyword by sync score) ---
+// Picks the highest-scoring and lowest-scoring rounds so the report ALWAYS shows
+// both a best and a worst card (even when every round was cleared).
+function bestWorstRounds(scores) {
+  if (!scores.length) return null;
+  let best = 0;
+  let worst = 0;
+  scores.forEach((s, i) => {
+    if (s > scores[best]) best = i;
+    if (s < scores[worst]) worst = i;
+  });
+  return { best: best + 1, worst: worst + 1 }; // 1-based round numbers
+}
+
+function reportCardEl(kind, roundNo, prompts, passed) {
   const cap = roundCaptures[roundNo] || {};
   const word = cap.prompt || prompts[roundNo - 1] || "—";
   const div = document.createElement("div");
@@ -769,30 +851,37 @@ function reportCardEl(kind, roundNo, prompts) {
   }
   div.innerHTML =
     `<div class="report-badge">${
-      kind === "pass" ? "✅ 통과한 키워드" : "❌ 놓친 키워드"
+      kind === "best" ? "🏆 베스트 호흡" : "🫣 아쉬웠던 순간"
     }</div>` +
     `<div class="report-shots">${
       shots || '<span class="report-noshot">스냅샷 없음</span>'
     }</div>` +
     `<div class="report-word">'${word}'</div>` +
-    `<div class="report-result">${kind === "pass" ? "통과" : "실패"}</div>` +
+    `<div class="report-result">${passed ? "✅ 통과" : "❌ 실패"}</div>` +
     `<div class="report-caption">${
-      kind === "pass"
-        ? "이 단어에서 모두 같은 동작! 호흡이 척척 맞았어요."
-        : "이 단어는 시간 안에 못 맞췄어요. 다음엔 분명 가능!"
+      kind === "best"
+        ? "이 제시어에서 호흡이 가장 잘 맞았어요!"
+        : "이 제시어가 제일 아슬아슬했어요."
     }</div>`;
   return div;
 }
 
 function renderReport(state) {
   if (!el.reportCards) return;
+  const scores = state.round_scores || [];
   const results = state.round_results || [];
   const prompts = state.prompts || [];
   el.reportCards.innerHTML = "";
-  const pf = passFailRounds(results);
-  if (!pf) return;
-  if (pf.pass) el.reportCards.appendChild(reportCardEl("pass", pf.pass, prompts));
-  if (pf.fail) el.reportCards.appendChild(reportCardEl("fail", pf.fail, prompts));
+  const bw = bestWorstRounds(scores);
+  if (!bw) return;
+  el.reportCards.appendChild(
+    reportCardEl("best", bw.best, prompts, results[bw.best - 1])
+  );
+  if (bw.worst !== bw.best) {
+    el.reportCards.appendChild(
+      reportCardEl("worst", bw.worst, prompts, results[bw.worst - 1])
+    );
+  }
 }
 
 function loadImage(src) {
@@ -862,29 +951,50 @@ function wrapText(ctx, text, cx, top, maxWidth, lineHeight) {
   return y;
 }
 
-async function drawReportSection(ctx, top, accent, label, word, score, images) {
+async function drawReportSection(ctx, top, accent, label, word, resultText, images) {
   const W = 1080;
-  roundRect(ctx, 80, top, W - 160, 360, 28);
+  const cardH = 360;
+  roundRect(ctx, 80, top, W - 160, cardH, 28);
   ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fill();
   ctx.strokeStyle = accent;
   ctx.lineWidth = 3;
   ctx.stroke();
 
+  // Section label (top-left).
   ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
   ctx.fillStyle = accent;
-  ctx.font = "bold 34px Inter, sans-serif";
-  ctx.fillText(label, 120, top + 56);
+  ctx.font = "bold 32px Inter, 'Noto Sans KR', sans-serif";
+  ctx.fillText(label, 120, top + 52);
 
+  // Pass/fail as a pill in the top-RIGHT corner so it can never collide with the
+  // keyword (which lives at the bottom-center).
+  ctx.font = "900 28px Inter, 'Noto Sans KR', sans-serif";
+  const padX = 22;
+  const bh = 46;
+  const bw = ctx.measureText(resultText).width + padX * 2;
+  const bx = W - 120 - bw;
+  const by = top + 22;
+  ctx.fillStyle = accent;
+  roundRect(ctx, bx, by, bw, bh, bh / 2);
+  ctx.fill();
+  ctx.fillStyle = "#08122b";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(resultText, bx + bw / 2, by + bh / 2 + 1);
+  ctx.textBaseline = "alphabetic";
+
+  // Captured shots row.
   const shots = (images || []).filter(Boolean).slice(0, 3);
   const loaded = await Promise.all(shots.map(loadImage));
   const thumbW = 150;
-  const thumbH = 190;
+  const thumbH = 186;
   const gap = 24;
   const cards = loaded.length ? loaded : [null];
   const totalW = cards.length * thumbW + (cards.length - 1) * gap;
   let tx = (W - totalW) / 2;
-  const ty = top + 80;
+  const ty = top + 92;
   cards.forEach((img) => {
     ctx.save();
     roundRect(ctx, tx, ty, thumbW, thumbH, 16);
@@ -900,19 +1010,25 @@ async function drawReportSection(ctx, top, accent, label, word, score, images) {
     tx += thumbW + gap;
   });
 
+  // Keyword on its own line at the bottom-center (never overlaps the pill).
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 52px 'Black Han Sans', Inter, sans-serif";
-  ctx.fillText(`'${word}'`, W / 2 - 70, top + 330);
-  ctx.fillStyle = accent;
-  ctx.font = "bold 40px Inter, sans-serif";
-  ctx.fillText(`${score}점`, W / 2 + 130, top + 330);
+  ctx.font = "900 46px 'Black Han Sans', 'Noto Sans KR', Inter, sans-serif";
+  ctx.fillText(`'${word}'`, W / 2, top + cardH - 30);
+}
+
+// Prefer the client-captured composite (photo + skeleton); fall back to the raw
+// server frames so a timed-out round (no result screen) still shows real shots.
+function reportSectionImages(cap, roundNo) {
+  if (cap.images && cap.images.filter(Boolean).length) return cap.images;
+  return PLAYER_INDICES.map((i) => `/api/game/result-frame/${roundNo}/${i}.jpg`);
 }
 
 async function buildReportImage() {
   const state = lastFinalState;
   if (!state) return;
   const scores = state.round_scores || [];
+  const results = state.round_results || [];
   const prompts = state.prompts || [];
   const bw = bestWorstRounds(scores);
   if (!bw) return;
@@ -931,41 +1047,73 @@ async function buildReportImage() {
   ctx.fillRect(0, 0, W, H);
 
   ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#00ffc6";
-  ctx.font = "bold 38px Inter, sans-serif";
-  ctx.fillText("이구동성 · 텔레파시 결과", W / 2, 84);
+  ctx.font = "bold 36px Inter, 'Noto Sans KR', sans-serif";
+  ctx.fillText("이구동성 · 텔레파시 결과", W / 2, 78);
 
+  // Team name up top.
+  const team = state.team_name ? `🏷 ${state.team_name}` : "";
+  if (team) {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 46px Inter, 'Noto Sans KR', sans-serif";
+    ctx.fillText(team, W / 2, 138);
+  }
+
+  // Headline stat: how many keywords cleared, and in how many seconds
+  // (replaces the old raw score number).
+  const secs = Number(state.final_seconds || 0).toFixed(1);
+  const cleared = state.cleared_count || 0;
+  ctx.fillStyle = "#8fe9ff";
+  ctx.font = "bold 40px Inter, 'Noto Sans KR', sans-serif";
+  ctx.fillText(`⏱ ${secs}초 안에`, W / 2, team ? 202 : 176);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 130px Inter, sans-serif";
-  ctx.fillText(String(Math.round(state.total_score || 0)), W / 2, 230);
+  ctx.font = "900 88px Inter, 'Noto Sans KR', sans-serif";
+  ctx.fillText(`${cleared}개 클리어!`, W / 2, team ? 292 : 266);
+
+  // MC title line.
   ctx.fillStyle = "#cfd8ff";
-  ctx.font = "bold 44px Inter, sans-serif";
-  ctx.fillText(state.final_title || "", W / 2, 296);
+  ctx.font = "bold 40px Inter, 'Noto Sans KR', sans-serif";
+  const titleY = team ? 348 : 322;
+  ctx.fillText(toCaption(state.final_title) || "", W / 2, titleY);
 
+  // LLM telepathy report (wrapped). Track where it ends so the keyword cards
+  // start below it and never overlap.
   ctx.fillStyle = "#aab4e0";
-  ctx.font = "26px Inter, sans-serif";
-  wrapText(ctx, state.final_report || "", W / 2, 356, W - 200, 36);
-
-  const bestCap = roundCaptures[bw.best] || {};
-  const worstCap = roundCaptures[bw.worst] || {};
-  await drawReportSection(
+  ctx.font = "26px Inter, 'Noto Sans KR', sans-serif";
+  const reportEndY = wrapText(
     ctx,
-    450,
-    "#00ffc6",
-    "🏆 베스트 호흡",
-    bestCap.prompt || prompts[bw.best - 1] || "—",
-    Math.round(scores[bw.best - 1] || 0),
-    bestCap.images,
+    toCaption(state.final_report) || "",
+    W / 2,
+    titleY + 52,
+    W - 200,
+    36,
   );
-  if (bw.worst !== bw.best) {
+
+  let sectionTop = Math.max(titleY + 96, reportEndY + 40);
+  {
+    const cap = roundCaptures[bw.best] || {};
     await drawReportSection(
       ctx,
-      850,
+      sectionTop,
+      "#00ffc6",
+      "🏆 베스트 호흡",
+      cap.prompt || prompts[bw.best - 1] || "—",
+      results[bw.best - 1] ? "✅ 통과" : "❌ 실패",
+      reportSectionImages(cap, bw.best),
+    );
+    sectionTop += 400;
+  }
+  if (bw.worst !== bw.best) {
+    const cap = roundCaptures[bw.worst] || {};
+    await drawReportSection(
+      ctx,
+      sectionTop,
       "#ff6b6b",
-      "💥 텔레파시 대참사",
-      worstCap.prompt || prompts[bw.worst - 1] || "—",
-      Math.round(scores[bw.worst - 1] || 0),
-      worstCap.images,
+      "🫣 아쉬웠던 순간",
+      cap.prompt || prompts[bw.worst - 1] || "—",
+      results[bw.worst - 1] ? "✅ 통과" : "❌ 실패",
+      reportSectionImages(cap, bw.worst),
     );
   }
 
@@ -1220,11 +1368,11 @@ function strokeSkeleton(ctx, pose, fit) {
   for (const keypoint of pose.keypoints) points[keypoint.name] = keypoint;
   const visible = (kp) => kp && (kp.visibility == null || kp.visibility >= SKELETON_VISIBILITY);
 
-  ctx.lineWidth = Math.max(2, fit.width * 0.03);
+  ctx.lineWidth = Math.max(1, fit.width * 0.01);
   ctx.lineCap = "round";
-  ctx.strokeStyle = "rgba(0, 255, 198, 0.95)";
-  ctx.shadowColor = "rgba(0, 255, 198, 0.8)";
-  ctx.shadowBlur = 8;
+  ctx.strokeStyle = "rgba(0, 255, 198, 0.8)";
+  ctx.shadowColor = "rgba(0, 255, 198, 0.45)";
+  ctx.shadowBlur = 3;
   for (const [a, b] of POSE_CONNECTIONS) {
     const pa = points[a];
     const pb = points[b];
@@ -1237,7 +1385,7 @@ function strokeSkeleton(ctx, pose, fit) {
 
   ctx.shadowBlur = 0;
   ctx.fillStyle = "#ffffff";
-  const radius = Math.max(2, fit.width * 0.025);
+  const radius = Math.max(1, fit.width * 0.009);
   for (const keypoint of pose.keypoints) {
     if (!visible(keypoint)) continue;
     ctx.beginPath();
