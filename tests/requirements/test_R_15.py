@@ -16,7 +16,7 @@ class TestR15MergedPoseHint(unittest.TestCase):
             self,
             "server/app/services/game_manager.py",
             "PROMPT_HINT_SECONDS = 10.0",
-            "PEEK_DURATION_SECONDS = 1.5",
+            "PEEK_DURATION_SECONDS = 2.5",
             "state.hint_cam_shown = True",
             "state.peek_until = now + PEEK_DURATION_SECONDS",
             '"show_hint_cams": show_hint_cams',
@@ -27,7 +27,8 @@ class TestR15MergedPoseHint(unittest.TestCase):
             "function renderCamHint",
             "state.show_hint_cams",
             "cam-hint-cam",
-            "setCamStreams(el.camHintCams, show)",
+            "startCamHintSnapshots",
+            "stopCamHintSnapshots",
         )
 
 

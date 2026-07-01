@@ -1,6 +1,6 @@
 requirement_id=R-20
 evidence_slug=llm-tts-fallback
-generated_at=2026-06-30T07:27:14.645664+00:00
+generated_at=2026-07-01T02:35:20.472771+00:00
 unit_status=fallback_paths_verified
 field_evidence_required=true
 field_success_criteria=LLM_ENABLED=false or TTS failure still reaches finished phase with visible static text/browser speech fallback

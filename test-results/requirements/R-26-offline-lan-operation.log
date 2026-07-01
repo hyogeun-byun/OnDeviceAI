@@ -1,6 +1,6 @@
 requirement_id=R-26
 evidence_slug=offline-lan-operation
-generated_at=2026-06-30T07:27:14.649784+00:00
+generated_at=2026-07-01T02:35:20.476227+00:00
 unit_status=offline_configuration_and_fallback_paths_verified
 field_evidence_required=true
 field_success_criteria=WAN disconnected, server/camera/browser on same LAN, /game and /stage finish one 60-second sprint

@@ -21,8 +21,10 @@ class TestR14GameScreenPrivacy(unittest.TestCase):
             self,
             "server/app/web/static/js/game.js",
             "function renderCamHint",
-            "setCamStreams(el.camHintCams, show)",
-            'img.src = `/api/cameras/${id}/stream`',
+            "function refreshCamHintSnapshots",
+            "function startCamHintSnapshots",
+            "function stopCamHintSnapshots",
+            'img.src = `/api/cameras/${id}/snapshot?t=${stamp}`',
             'img.removeAttribute("src")',
         )
 

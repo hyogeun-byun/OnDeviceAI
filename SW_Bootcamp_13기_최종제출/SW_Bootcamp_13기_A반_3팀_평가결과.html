@@ -1,576 +1,448 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f7f8fb;
-        --panel: #ffffff;
-        --ink: #172033;
-        --muted: #637083;
-        --line: #d9dee8;
-        --ok: #117a45;
-        --warn: #a15c00;
-        --bad: #b42318;
-        --info: #2457c5;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--ink);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        line-height: 1.55;
-      }
-
-      main {
-        width: min(1240px, calc(100% - 40px));
-        margin: 0 auto;
-        padding: 34px 0 56px;
-      }
-
-      header {
-        margin-bottom: 22px;
-      }
-
-      h1 {
-        margin: 0 0 8px;
-        font-size: 30px;
-        line-height: 1.2;
-      }
-
-      h2 {
-        margin: 34px 0 12px;
-        font-size: 21px;
-      }
-
-      h3 {
-        margin: 22px 0 10px;
-        font-size: 17px;
-      }
-
-      p {
-        margin: 8px 0;
-      }
-
-      code {
-        padding: 1px 5px;
-        border-radius: 4px;
-        background: #eef2f8;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 0.92em;
-      }
-
-      .notice,
-      section {
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: var(--panel);
-        box-shadow: 0 10px 24px rgba(23, 32, 51, 0.06);
-      }
-
-      .notice {
-        padding: 14px 16px;
-        border-left: 5px solid var(--info);
-        color: #24324a;
-      }
-
-      section {
-        padding: 18px;
-        margin-top: 18px;
-      }
-
-      .meta,
-      .small {
-        color: var(--muted);
-      }
-
-      .meta {
-        font-size: 14px;
-      }
-
-      .small {
-        font-size: 13px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .card {
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fbfcff;
-      }
-
-      .card strong {
-        display: block;
-        margin-top: 4px;
-        font-size: 24px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        overflow-wrap: anywhere;
-      }
-
-      th,
-      td {
-        padding: 9px 10px;
-        border: 1px solid var(--line);
-        vertical-align: top;
-        text-align: left;
-        font-size: 14px;
-      }
-
-      th {
-        background: #eef2f8;
-        font-weight: 700;
-      }
-
-      .status {
-        display: inline-block;
-        min-width: 72px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 12px;
-        text-align: center;
-        white-space: nowrap;
-      }
-
-      .ok {
-        color: var(--ok);
-        background: #e8f6ee;
-      }
-
-      .warn {
-        color: var(--warn);
-        background: #fff3df;
-      }
-
-      .bad {
-        color: var(--bad);
-        background: #fdeceb;
-      }
-
-      .unknown {
-        color: #4b5563;
-        background: #eef0f3;
-      }
-
-      .priority {
-        margin: 8px 0 0;
-        padding-left: 22px;
-      }
-
-      .priority li {
-        margin: 6px 0;
-      }
-
-      .wide th:first-child,
-      .wide td:first-child {
-        width: 74px;
-      }
-
-      .nowrap {
-        white-space: nowrap;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <header>
-        <h1>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</h1>
-        <p class="meta">
-          프로젝트: 이구동성 텔레파시 (On-Device AI Party Game) · 분석일: 2026-06-30 15:51 +0900 ·
-          기준 문서: <code>프로젝트_평가_Agent_정의서.md</code> ·
-          요구사항 명세: <code>SW_Bootcamp_13기_A반_3팀_요구사항_명세서.md</code>
-        </p>
-      </header>
-
-      <div class="notice">
-        이 리포트는 Agent 정의서의 원칙에 따라 검증 가능한 사실만 자동 판정하고, 시연 영상 판정과 비기능 품질 판단은 평가자에게 위임합니다.
-        Agent가 생성하는 HTML 파일은 산출물 점검 대상에서 제외했습니다.
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #18202a;
+      --muted: #667085;
+      --line: #d8dee8;
+      --ok: #0f7a4f;
+      --ok-bg: #e7f6ef;
+      --warn: #9a5a00;
+      --warn-bg: #fff2d6;
+      --bad: #b42318;
+      --bad-bg: #ffe6e3;
+      --info: #2351a3;
+      --info-bg: #e8efff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 20px 64px;
+    }
+    header, section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.25; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    h3 { font-size: 16px; margin: 18px 0 8px; }
+    p { margin: 8px 0; }
+    .small { color: var(--muted); font-size: 13px; }
+    .lead { font-size: 15px; color: #344054; max-width: 900px; }
+    code {
+      background: #f1f3f7;
+      border: 1px solid #e1e6ef;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+    .card strong {
+      display: block;
+      font-size: 22px;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: #f2f5f9;
+      font-weight: 700;
+    }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 4px 0; }
+    .status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .ok { color: var(--ok); background: var(--ok-bg); }
+    .warn { color: var(--warn); background: var(--warn-bg); }
+    .bad { color: var(--bad); background: var(--bad-bg); }
+    .info { color: var(--info); background: var(--info-bg); }
+    .mono-list code { display: inline-block; margin: 2px 0; }
+    .callout {
+      border-left: 4px solid var(--bad);
+      background: #fff8f7;
+      padding: 12px 14px;
+      margin-top: 14px;
+      border-radius: 6px;
+    }
+    @media (max-width: 760px) {
+      main { padding: 18px 10px 40px; }
+      header, section { padding: 16px; }
+      table { font-size: 12px; }
+      th, td { padding: 7px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SW Bootcamp 13기 A반 3팀 평가 결과 리포트</h1>
+    <p class="lead">
+      기준 문서: <code>프로젝트_평가_Agent_정의서.md</code>. 이 리포트는 자동으로 확인 가능한 사실과
+      사람이 영상/현장에서 확인해야 하는 항목을 분리한다. 테스트 통과는 중요한 근거지만, 실제 장비 동작과
+      제출 산출물 형식 충족을 자동으로 보장하지 않는다.
+    </p>
+    <p class="small">분석 기준일: 2026-07-01 · 대상 폴더: <code>SW_Bootcamp_13기_최종제출/</code></p>
+    <div class="cards">
+      <div class="card">
+        <span class="small">정적 요구사항 unittest</span>
+        <strong>29 / 29 OK</strong>
+        <span class="status info">코드 기준 통과</span>
       </div>
+      <div class="card">
+        <span class="small">필수 제출 산출물</span>
+        <strong>일부 누락</strong>
+        <span class="status bad">보완 필요</span>
+      </div>
+      <div class="card">
+        <span class="small">실제 장비/영상 검증</span>
+        <strong>다수 확인 필요</strong>
+        <span class="status warn">평가자 확인</span>
+      </div>
+      <div class="card">
+        <span class="small">최대 리스크</span>
+        <strong>결과파일 ZIP 없음</strong>
+        <span class="status bad">자동 분석 제한</span>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>냉정한 결론:</strong>
+      코드와 정적 unittest 기준으로는 요구사항 대응 흔적이 넓게 존재한다. 그러나 최종 제출 폴더 기준으로
+      결과파일 ZIP, 포스터, 정식 파일명 시연영상, 정식 결과보고서 PDF/PPTX가 부족하거나 이름이 맞지 않는다.
+      또한 R-01, R-03, R-04, R-13, R-17, R-20, R-22, R-26은 실제 장비·장애 주입·오프라인 LAN 같은
+      현장 증거 없이는 최종 충족으로 단정할 수 없다.
+    </div>
+  </header>
 
-      <section>
-        <h2>요약</h2>
-        <div class="grid">
-          <div class="card">
-            필수 제출 파일
-            <strong>1 / 7</strong>
-            <span class="small">평가 HTML 제외, 제출 폴더 기준</span>
-          </div>
-          <div class="card">
-            요구사항 명세
-            <strong>27개</strong>
-            <span class="small">2026-06-30 최신 게임 규칙 반영</span>
-          </div>
-          <div class="card">
-            현재 테스트 실행
-            <strong>29 / 29</strong>
-            <span class="small">최신 명세 기준 unittest 전체 통과</span>
-          </div>
-          <div class="card">
-            DevOps 근거
-            <strong>8개 기준</strong>
-            <span class="small">문서·로그 기준 확인</span>
-          </div>
-        </div>
+  <section>
+    <h2>1. 산출물 점검</h2>
+    <p class="small">평가 정의서와 제출 가이드의 파일명 형식을 기준으로 확인했다. 유사 파일이 있어도 정식 파일명이 아니면 별도 보완 대상으로 표시했다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>산출물</th>
+          <th>기대 파일</th>
+          <th>현재 확인된 파일</th>
+          <th>판정</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>요구사항 명세서</td>
+          <td><code>SW_Bootcamp_13기_A반_3팀_요구사항_명세서.md</code></td>
+          <td>정식 파일 존재</td>
+          <td><span class="status ok">충족</span></td>
+        </tr>
+        <tr>
+          <td>결과보고서 PDF/PPTX</td>
+          <td><code>..._결과보고서.pdf</code>, <code>..._결과보고서.pptx</code></td>
+          <td><code>AI_텔레파시_게임_v1.1.pptx</code>, 중간발표 PDF/PPTX만 확인</td>
+          <td><span class="status bad">미충족</span> 정식 결과보고서 파일명과 PDF가 부족함</td>
+        </tr>
+        <tr>
+          <td>결과파일 ZIP</td>
+          <td><code>SW_Bootcamp_13기_A반_3팀_결과파일.zip</code></td>
+          <td>제출 폴더에서 확인되지 않음</td>
+          <td><span class="status bad">미충족</span> 소스/테스트/Git 히스토리 제출물 검증 제한</td>
+        </tr>
+        <tr>
+          <td>시연영상 MP4</td>
+          <td><code>SW_Bootcamp_13기_A반_3팀_시연영상.mp4</code></td>
+          <td><code>2026-07-01 09-12-44.mp4</code>, <code>2026-07-01 10-10-25.mp4</code></td>
+          <td><span class="status warn">부분 충족</span> 영상은 있으나 정식 파일명/기준 영상 지정 필요</td>
+        </tr>
+        <tr>
+          <td>포스터 PDF/PPTX</td>
+          <td><code>..._포스터.pdf</code>, <code>..._포스터.pptx</code></td>
+          <td>제출 폴더에서 정식 파일 확인되지 않음</td>
+          <td><span class="status bad">미충족</span></td>
+        </tr>
+        <tr>
+          <td>평가 결과 HTML</td>
+          <td><code>SW_Bootcamp_13기_A반_3팀_평가결과.html</code></td>
+          <td>현재 리포트 파일</td>
+          <td><span class="status ok">충족</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 
-        <h3>최우선 보완 항목</h3>
-        <ol class="priority">
-          <li>최종 제출 폴더에 결과보고서 PDF/PPTX, 결과파일 ZIP, 시연영상 MP4, 포스터 PDF/PPTX를 추가해야 합니다.</li>
-          <li>실제 다중 카메라 장비 로그, 60초 스프린트 완주 영상, 오프라인 LAN 증빙을 제출 ZIP에 포함하면 확인 불가 항목이 줄어듭니다.</li>
-          <li>현장 검증 시 <code>test-results/requirements/R-xx-...</code> 형식의 요구사항별 로그 파일명을 유지하면 Agent가 나중에 자동 매핑하기 쉽습니다.</li>
-        </ol>
-      </section>
+  <section>
+    <h2>2. 테스트 결과</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>결과</th>
+          <th>근거</th>
+          <th>해석</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>요구사항 unittest</td>
+          <td><span class="status ok">통과</span></td>
+          <td><code>test-results/requirements/R-01-R-27-requirements-unittest.log</code>: <code>Ran 29 tests</code>, <code>OK</code></td>
+          <td>R-01~R-27에 대응하는 정적/단위 검증은 모두 통과했다.</td>
+        </tr>
+        <tr>
+          <td>R-11/R-14/R-15 테스트 기준</td>
+          <td><span class="status ok">갱신됨</span></td>
+          <td><code>tests/requirements/test_R_11.py</code>, <code>test_R_14.py</code>, <code>test_R_15.py</code></td>
+          <td>명세서의 현재 구현 기준: 결과 3.0초, 카메라 힌트 snapshot polling, 힌트 2.5초와 일치하도록 갱신했다.</td>
+        </tr>
+        <tr>
+          <td>테스트 한계</td>
+          <td><span class="status warn">주의</span></td>
+          <td>대부분 파일 내용, 함수/상수, 엔드포인트 존재 확인 중심</td>
+          <td>실제 카메라 2대 이상, FPS 지속성, 브라우저 음성, 오프라인 LAN 완주는 별도 현장 증거가 필요하다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>산출물 점검</h2>
-        <p class="small">점검 기준: <code>SW_Bootcamp_13기_최종제출/</code> 폴더. 평가 결과 HTML은 Agent 출력물이므로 제외.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>산출물</th>
-              <th>상태</th>
-              <th>근거 / 조치</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>요구사항 명세서</td>
-              <td><span class="status ok">충족</span></td>
-              <td><code>SW_Bootcamp_13기_최종제출/SW_Bootcamp_13기_A반_3팀_요구사항_명세서.md</code></td>
-            </tr>
-            <tr>
-              <td>결과보고서 PDF</td>
-              <td><span class="status bad">누락</span></td>
-              <td>제출 폴더에는 <code>AI_텔레파시_게임_중간발표.pdf</code>만 있음. 최종 결과보고서 파일명으로 제출 필요.</td>
-            </tr>
-            <tr>
-              <td>결과보고서 PPTX</td>
-              <td><span class="status bad">누락</span></td>
-              <td>제출 폴더에는 <code>AI_텔레파시_게임_중간발표.pptx</code>만 있음. 최종 결과보고서 파일명으로 제출 필요.</td>
-            </tr>
-            <tr>
-              <td>결과파일 ZIP</td>
-              <td><span class="status bad">누락</span></td>
-              <td>소스, 테스트, test-results, RUN.md, requirements, Git 히스토리를 포함한 ZIP 필요.</td>
-            </tr>
-            <tr>
-              <td>시연영상 MP4</td>
-              <td><span class="status bad">누락</span></td>
-              <td>명세서 타임스탬프와 대응되는 최종 시연영상 파일 필요.</td>
-            </tr>
-            <tr>
-              <td>포스터 PDF</td>
-              <td><span class="status warn">형식 보완</span></td>
-              <td><code>poster/poster.pdf</code>는 있으나 제출 폴더 안의 정식 파일명으로 복사/이름 변경 필요.</td>
-            </tr>
-            <tr>
-              <td>포스터 PPTX</td>
-              <td><span class="status bad">누락</span></td>
-              <td>제출 폴더에 <code>SW_Bootcamp_13기_A반_3팀_포스터.pptx</code> 필요.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+  <section>
+    <h2>3. 기능 구현 매트릭스</h2>
+    <p class="small">구현 판정은 정의서의 판정 범위(구현됨/부분 구현/미구현/확인 불가)를 사용한다. 런타임·현장 확인 조건은 마지막 열에 분리했다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>요구사항 요약</th>
+          <th>구현 판정</th>
+          <th>테스트</th>
+          <th>확인 필요 사항</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>R-01</td><td>다중 카메라 WebSocket 독립 연결</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>최종 발표 현장에서 다중 카메라 연결과 1대 종료 후 유지 확인.</td></tr>
+        <tr><td>R-02</td><td>JPEG/MJPEG 실시간 전송</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상 기준 대시보드 스트림 확인.</td></tr>
+        <tr><td>R-03</td><td>MediaPipe Pose Lite 10fps, 33 landmarks</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>camera-worker-camera_02/03</code> 로그에 FPS 근거 있음. 33 landmarks 수신은 대시보드/서버 로그로 확인.</td></tr>
+        <tr><td>R-04</td><td>포즈 추정/영상 전송 스레드 독립 실행</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>스레드 구조와 FPS 로그 근거 있음. 일부 timeout 구간은 참고.</td></tr>
+        <tr><td>R-05</td><td>대시보드 상태·성능 지표</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 상태/지표 갱신 확인.</td></tr>
+        <tr><td>R-06</td><td>스켈레톤 오버레이</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 사람 움직임과 오버레이 확인.</td></tr>
+        <tr><td>R-07</td><td>팀명 입력 후 T자 포즈 시작</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 팀명/진행률/인트로 전환 확인.</td></tr>
+        <tr><td>R-08</td><td>몸동작/버튼 카테고리 선택</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 선택 흐름 확인.</td></tr>
+        <tr><td>R-09</td><td>카테고리 제시어 60초 스프린트</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 제시어 진행 확인.</td></tr>
+        <tr><td>R-10</td><td>SQLite 리더보드 저장/순위</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>2팀 이상 기록과 정렬은 DB/시연으로 확인.</td></tr>
+        <tr><td>R-11</td><td>게임 단계 자동 진행</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 전체 단계 확인.</td></tr>
+        <tr><td>R-12</td><td>텔레파시 게이지 계산</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 게이지 변화 확인.</td></tr>
+        <tr><td>R-13</td><td>활동성 게이트</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>반복 측정 로그는 별도 확인.</td></tr>
+        <tr><td>R-14</td><td>참가자 화면 카메라 비노출/힌트 예외</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>현재 기준은 snapshot polling 힌트.</td></tr>
+        <tr><td>R-15</td><td>10초 후 카메라 힌트 오버레이</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 2.5초 표시/해제 확인.</td></tr>
+        <tr><td>R-16</td><td>관객 화면 동기화</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 stage 화면 확인.</td></tr>
+        <tr><td>R-17</td><td>WebSocket 10Hz 상태 브로드캐스트</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>10Hz 수준 동기화는 계측 로그/화면 비교로 확인.</td></tr>
+        <tr><td>R-18</td><td>AI MC 한국어 멘트</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 멘트 표시 확인.</td></tr>
+        <tr><td>R-19</td><td>playing 구간 LLM 미호출 코칭</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>playing 구간 로그로 확인.</td></tr>
+        <tr><td>R-20</td><td>LLM/TTS 실패 폴백</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>장애 주입 또는 비활성 설정 실행 결과 확인.</td></tr>
+        <tr><td>R-21</td><td>edge-tts 음성·MC 아바타</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>브라우저에서 음성/입 애니메이션 확인.</td></tr>
+        <tr><td>R-22</td><td>speech_id 중복 재생 방지/폴백</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>중복 재생 방지는 브라우저 런타임에서 확인.</td></tr>
+        <tr><td>R-23</td><td>처음부터 초기화</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 초기화 확인.</td></tr>
+        <tr><td>R-24</td><td>최종 결과 화면</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>시연영상에서 점수/시간/등급 확인.</td></tr>
+        <tr><td>R-25</td><td>사진+스켈레톤 결과 PNG 저장</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>브라우저 다운로드 결과 확인.</td></tr>
+        <tr><td>R-26</td><td>인터넷 미연결 LAN 환경 동작</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>최종 발표 현장에서 WAN 차단 LAN 완주 확인.</td></tr>
+        <tr><td>R-27</td><td>.env/설정 파일 관리</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>제출 ZIP 안 예시 설정 파일 포함 확인.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>요구사항 명세 점검</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>항목</th>
-              <th>상태</th>
-              <th>근거</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>중립 ID</td>
-              <td><span class="status ok">충족</span></td>
-              <td><code>R-01</code>부터 <code>R-27</code>까지 기능/비기능을 미리 분리하지 않은 ID 사용.</td>
-            </tr>
-            <tr>
-              <td>최신 구현 반영</td>
-              <td><span class="status ok">충족</span></td>
-              <td>5라운드 평균 방식에서 60초 스프린트, 90점 클리어, 20초 제한, 10초 카메라 힌트 방식으로 수정됨.</td>
-            </tr>
-            <tr>
-              <td>검증 기준</td>
-              <td><span class="status ok">충족</span></td>
-              <td>각 요구사항에 화면, API, 로그, 설정, 파일 산출물 기준의 완료 조건이 있음.</td>
-            </tr>
-            <tr>
-              <td>시연 타임스탬프</td>
-              <td><span class="status warn">제공됨</span></td>
-              <td>영상 대상은 <code>MM:SS</code>, 비영상 대상은 <code>N/A (사유)</code>로 표기됨. 단 실제 MP4 파일은 현재 제출 폴더에 없음.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+  <section>
+    <h2>4. DevOps 및 실행 가능성 8개 기준</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>기준</th>
+          <th>판정</th>
+          <th>근거/주의</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>라이브러리 목록 명시</td><td><span class="status ok">충족</span></td><td><code>server/requirements.txt</code>, <code>camera-worker/requirements.txt</code></td></tr>
+        <tr><td>2</td><td>버전 고정</td><td><span class="status ok">충족</span></td><td>확인된 Python 의존성은 <code>==</code> 형식으로 고정됨.</td></tr>
+        <tr><td>3</td><td>설치 방법 문서화</td><td><span class="status ok">충족</span></td><td><code>RUN.md</code>에 서버/카메라 워커 venv 및 설치 방법 기재.</td></tr>
+        <tr><td>4</td><td>실행 방법 문서화</td><td><span class="status ok">충족</span></td><td><code>RUN.md</code>에 서버, 워커, 브라우저 URL 기재.</td></tr>
+        <tr><td>5</td><td>환경 변수/설정 파일</td><td><span class="status ok">충족</span></td><td><code>server/.env.example</code>, <code>camera-worker/.env.example</code>, <code>config/*.yaml</code></td></tr>
+        <tr><td>6</td><td>외부 서비스/자원 안내</td><td><span class="status ok">충족</span></td><td>Ollama, edge-tts, OpenAI/Piper/espeak, SQLite, LAN 의존성이 문서화됨.</td></tr>
+        <tr><td>7</td><td>빌드/설치 성공</td><td><span class="status warn">첨부 로그 기준</span></td><td><code>log/server-install.log</code>, <code>log/camera-worker-install.log</code> 존재. 이번 리포트 작성 중 전체 재설치는 수행하지 않음.</td></tr>
+        <tr><td>8</td><td>애플리케이션 실행/기동</td><td><span class="status warn">첨부 로그 기준</span></td><td><code>log/server-run.log</code>, <code>log/server-health.log</code>, <code>log/camera-worker-run.log</code> 존재. 실제 최종 제출 ZIP 안 포함 여부 확인 필요.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>기능 구현 매트릭스</h2>
-        <p class="small">테스트 결과는 2026-06-30 현재 직접 실행한 <code>python3 -m unittest discover -s tests/requirements -p 'test_R_*.py'</code> 기준입니다.</p>
-        <table class="wide">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>구현 판정</th>
-              <th>테스트</th>
-              <th>근거 / 비고</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>R-01</td><td><span class="status warn">부분 구현</span></td><td><span class="status ok">통과</span></td><td>WebSocket 워커 구조는 있음. 실제 2대 이상 동시 하드웨어 중단/유지 검증은 영상·현장 로그 필요.</td></tr>
-            <tr><td>R-02</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>camera-worker/app/camera/frame_encoder.py</code>, 서버 MJPEG 스트림 경로.</td></tr>
-            <tr><td>R-03</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>KEYPOINT_INFERENCE_FPS = 10.0</code>, <code>mediapipe==0.10.18</code>, <code>pose_fps</code> 로그 구조.</td></tr>
-            <tr><td>R-04</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>카메라 워커의 프레임/포즈 처리 루프와 <code>frame_fps</code>, <code>pose_fps</code> metrics 로그.</td></tr>
-            <tr><td>R-05</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>서버 대시보드와 카메라 API smoke 근거: <code>log/camera-api-smoke.log</code>.</td></tr>
-            <tr><td>R-06</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>대시보드 Canvas 스켈레톤 렌더링 테스트 통과.</td></tr>
-            <tr><td>R-07</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>/api/game/stage</code>, <code>_check_idle_ready_pose()</code>, 수동 시작 버튼.</td></tr>
-            <tr><td>R-08</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>CATEGORY_PROMPTS</code>, 몸동작 카테고리 선택, 버튼 fallback.</td></tr>
-            <tr><td>R-09</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>PROMPT_POOL_LIMIT = 99</code>, <code>PLAY_PASS_SCORE = 90.0</code>, 60초 스프린트 제시어 순환 기준으로 테스트 갱신됨.</td></tr>
-            <tr><td>R-10</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>server/app/services/leaderboard.py</code>: score desc, total_time asc 정렬.</td></tr>
-            <tr><td>R-11</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>intro/category/camtest/confirm/countdown/reveal/playing/result/giveup/finished</code> 상태와 60초/20초/10초 힌트 기준으로 테스트 갱신됨.</td></tr>
-            <tr><td>R-12</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>pose_similarity.py</code>의 bone vector, face/body 유사도 계산.</td></tr>
-            <tr><td>R-13</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>ACTIVITY_FLOOR</code>, <code>expressiveness</code>, activity factor로 정지 자세 감점.</td></tr>
-            <tr><td>R-14</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>기본 playing 화면에는 상시 카메라 URL이 없고, 힌트 활성화 시 JS가 임시 스트림을 붙였다 해제하는 기준으로 테스트 갱신됨.</td></tr>
-            <tr><td>R-15</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>show_hint_cams</code>, <code>cam-hint-overlay</code>, <code>PROMPT_HINT_SECONDS = 10.0</code>, <code>PEEK_DURATION_SECONDS = 1.5</code> 기준으로 테스트 갱신됨.</td></tr>
-            <tr><td>R-16</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>server/app/web/templates/stage.html</code>, <code>server/app/web/static/js/stage.js</code>.</td></tr>
-            <tr><td>R-17</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>/api/game/ws</code>, <code>GameHub</code>, state snapshot 브로드캐스트 구조.</td></tr>
-            <tr><td>R-18</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>game_narrator.py</code>, LLM/정적 폴백 멘트, intro/result/final report.</td></tr>
-            <tr><td>R-19</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>playing 구간은 <code>narrator.coach()</code> 규칙 기반. LLM 결과 멘트는 result/final background task.</td></tr>
-            <tr><td>R-20</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>LLM_ENABLED=false</code>, TTS 실패 시 정적/브라우저 폴백 경로.</td></tr>
-            <tr><td>R-21</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>edge-tts==7.2.8</code>, <code>/api/game/speech/{speech_id}.mp3</code>, MC 아바타 UI.</td></tr>
-            <tr><td>R-22</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>speech_id</code> 증가 관리와 브라우저 재생 중복 방지 로직.</td></tr>
-            <tr><td>R-23</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>/api/game/reset</code>, <code>GameManager.reset()</code>, UI 재시작 버튼.</td></tr>
-            <tr><td>R-24</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td>클리어 수 기반 <code>total_score</code>, <code>final_seconds</code>, 라운드별 점수와 동점 시 <code>total_time</code> 정렬 기준으로 테스트 갱신됨.</td></tr>
-            <tr><td>R-25</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>/api/game/result-frame/{round}/{player}.jpg</code>, Canvas 합성, 1080x1350 PNG 저장.</td></tr>
-            <tr><td>R-26</td><td><span class="status warn">부분 구현</span></td><td><span class="status ok">통과</span></td><td>오프라인 설정/절차 문서와 폴백 경로는 있음. 실제 인터넷 차단 LAN 완주 영상/로그는 제출 필요.</td></tr>
-            <tr><td>R-27</td><td><span class="status ok">구현됨</span></td><td><span class="status ok">통과</span></td><td><code>server/.env.example</code>, <code>camera-worker/.env.example</code>, <code>config/*.example.yaml</code>.</td></tr>
-          </tbody>
-        </table>
-      </section>
+  <section>
+    <h2>5. 시연 확인표</h2>
+    <p class="small">
+      요구사항 명세서의 타임스탬프를 기준으로 평가자 확인용 표를 생성했다. 현재 제출 폴더에는 MP4 파일이 2개 있지만
+      정식 이름의 <code>..._시연영상.mp4</code>가 없으므로, 어떤 파일을 기준 영상으로 볼지 명확히 지정해야 한다.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>확인 항목</th>
+          <th>타임스탬프</th>
+          <th>평가자 확인 포인트</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>R-01</td><td>다중 카메라 WebSocket 연결 유지</td><td>N/A</td><td>하드웨어 로그/현장 확인</td></tr>
+        <tr><td>R-02</td><td>대시보드 MJPEG 스트림</td><td>00:10</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-03</td><td>pose_fps 및 33 landmarks</td><td>N/A</td><td>로그/지표 확인</td></tr>
+        <tr><td>R-04</td><td>프레임/포즈 독립 실행</td><td>N/A</td><td>로그/지표 확인</td></tr>
+        <tr><td>R-05</td><td>대시보드 상태·성능 지표</td><td>00:20</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-06</td><td>대시보드 스켈레톤 오버레이</td><td>00:30</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-07</td><td>팀명 입력 후 T자 포즈 시작</td><td>00:40</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-08</td><td>몸동작/버튼 카테고리 선택</td><td>00:45</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-09</td><td>60초 스프린트 제시어 진행</td><td>01:00</td><td>기준 MP4 지정 후 확인</td></tr>
+        <tr><td>R-10</td><td>리더보드 저장/순위</td><td>01:10</td><td>2팀 이상 결과인지 확인</td></tr>
+        <tr><td>R-11</td><td>카메라 테스트·카운트다운·제시어 공개·동작 단계</td><td>01:20</td><td>timeup 포함 전체 단계 확인</td></tr>
+        <tr><td>R-12</td><td>텔레파시 게이지</td><td>01:30</td><td>같은/다른 동작에 따른 변화 확인</td></tr>
+        <tr><td>R-13</td><td>활동성 게이트</td><td>N/A</td><td>반복 측정 로그 또는 현장 확인</td></tr>
+        <tr><td>R-14</td><td>참가자 화면 영상 비노출/스냅샷 힌트</td><td>01:50</td><td>평상시 비노출, 힌트 때만 표시 확인</td></tr>
+        <tr><td>R-15</td><td>10초 후 2.5초 카메라 힌트</td><td>01:55</td><td>힌트 표시 후 자동 해제 확인</td></tr>
+        <tr><td>R-16</td><td>관객 화면 동기화</td><td>02:00</td><td>카메라/게이지/타이머 동시 표시 확인</td></tr>
+        <tr><td>R-17</td><td>WebSocket 10Hz 동기화</td><td>N/A</td><td>계측 로그 확인</td></tr>
+        <tr><td>R-18</td><td>AI MC 진행 멘트</td><td>02:10</td><td>인트로/결과/종료 멘트 확인</td></tr>
+        <tr><td>R-19</td><td>playing 구간 LLM 미호출</td><td>N/A</td><td>로그 확인</td></tr>
+        <tr><td>R-20</td><td>LLM/TTS 실패 폴백</td><td>N/A</td><td>장애 주입 확인</td></tr>
+        <tr><td>R-21</td><td>edge-tts 음성·MC 아바타</td><td>02:20</td><td>음성/말풍선/입 애니메이션 확인</td></tr>
+        <tr><td>R-22</td><td>speech_id 중복 재생 방지</td><td>N/A</td><td>로그/브라우저 확인</td></tr>
+        <tr><td>R-23</td><td>처음부터 초기화</td><td>02:35</td><td>상태 초기화 확인</td></tr>
+        <tr><td>R-24</td><td>최종 결과 화면</td><td>02:45</td><td>클리어 수/시간/등급 확인</td></tr>
+        <tr><td>R-25</td><td>결과 PNG 저장</td><td>02:55</td><td>다운로드 파일 생성 확인</td></tr>
+        <tr><td>R-26</td><td>오프라인 LAN 완주</td><td>N/A</td><td>WAN 차단 현장 영상/로그 확인</td></tr>
+        <tr><td>R-27</td><td>설정 파일 관리</td><td>N/A</td><td>제출 ZIP 내부 파일 확인</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>테스트 결과</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>항목</th>
-              <th>상태</th>
-              <th>근거</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>테스트 코드 존재</td>
-              <td><span class="status ok">충족</span></td>
-              <td><code>tests/requirements/test_R_01.py</code>부터 <code>test_R_27.py</code>까지 27개 파일 존재.</td>
-            </tr>
-            <tr>
-              <td>현재 직접 실행</td>
-              <td><span class="status ok">통과</span></td>
-              <td><code>Ran 29 tests</code>, <code>OK</code>. 근거: <code>test-results/requirements/unittest-results.txt</code>, <code>log/requirements-unittest.log</code>.</td>
-            </tr>
-            <tr>
-              <td>첨부 테스트 결과</td>
-              <td><span class="status ok">최신 OK</span></td>
-              <td>제출용 결과 파일과 DevOps 로그 모두 최신 명세 기준 재실행 결과로 갱신됨.</td>
-            </tr>
-            <tr>
-              <td>요구사항별 로그</td>
-              <td><span class="status ok">생성됨</span></td>
-              <td><code>test-results/requirements/R-01-...</code>, <code>R-03-...</code>, <code>R-04-...</code>, <code>R-17-...</code>, <code>R-19-...</code>, <code>R-20-...</code>, <code>R-22-...</code>, <code>R-26-...</code> 로그 생성.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+  <section>
+    <h2>6. Git 협업 지표</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>지표</th>
+          <th>측정 결과</th>
+          <th>사실 기반 해석</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>기여 분산도</td>
+          <td><code>manypeople 87</code>, <code>hyogeun_byun 31</code>, <code>langleman2 6</code>, <code>jongmin 5</code> 등</td>
+          <td>여러 작성자 기록은 있으나 <code>manypeople</code> 작성자에 커밋이 집중되어 있다. 계정 표기 분리 가능성도 있다.</td>
+        </tr>
+        <tr>
+          <td>커밋 지속성</td>
+          <td>최근 커밋은 2026-06-30~2026-07-01에 집중</td>
+          <td>여러 날짜의 작업 이력은 있으나 마감 직전 작업량이 큰 편이다.</td>
+        </tr>
+        <tr>
+          <td>협업 상호작용</td>
+          <td>merge commit 다수 확인: <code>44b7bd3</code>, <code>ef50efb</code>, <code>4264bd9</code> 등</td>
+          <td>브랜치 병합 흔적은 있으나 PR 리뷰 여부는 로컬 Git 로그만으로 확인할 수 없다.</td>
+        </tr>
+        <tr>
+          <td>제출 ZIP 내 Git 히스토리</td>
+          <td><span class="status bad">확인 불가</span></td>
+          <td>결과파일 ZIP이 제출 폴더에 없으므로 최종 제출물 내부의 <code>.git</code> 또는 <code>git_log.txt</code> 포함 여부를 확인할 수 없다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>DevOps 및 실행 가능성 8개 기준</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>기준</th>
-              <th>판정</th>
-              <th>근거</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>라이브러리 목록 명시</td><td><span class="status ok">충족</span></td><td><code>server/requirements.txt</code>, <code>camera-worker/requirements.txt</code>.</td></tr>
-            <tr><td>2</td><td>라이브러리 버전 고정</td><td><span class="status ok">충족</span></td><td>모든 확인된 Python 의존성이 <code>==</code> 버전 고정 형식.</td></tr>
-            <tr><td>3</td><td>빌드·설치 방법 문서화</td><td><span class="status ok">충족</span></td><td><code>RUN.md</code>, <code>server/README.md</code>, <code>camera-worker/README.md</code>.</td></tr>
-            <tr><td>4</td><td>실행·기동 방법 문서화</td><td><span class="status ok">충족</span></td><td><code>RUN.md</code>와 실행 스크립트가 있으며, R-26 절차도 60초 스프린트 기준으로 최신화됨.</td></tr>
-            <tr><td>5</td><td>환경 변수·설정 파일 문서화</td><td><span class="status ok">충족</span></td><td><code>server/.env.example</code>, <code>camera-worker/.env.example</code>, <code>config/*.example.yaml</code>.</td></tr>
-            <tr><td>6</td><td>외부 서비스·자원 안내</td><td><span class="status ok">충족</span></td><td><code>RUN.md</code>에 Ollama, edge-tts, OpenAI/Piper/espeak, SQLite, LAN 구성 및 폴백 안내. 근거: <code>test-results/requirements/R-26-offline-lan-summary.log</code>.</td></tr>
-            <tr><td>7</td><td>빌드·설치 성공</td><td><span class="status ok">첨부결과 확인</span></td><td><code>test-results/requirements/R-27-server-install.log</code>, <code>test-results/requirements/R-27-camera-worker-install.log</code>, <code>pip check</code> 근거가 <code>test-results/requirements/R-26-offline-lan-summary.log</code>에 기록됨.</td></tr>
-            <tr><td>8</td><td>애플리케이션 실행·기동</td><td><span class="status ok">첨부결과 확인</span></td><td><code>test-results/requirements/R-26-offline-lan-server.log</code>, <code>test-results/requirements/R-26-offline-lan-server-health.log</code>, <code>test-results/requirements/R-11-game-state-api.log</code>, <code>test-results/requirements/R-01-multi-camera-websocket-camera-01.log</code>, <code>test-results/requirements/R-05-dashboard-camera-api.log</code>.</td></tr>
-          </tbody>
-        </table>
-      </section>
+  <section>
+    <h2>7. 비기능 평가자 확인 항목</h2>
+    <p class="small">아래는 자동 점수가 아니라 평가자가 점수와 코멘트를 기입할 항목이다. Agent는 참고 사실만 제공한다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>비기능 요소</th>
+          <th>관련 요구사항</th>
+          <th>참고 사실</th>
+          <th>평가자 코멘트</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>성능</td><td>R-03, R-04, R-17</td><td>10fps 포즈, 스레드 분리, 10Hz 동기화 요구. unittest는 통과했지만 장시간 실측 로그 확인 필요.</td><td></td></tr>
+        <tr><td>사용성</td><td>R-07, R-08, R-14, R-15, R-23</td><td>T자 시작, 몸동작 카테고리, 프라이버시형 참가자 화면, 힌트 오버레이, 초기화 흐름 구현 근거 있음.</td><td></td></tr>
+        <tr><td>신뢰성</td><td>R-20, R-22</td><td>LLM/TTS 실패 폴백과 speech_id 중복 방지 코드 근거 있음. 실패 주입 실행 증거는 부족함.</td><td></td></tr>
+        <tr><td>오프라인 호환성</td><td>R-26</td><td>오프라인 LAN 절차와 설정은 있으나 실제 WAN 차단 완주 증거는 최종 제출 기준으로 더 필요함.</td><td></td></tr>
+        <tr><td>유지보수성</td><td>R-27</td><td>서버/워커 환경 예시와 RUN 문서가 있다. 제출 ZIP 안 구성까지 확인해야 최종 판정 가능.</td><td></td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <section>
-        <h2>시연 확인표</h2>
-        <p class="small">Agent는 영상을 직접 판정하지 않습니다. 실제 동작 여부는 평가자가 MP4의 해당 지점을 보고 기입합니다. 현재 제출 폴더에는 MP4 파일이 없어 모든 영상 판정은 보류입니다.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>확인 항목</th>
-              <th>타임스탬프</th>
-              <th>평가자 확인</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>R-01</td><td>다중 카메라 WebSocket 연결 유지</td><td>N/A (하드웨어 구성 검증)</td><td>로그/현장 확인</td></tr>
-            <tr><td>R-02</td><td>대시보드 MJPEG 스트림</td><td>00:10</td><td>MP4 필요</td></tr>
-            <tr><td>R-03</td><td>pose_fps 및 33 landmarks</td><td>N/A (로그/지표 검증)</td><td>로그 확인</td></tr>
-            <tr><td>R-04</td><td>프레임/포즈 독립 실행</td><td>N/A (로그/지표 검증)</td><td>로그 확인</td></tr>
-            <tr><td>R-05</td><td>대시보드 상태·성능 지표</td><td>00:20</td><td>MP4 필요</td></tr>
-            <tr><td>R-06</td><td>대시보드 스켈레톤 오버레이</td><td>00:30</td><td>MP4 필요</td></tr>
-            <tr><td>R-07</td><td>팀명 입력 후 T자 포즈 시작</td><td>00:40</td><td>MP4 필요</td></tr>
-            <tr><td>R-08</td><td>몸동작/버튼 카테고리 선택</td><td>00:45</td><td>MP4 필요</td></tr>
-            <tr><td>R-09</td><td>60초 스프린트 제시어 진행</td><td>01:00</td><td>MP4 필요</td></tr>
-            <tr><td>R-10</td><td>리더보드 저장/순위</td><td>01:10</td><td>MP4 필요</td></tr>
-            <tr><td>R-11</td><td>카메라 테스트·카운트다운·제시어 공개·동작 단계</td><td>01:20</td><td>MP4 필요</td></tr>
-            <tr><td>R-12</td><td>텔레파시 게이지</td><td>01:30</td><td>MP4 필요</td></tr>
-            <tr><td>R-13</td><td>활동성 게이트</td><td>N/A (동작 조건 반복 측정)</td><td>실측 확인</td></tr>
-            <tr><td>R-14</td><td>참가자 화면 영상 비노출/임시 힌트</td><td>01:50</td><td>MP4 필요</td></tr>
-            <tr><td>R-15</td><td>10초 카메라 힌트 오버레이</td><td>01:55</td><td>MP4 필요</td></tr>
-            <tr><td>R-16</td><td>관객 화면 동기화</td><td>02:00</td><td>MP4 필요</td></tr>
-            <tr><td>R-17</td><td>WebSocket 10Hz 수준 동기화</td><td>N/A (기술/동기화 검증)</td><td>로그/계측 확인</td></tr>
-            <tr><td>R-18</td><td>AI MC 진행 멘트</td><td>02:10</td><td>MP4 필요</td></tr>
-            <tr><td>R-19</td><td>playing 구간 LLM 미호출</td><td>N/A (로그 검증)</td><td>로그 확인</td></tr>
-            <tr><td>R-20</td><td>LLM/TTS 실패 폴백</td><td>N/A (설정/장애 주입 검증)</td><td>장애 주입 확인</td></tr>
-            <tr><td>R-21</td><td>edge-tts 음성·MC 아바타</td><td>02:20</td><td>MP4 필요</td></tr>
-            <tr><td>R-22</td><td>speech_id 중복 재생 방지</td><td>N/A (기술 검증)</td><td>로그/브라우저 확인</td></tr>
-            <tr><td>R-23</td><td>처음부터 초기화</td><td>02:35</td><td>MP4 필요</td></tr>
-            <tr><td>R-24</td><td>클리어 수·소요 시간·라운드별 점수</td><td>02:45</td><td>MP4 필요</td></tr>
-            <tr><td>R-25</td><td>사진+스켈레톤 결과 PNG 저장</td><td>02:55</td><td>MP4 필요</td></tr>
-            <tr><td>R-26</td><td>오프라인 LAN 완주</td><td>N/A (환경 조건 검증)</td><td>현장 영상/로그 확인</td></tr>
-            <tr><td>R-27</td><td>설정 파일 관리</td><td>N/A (설정 파일 검증)</td><td>파일 확인</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section>
-        <h2>Git 협업 지표</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>지표</th>
-              <th>측정 결과</th>
-              <th>사실 기반 해석</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>기여 분산도</td>
-              <td><code>manypeople 83</code>, <code>hyogeun_byun 25</code>, <code>jongmin 4</code>, <code>langleman2 3</code>, <code>hyogeun-byun 3</code> 등</td>
-              <td>여러 작성자 기록이 있으나 <code>manypeople</code> 작성자에 커밋이 집중됨. <code>hyogeun-byun</code> 계정 표기 분리 가능성 있음.</td>
-            </tr>
-            <tr>
-              <td>커밋 지속성</td>
-              <td>2026-06-08, 06-22, 06-23, 06-24, 06-25, 06-26, 06-28, 06-29, 06-30에 커밋 존재</td>
-              <td>여러 날짜에 작업 기록이 있으나 2026-06-29와 2026-06-30에 커밋이 크게 집중됨.</td>
-            </tr>
-            <tr>
-              <td>협업 상호작용</td>
-              <td>merge commit 다수: <code>4264bd9</code>, <code>88e8711</code>, <code>61fcb39</code> 등</td>
-              <td>브랜치 병합 흔적은 확인됨. PR 리뷰 여부는 로컬 Git 로그만으로 확인 불가.</td>
-            </tr>
-            <tr>
-              <td>제출 ZIP 내 Git 히스토리</td>
-              <td><span class="status bad">확인 불가</span></td>
-              <td>결과파일 ZIP이 아직 제출 폴더에 없으므로 <code>.git</code> 또는 <code>git_log.txt</code> 포함 여부 확인 불가.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section>
-        <h2>비기능 평가자 확인 항목</h2>
-        <p class="small">아래 항목은 Agent가 최종 품질을 채점하지 않고, 평가자가 점수와 코멘트를 기입할 수 있도록 구성한 폼입니다.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>카테고리</th>
-              <th>출처 요구사항</th>
-              <th>Agent가 수집한 참고 사실</th>
-              <th>점수(1-5)</th>
-              <th>코멘트</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>성능</td>
-              <td>R-03, R-04, R-17, R-19</td>
-              <td><code>KEYPOINT_INFERENCE_FPS = 10.0</code>, FPS metrics 로그 구조, WebSocket 동기화 구조, playing 구간 규칙 기반 코칭.</td>
-              <td>[ ]</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>신뢰성</td>
-              <td>R-01, R-13, R-20, R-22, R-23, R-26</td>
-              <td>활동성 게이트, LLM/TTS 폴백, reset, speech_id 중복 방지, 오프라인 LAN 절차 문서 존재. 실제 현장 완주 증빙은 추가 필요.</td>
-              <td>[ ]</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>사용성/프라이버시</td>
-              <td>R-07, R-08, R-14, R-15, R-16, R-24, R-25</td>
-              <td>T자 시작, 몸동작 카테고리 선택, 기본 참가자 화면 영상 비노출, 10초 카메라 힌트, 최종 리포트 저장 구현 근거 확인.</td>
-              <td>[ ]</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>유지보수성</td>
-              <td>R-27</td>
-              <td><code>.env.example</code>, <code>config/*.example.yaml</code>, <code>RUN.md</code> 제공. R-26 실행 절차도 60초 스프린트 기준으로 갱신됨.</td>
-              <td>[ ]</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>호환성/운영</td>
-              <td>R-26</td>
-              <td>인터넷 차단 LAN 절차와 edge-tts/Ollama 비활성 설정 안내 있음. 실제 네트워크 차단 영상은 미제출.</td>
-              <td>[ ]</td>
-              <td></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section>
-        <h2>확인 불가 및 한계</h2>
-        <ul>
-          <li>시연영상 MP4가 없어 타임스탬프 기반 실제 동작 판정은 수행하지 않았습니다.</li>
-          <li>결과파일 ZIP이 없어 최종 제출물 내부의 소스·테스트·Git 히스토리 포함 여부는 확인하지 못했습니다.</li>
-          <li>현재 코드 직접 테스트는 <code>Ran 29 tests</code>, <code>OK</code>입니다.</li>
-          <li>DevOps 7~8 기준은 기존 로그로 확인했으며, 이번 리포트 생성 시 설치/기동 전체 재검증은 수행하지 않았습니다.</li>
-          <li>Agent는 기술 난이도, 창의성, 발표력, 사업성, 최종 비기능 품질 점수를 판정하지 않았습니다.</li>
-        </ul>
-      </section>
-    </main>
-  </body>
+  <section>
+    <h2>8. 확인 불가 및 보완 우선순위</h2>
+    <h3>즉시 보완해야 할 제출물</h3>
+    <ul>
+      <li><code>SW_Bootcamp_13기_A반_3팀_결과파일.zip</code> 생성 및 제출 폴더 포함</li>
+      <li>정식 파일명의 결과보고서 PDF/PPTX 추가</li>
+      <li>정식 파일명의 포스터 PDF/PPTX 추가</li>
+      <li>시연영상 MP4를 하나로 확정하거나 정식 파일명으로 복사/정리</li>
+      <li>평가자가 볼 기준 영상과 요구사항 명세서 타임스탬프의 기준 파일 일치</li>
+    </ul>
+    <h3>구현은 있으나 증거가 약한 항목</h3>
+    <ul>
+      <li>R-01: 실제 다중 카메라 연결과 장애 시 유지는 최종 발표 현장 시연에서 확인 예정</li>
+      <li>R-03/R-04: 실제 장비에서 pose_fps/frame_fps 지속성</li>
+      <li>R-13: 활동성 게이트 반복 측정</li>
+      <li>R-17: 참가자/관객 화면 10Hz 수준 동기화 계측</li>
+      <li>R-20/R-22: LLM/TTS 실패 주입과 중복 음성 방지</li>
+      <li>R-26: 인터넷 차단 LAN 완주는 최종 발표 현장 시연에서 확인 예정</li>
+    </ul>
+    <p class="small">
+      이 리포트는 테스트 통과를 숨기지 않지만, 테스트 통과만으로 현장 요구가 입증됐다고 보지도 않는다.
+      최종 평가는 정식 제출 ZIP, 정식 시연영상, 실제 로그 포함 여부를 함께 봐야 한다.
+    </p>
+  </section>
+</main>
+</body>
 </html>
