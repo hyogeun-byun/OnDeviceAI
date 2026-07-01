@@ -1,6 +1,6 @@
 requirement_id=R-01
 evidence_slug=multi-camera-websocket
-generated_at=2026-06-30T07:27:11.023596+00:00
+generated_at=2026-07-01T02:35:20.338221+00:00
 unit_status=static_code_verified
 field_evidence_required=true
 field_reason=requires_two_or_more_camera_workers_and_one-worker-stop scenario
