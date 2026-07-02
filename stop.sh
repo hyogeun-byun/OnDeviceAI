@@ -73,12 +73,12 @@ terminate_port() {
 }
 
 # start.sh가 띄운 서버와 예전 run_server.sh 방식 모두 정리합니다.
-terminate_pattern "web server" "$ROOT/server/.venv/bin/python -m uvicorn app.main:app"
+terminate_pattern "web server" "$ROOT/src/program_server/.venv/bin/python -m uvicorn app.main:app"
 terminate_pattern "web server" "python3 -m uvicorn app.main:app"
 terminate_pattern "web server" "uvicorn app.main:app"
 
-# start-camera.sh와 camera-worker/scripts/run_worker.sh 방식 모두 정리합니다.
-terminate_pattern "camera worker" "$ROOT/camera-worker/.venv/bin/python -m app.main"
+# start-camera.sh와 src/program_camera_worker/scripts/run_worker.sh 방식 모두 정리합니다.
+terminate_pattern "camera worker" "$ROOT/src/program_camera_worker/.venv/bin/python -m app.main"
 terminate_pattern "camera worker" "python3 -m app.main"
 terminate_pattern "camera worker" "python -m app.main"
 

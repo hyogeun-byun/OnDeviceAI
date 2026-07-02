@@ -17,7 +17,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8000}"
 
-SERVER_VENV="$ROOT/server/.venv"
+SERVER_VENV="$ROOT/src/program_server/.venv"
 if [ -x "$SERVER_VENV/bin/python" ]; then
   SERVER_PY="$SERVER_VENV/bin/python"
 else
@@ -69,7 +69,7 @@ cat <<EOF
 
 EOF
 
-cd "$ROOT/server"
+cd "$ROOT/src/program_server"
 
 # 서버가 죽어도 자동으로 다시 띄움 (Ctrl+C 누르기 전까지)
 while [ "$STOP" != "1" ]; do

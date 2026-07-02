@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>이구동성 텔레파시</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@700;800;900&family=Inter:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}" />
+  </head>
+  <body data-player-count="{{ player_count }}">
+    <div class="aurora" aria-hidden="true">
+      <span class="orb orb-a"></span>
+      <span class="orb orb-b"></span>
+      <span class="orb orb-c"></span>
+    </div>
+
+    <main class="stage">
+      <header class="stage-top">
+        <div class="brand">
+          <span class="brand-mark">◈</span>
+          <span class="brand-name">이구동성 · 텔레파시</span>
+        </div>
+        <div class="round-pill" id="round-pill">READY</div>
+        <button class="restart-game-btn is-hidden" id="restart-game-btn" type="button" title="처음부터 다시 시작">
+          ↺ 처음부터
+        </button>
+        <button class="tts-toggle" id="tts-toggle" type="button" title="음성 켜기/끄기" aria-label="음성 토글">
+          🔊
+        </button>
+        <div class="conn" id="conn">연결 중…</div>
+      </header>
+
+      <!-- IDLE -->
+      <section class="screen screen-idle is-active" id="screen-idle">
+        <p class="idle-eyebrow">ON-DEVICE AI PARTY</p>
+        <h1 class="idle-title">여러분의<br /><em>텔레파시</em>는?</h1>
+        <p class="idle-desc">
+          제시어를 보고 <strong>똑같은 동작</strong>을 떠올리세요.<br />
+          서로의 모습은 볼 수 없습니다. 오직 <strong>게이지</strong>만이 진실을 말합니다.
+        </p>
+        <div class="player-dots" id="idle-players"></div>
+        <div class="team-input">
+          <label class="team-label" for="team-name">우리 팀 이름</label>
+          <input
+            id="team-name"
+            class="team-field"
+            type="text"
+            maxlength="40"
+            autocomplete="off"
+            placeholder="예) 텔레파시 4인방"
+          />
+        </div>
+        <div class="tpose-cue" id="tpose-cue">
+          <div class="tpose-icon">🙆</div>
+          <p class="tpose-headline">팀 이름을 적고 <em>T자 포즈</em>로 시작!</p>
+          <p class="tpose-sub">양팔을 옆으로 쭉 펴면 게임이 시작됩니다.</p>
+          <div class="tpose-progress"><span id="tpose-progress-fill"></span></div>
+        </div>
+        <button class="cta" id="manual-start-btn" type="button">▶ 바로 시작 (버튼)</button>
+        <p class="idle-hint">시작하면 AI MC 민수가 룰을 설명하고, 카테고리를 고른 뒤 ⏱ 단 1분 동안 제시어를 최대한 많이 맞혀요! (90점 통과)</p>
+
+
+        <section class="leaderboard-panel" id="leaderboard-panel">
+          <div class="leaderboard-head">
+            <h2 class="leaderboard-title">🏆 팀 리더보드</h2>
+            <button class="leaderboard-reset" id="leaderboard-reset" type="button">
+              초기화
+            </button>
+          </div>
+          <ol class="leaderboard-list" id="leaderboard-list"></ol>
+          <p class="leaderboard-empty" id="leaderboard-empty">
+            아직 기록이 없습니다. 첫 팀이 되어보세요!
+          </p>
+        </section>
+      </section>
+
+      <!-- INTRO (MC greets, then flies around the demo board explaining it) -->
+      <section class="screen screen-intro" id="screen-intro">
+        <p class="intro-eyebrow">🎤 AI MC 민수</p>
+        <h2 class="intro-title">곧 시작합니다!</h2>
+        <p class="intro-speech" id="intro-speech">민수가 인사 중…</p>
+
+        <!-- Demo board: a mini mock of the real play screen the MC points at -->
+        <div class="intro-demo" id="intro-demo">
+          <div class="demo-prompt" id="demo-prompt" data-tour="prompt">
+            <span class="demo-prompt-label">제시어</span>
+            <span class="demo-prompt-word">사과</span>
+          </div>
+          <div class="demo-gauge" id="demo-gauge" data-tour="gauge">
+            <svg viewBox="0 0 120 120"><circle class="demo-gauge-track" cx="60" cy="60" r="50"/><circle class="demo-gauge-fill" cx="60" cy="60" r="50"/></svg>
+            <span class="demo-gauge-val">87</span>
+          </div>
+          <div class="demo-hint" id="demo-hint" data-tour="hint">
+            <span class="demo-skel demo-skel-a">📷</span>
+            <span class="demo-skel demo-skel-b">📷</span>
+            <span class="demo-skel demo-skel-c">📷</span>
+            <small>카메라 힌트</small>
+          </div>
+        </div>
+
+        <div class="player-dots" id="intro-players"></div>
+        <p class="idle-hint">🙆 <em>T자 포즈</em>를 만들면 설명을 건너뛰어요! (한 번 참여해 본 팀은 바로 스킵)</p>
+        <button class="cta ghost" id="skip-intro-btn" type="button">⏭ 설명 건너뛰기 (버튼)</button>
+      </section>
+
+
+      <!-- CATEGORY (body-controlled category picker) -->
+      <section class="screen screen-category" id="screen-category">
+        <p class="cat-eyebrow">🙆 몸으로 카테고리 선택</p>
+        <h2 class="cat-title">카테고리를 골라요!</h2>
+        <p class="cat-speech" id="cat-speech"></p>
+        <div class="cat-cards" id="cat-cards"></div>
+        <div class="cat-help">
+          <span class="cat-help-item">⬅ 왼손 들기 <small>이전</small></span>
+          <span class="cat-help-item">오른손 들기 ➡ <small>다음</small></span>
+          <span class="cat-help-item">🙆 T자 <small>확정</small></span>
+        </div>
+        <div class="cat-confirm"><span id="cat-confirm-fill"></span></div>
+        <div class="cat-buttons">
+          <button class="cta ghost" id="cat-prev-btn" type="button">⬅ 이전</button>
+          <button class="cta" id="cat-confirm-btn" type="button">✅ 이 카테고리로 시작 (버튼)</button>
+          <button class="cta ghost" id="cat-next-btn" type="button">다음 ➡</button>
+        </div>
+      </section>
+
+      <!-- CAMERA TEST (3-camera framing check) -->
+      <section class="screen screen-camtest" id="screen-camtest">
+        <p class="cat-eyebrow">📷 카메라 테스트</p>
+        <h2 class="cat-title">이 포즈를 따라 해주세요!</h2>
+        <p class="camtest-sub">🙌 양손을 머리 위로 번쩍! · 접속된 카메라가 모두 통과하면 시작합니다</p>
+        <p class="camtest-mc" id="camtest-mc"></p>
+        <div class="camtest-cams" id="camtest-cams"></div>
+        <button class="cta ghost" id="camtest-skip-btn" type="button">⏭ 카메라 테스트 건너뛰기 (버튼)</button>
+      </section>
+
+      <!-- COUNTDOWN -->
+      <section class="screen screen-countdown" id="screen-countdown">
+        <div class="count-number" id="cd-number">3</div>
+        <p class="count-hint">자세 준비!</p>
+      </section>
+
+      <!-- PLAYING -->
+      <section class="screen screen-playing" id="screen-playing">
+        <div class="play-foot play-foot-top">
+          <div class="timer-bar"><span id="timer-fill"></span></div>
+          <div class="timer-text"><span id="timer-text">60.0</span>s</div>
+        </div>
+
+        <div class="play-head">
+          <p class="prompt-label">제시어</p>
+          <h2 class="prompt-word small" id="play-prompt">제시어</h2>
+        </div>
+
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 240 240">
+            <circle class="gauge-track" cx="120" cy="120" r="104" />
+            <circle class="gauge-fill" id="gauge-fill" cx="120" cy="120" r="104" />
+          </svg>
+          <div class="gauge-center">
+            <span class="gauge-value" id="gauge-value">0</span>
+            <span class="gauge-unit">텔레파시</span>
+          </div>
+        </div>
+
+        <p class="play-tagline" id="play-tagline">동작을 맞춰보세요…</p>
+
+        <div class="coach-panel" id="coach-panel">
+          <span class="coach-icon">🎤</span>
+          <span class="coach-text" id="coach-text">AI MC 민수가 코칭합니다…</span>
+        </div>
+
+        <p class="play-secret">🙈 서로의 동작은 보이지 않아요 — 하지만 10초 동안 못 맞히면 카메라 화면을 잠깐 보여드려요!</p>
+
+        <!-- Camera-image hint: flashes the live camera feeds big when a team is
+             stuck on a prompt for 10s, then fades out. -->
+        <div class="cam-hint-overlay" id="cam-hint-overlay" aria-hidden="true">
+          <p class="cam-hint-title">👀 힌트! 서로의 모습을 잠깐 보여드릴게요</p>
+          <div class="cam-hint-cams" id="cam-hint-cams"></div>
+        </div>
+
+        <!-- Timeout notice: shown for ~2s when a prompt runs out (20s), while the
+             sprint clock is paused, right before the next prompt loads. Shows the
+             3 camera shots so the team can see why it didn't match. -->
+        <div class="giveup-overlay" id="giveup-overlay" aria-hidden="true">
+          <p class="giveup-title">⏱️ 시간 초과! 아쉬운네요</p>
+          <p class="giveup-prompt" id="giveup-prompt">제시어</p>
+          <div class="giveup-shots" id="giveup-shots"></div>
+          <p class="giveup-sub">다음 제시어로 넘어갈게요…</p>
+        </div>
+
+        <!-- Prompt reveal: shows the new prompt big while the MC announces it
+             ("이번 제시어는 …"), clock paused, before the gauge game appears. -->
+        <div class="reveal-overlay" id="reveal-overlay" aria-hidden="true">
+          <p class="reveal-label">이번 제시어는!</p>
+          <p class="reveal-word" id="reveal-word">제시어</p>
+        </div>
+      </section>
+
+      <!-- TIME UP -->
+      <section class="screen screen-timeup" id="screen-timeup">
+        <div class="timeup-flash">
+          <p class="timeup-big">⏱️ 1분 시간 종료!</p>
+          <p class="timeup-sub">결과를 확인해볼까요?</p>
+        </div>
+      </section>
+
+      <!-- RESULT -->
+      <section class="screen screen-result" id="screen-result">
+        <p class="result-round" id="result-round">ROUND 1</p>
+        <p class="result-prompt" id="result-prompt">제시어</p>
+        <div class="result-score" id="result-score">0</div>
+        <div class="mc-bubble" id="result-comment">
+          <span class="mc-icon">🎤</span>
+          <span class="mc-text" id="mc-text">결과 집계 중…</span>
+        </div>
+        <p class="vision-caption">🤖 AI가 포착한 결정적 순간</p>
+        <div class="skeleton-strip" id="result-skeletons">
+          {% for i in range(player_count) %}
+          <div class="skel-card" id="result-skel-card-{{ i }}">
+            <canvas class="skel-canvas" id="result-skel-{{ i }}"></canvas>
+            <span class="skel-label">P{{ i + 1 }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- FINISHED -->
+      <section class="screen screen-final" id="screen-final">
+        <p class="final-eyebrow">FINAL TELEPATHY</p>
+        <p class="final-team" id="final-team"></p>
+        <div class="final-score" id="final-score">0</div>
+        <h2 class="final-title" id="final-title">—</h2>
+        <p class="final-summary" id="final-summary"></p>
+        <p class="final-rank" id="final-rank"></p>
+        <p class="final-report" id="final-report"></p>
+        <div class="report-cards" id="report-cards"></div>
+        <ul class="final-breakdown" id="final-breakdown"></ul>
+        <section class="leaderboard-panel final-leaderboard" id="final-leaderboard">
+          <h2 class="leaderboard-title">🏆 팀 리더보드</h2>
+          <ol class="leaderboard-list" id="final-leaderboard-list"></ol>
+          <p class="leaderboard-empty" id="final-leaderboard-empty">아직 기록이 없습니다.</p>
+        </section>
+        <div class="final-actions">
+          <button class="cta ghost" id="save-report-btn" type="button">📸 결과 이미지 저장</button>
+          <button class="cta" id="restart-btn" type="button">다시 하기</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- AI MC 민수 (2D animated host) -->
+    <div class="mc-stage" id="mc-stage">
+      <div class="mc-live-bubble" id="mc-live-bubble"><span id="mc-live-text"></span></div>
+      <div class="mc-avatar" id="mc-avatar" aria-hidden="true">
+        <svg viewBox="0 0 200 220" class="mc-svg" role="img" aria-label="AI MC 민수">
+          <g class="mc-mic">
+            <rect x="150" y="118" width="10" height="56" rx="5" fill="#cfd8ff" />
+            <circle cx="155" cy="112" r="16" fill="#161f44" stroke="#6c8bff" stroke-width="3" />
+            <circle cx="155" cy="112" r="7" fill="#6c8bff" />
+          </g>
+          <path d="M132 150 Q162 150 155 128" stroke="#6c8bff" stroke-width="9" fill="none" stroke-linecap="round" />
+          <rect x="55" y="120" width="90" height="82" rx="26" fill="#2a3566" stroke="#6c8bff" stroke-width="3" />
+          <g class="mc-head">
+            <line x1="100" y1="40" x2="100" y2="22" stroke="#6c8bff" stroke-width="4" />
+            <circle cx="100" cy="16" r="7" fill="#00ffc6" class="mc-antenna" />
+            <rect x="48" y="38" width="104" height="86" rx="30" fill="#33407a" stroke="#6c8bff" stroke-width="3" />
+            <rect x="60" y="58" width="80" height="42" rx="21" fill="#0d1230" />
+            <circle class="mc-eye" cx="84" cy="79" r="8" fill="#00ffc6" />
+            <circle class="mc-eye" cx="116" cy="79" r="8" fill="#00ffc6" />
+            <ellipse class="mc-mouth" cx="100" cy="108" rx="13" ry="4" fill="#00ffc6" />
+          </g>
+        </svg>
+        <span class="mc-name">AI MC 민수</span>
+      </div>
+    </div>
+
+    <script src="/static/js/game.js?v={{ asset_version }}"></script>
+    <!-- DEMO OVERLAY (remove this one line to delete): shows 3 small camera+skeleton
+         feeds top-right of /game. Active only when opened as /game?demo=1 -->
+    <script src="/static/js/demo-overlay.js?v={{ asset_version }}"></script>
+  </body>
+</html>

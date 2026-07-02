@@ -1,0 +1,5 @@
+# Aggregate dependency entrypoints for the evaluation package.
+# Install each program in its own virtual environment as documented in RUN.md.
+
+-r src/program_server/requirements.txt
+-r src/program_camera_worker/requirements.txt

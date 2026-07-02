@@ -1,0 +1,10 @@
+requirement_id=R-03
+evidence_slug=pose-fps-33-landmarks
+generated_at=2026-07-02T00:31:54.316296+00:00
+unit_status=metrics_jsonl_writer_verified
+unit_generated_metrics_jsonl=true
+field_evidence_required=true
+field_success_criteria=pose_fps>=9 and keypoints=33 in dashboard/server pose payload
+expected_runtime_logs=test-results/program_camera_worker/requirements/R-03-pose-fps-33-landmarks-camera-<CAMERA_NO>.log
+expected_metric_logs=test-results/program_camera_worker/requirements/R-03-pose-fps-33-landmarks-camera-<CAMERA_NO>-metrics.jsonl
+sample_existing_logs=log/camera-worker-camera_02-metrics.jsonl, log/camera-worker-camera_03-metrics.jsonl

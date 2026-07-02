@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OnDeviceAI Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+  </head>
+  <body data-visualize-metrics="{{ 'true' if visualize_metrics else 'false' }}">
+    <main class="dashboard">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">OnDeviceAI</p>
+          <h1>Camera Dashboard</h1>
+        </div>
+        <div class="server-status" id="server-status">Checking</div>
+      </header>
+
+      <section class="camera-grid" aria-label="Camera streams">
+        {% for camera_id in camera_ids %}
+        <article class="camera-panel">
+          <div class="camera-header">
+            <h2>{{ camera_id }}</h2>
+            <span class="camera-state" id="{{ camera_id }}-state">Waiting</span>
+          </div>
+          <div class="stream-box">
+            <img
+              src="/api/cameras/{{ camera_id }}/stream"
+              alt="{{ camera_id }} live stream"
+              class="stream-image"
+            />
+            <canvas class="pose-overlay" id="{{ camera_id }}-overlay"></canvas>
+          </div>
+          <dl class="pose-summary">
+            <div>
+              <dt>Pose</dt>
+              <dd id="{{ camera_id }}-pose-state">Waiting</dd>
+            </div>
+            <div>
+              <dt>Keypoints</dt>
+              <dd id="{{ camera_id }}-keypoint-count">0</dd>
+            </div>
+          </dl>
+          <section class="diag-panel" aria-label="{{ camera_id }} bone vectors">
+            <div class="diag-head">
+              <span>Bone vectors</span>
+              <strong id="{{ camera_id }}-visible">0/6</strong>
+            </div>
+            <div class="diag-angles" id="{{ camera_id }}-angles"></div>
+          </section>
+          {% if visualize_metrics %}
+          <section class="metrics-panel" aria-label="{{ camera_id }} performance metrics">
+            <div class="metrics-row">
+              <span>Frame FPS</span>
+              <strong id="{{ camera_id }}-frame-fps">0.0</strong>
+            </div>
+            <div class="meter">
+              <span id="{{ camera_id }}-frame-fps-bar"></span>
+            </div>
+            <div class="metrics-row">
+              <span>Pose FPS</span>
+              <strong id="{{ camera_id }}-pose-fps">0.0</strong>
+            </div>
+            <div class="meter">
+              <span id="{{ camera_id }}-pose-fps-bar"></span>
+            </div>
+            <dl class="metrics-grid">
+              <div>
+                <dt>Pose</dt>
+                <dd id="{{ camera_id }}-avg-pose-ms">0 ms</dd>
+              </div>
+              <div>
+                <dt>Upload</dt>
+                <dd id="{{ camera_id }}-avg-upload-ms">0 ms</dd>
+              </div>
+              <div>
+                <dt>Traffic</dt>
+                <dd id="{{ camera_id }}-upload-kb-s">0 KB/s</dd>
+              </div>
+              <div>
+                <dt>Frame</dt>
+                <dd id="{{ camera_id }}-avg-frame-kb">0 KB</dd>
+              </div>
+              <div>
+                <dt>Server FPS</dt>
+                <dd id="{{ camera_id }}-server-frame-fps">0.0</dd>
+              </div>
+              <div>
+                <dt>Failures</dt>
+                <dd id="{{ camera_id }}-failures">0</dd>
+              </div>
+            </dl>
+          </section>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </section>
+
+      <section class="group-diagnostics" aria-label="Telepathy score breakdown">
+        <div class="group-head">
+          <h2>Score breakdown</h2>
+          <span class="diag-note">live</span>
+        </div>
+        <div class="group-stats">
+          <div class="gstat"><span>Final score</span><strong id="diag-score">0.0</strong></div>
+          <div class="gstat"><span>Raw similarity</span><strong id="diag-similarity">0.0</strong></div>
+          <div class="gstat"><span>Activity gate</span><strong id="diag-activity">×0.00</strong></div>
+          <div class="gstat"><span>Expressiveness</span><strong id="diag-expressiveness">0.00</strong></div>
+          <div class="gstat"><span>Players ready</span><strong id="diag-ready">0</strong></div>
+        </div>
+        <div class="group-pairs" id="diag-pairs"></div>
+      </section>
+    </main>
+
+    <script src="/static/js/dashboard.js"></script>
+  </body>
+</html>

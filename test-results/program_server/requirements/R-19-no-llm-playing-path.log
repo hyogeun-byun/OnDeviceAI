@@ -1,0 +1,7 @@
+requirement_id=R-19
+evidence_slug=no-llm-playing-path
+generated_at=2026-07-02T00:31:54.575128+00:00
+unit_status=playing_path_static_verified
+field_evidence_required=optional
+field_success_criteria=server log has no LLM request during playing phase and pose_fps remains stable
+expected_runtime_logs=test-results/program_server/requirements/R-19-no-llm-playing-path-server.log, test-results/program_server/requirements/R-19-no-llm-playing-path-camera-<CAMERA_NO>-metrics.jsonl

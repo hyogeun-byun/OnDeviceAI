@@ -1,0 +1,386 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  background: #101216;
+  color: #f2f5f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #101216;
+}
+
+.dashboard {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #7fd1ae;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.12;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+.server-status,
+.camera-state {
+  border: 1px solid #2c3440;
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.server-status.online,
+.camera-state.online {
+  border-color: #348f69;
+  color: #7fd1ae;
+}
+
+.camera-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.camera-panel {
+  min-width: 0;
+  border: 1px solid #262d36;
+  border-radius: 8px;
+  background: #171a20;
+  overflow: hidden;
+}
+
+.camera-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #262d36;
+}
+
+.stream-box {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #0b0d10;
+}
+
+.stream-box::before {
+  content: "No frame yet";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #6f7a86;
+  font-size: 14px;
+}
+
+.stream-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pose-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pose-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: #262d36;
+}
+
+.pose-summary div {
+  min-width: 0;
+  padding: 12px 16px;
+  background: #171a20;
+}
+
+.pose-summary dt {
+  margin: 0 0 4px;
+  color: #7f8996;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pose-summary dd {
+  margin: 0;
+  color: #f2f5f8;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.metrics-panel {
+  padding: 14px 16px 16px;
+  border-top: 1px solid #262d36;
+}
+
+.metrics-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.metrics-row strong {
+  color: #f2f5f8;
+}
+
+.meter {
+  height: 8px;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: #0d1014;
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: #7fd1ae;
+  transition: width 180ms ease;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.metrics-grid div {
+  min-width: 0;
+}
+
+.metrics-grid dt {
+  margin: 0 0 4px;
+  color: #7f8996;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.metrics-grid dd {
+  margin: 0;
+  color: #f2f5f8;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 980px) {
+  .camera-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard {
+    padding: 18px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+}
+
+/* --- Score-breakdown diagnostics --- */
+.diag-panel {
+  padding: 12px 16px 14px;
+  border-top: 1px solid #262d36;
+}
+
+.diag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.diag-head strong {
+  color: #7fd1ae;
+}
+
+.diag-angles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.angle-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 9px;
+  border: 1px solid #2c3440;
+  border-radius: 6px;
+  background: #11141a;
+  color: #aeb8c4;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.angle-chip b {
+  color: #f2f5f8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.angle-chip.missing {
+  border-color: #3a2c2c;
+  color: #6f7a86;
+}
+
+.angle-chip.missing b {
+  color: #c2756f;
+}
+
+.group-diagnostics {
+  margin-top: 16px;
+  padding: 18px 20px 20px;
+  border: 1px solid #262d36;
+  border-radius: 8px;
+  background: #171a20;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.diag-note {
+  padding: 3px 8px;
+  border: 1px solid #348f69;
+  border-radius: 999px;
+  color: #7fd1ae;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.group-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.gstat {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #2c3440;
+  border-radius: 8px;
+  background: #11141a;
+}
+
+.gstat span {
+  display: block;
+  margin-bottom: 6px;
+  color: #7f8996;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gstat strong {
+  color: #f2f5f8;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.group-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pair-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid #2c3440;
+  border-radius: 999px;
+  background: #11141a;
+  color: #aeb8c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pair-chip b {
+  color: #7fd1ae;
+  font-variant-numeric: tabular-nums;
+}
+
+.pair-empty {
+  color: #6f7a86;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .group-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

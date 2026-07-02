@@ -6,38 +6,39 @@
 
 | 프로그램 | 위치 | 역할 |
 |---|---|---|
-| FastAPI 서버 | `server/` | 카메라 프레임/포즈 수신, 게임 상태머신, 브라우저 화면 제공 |
-| 카메라 워커 | `camera-worker/` | OpenCV 카메라 캡처, MediaPipe Pose 추론, 서버 WebSocket 전송 |
-| 브라우저 화면 | `server/app/web/` | `/`, `/game`, `/stage` 화면 |
+| FastAPI 서버 | `src/program_server/` | 카메라 프레임/포즈 수신, 게임 상태머신, 브라우저 화면 제공 |
+| 카메라 워커 | `src/program_camera_worker/` | OpenCV 카메라 캡처, MediaPipe Pose 추론, 서버 WebSocket 전송 |
+| 브라우저 화면 | `src/program_server/app/web/` | `/`, `/game`, `/stage` 화면 |
 
 ## 2. 라이브러리와 버전
 
 서버:
 
 ```bash
-server/requirements.txt
+src/program_server/requirements.txt
 ```
 
 카메라 워커:
 
 ```bash
-camera-worker/requirements.txt
+src/program_camera_worker/requirements.txt
 ```
 
 모든 Python 의존성은 `==` 버전 고정으로 관리한다.
+루트 `requirements.txt`는 위 두 파일을 참조하는 평가용 집계 파일이다.
 
 ## 3. 환경 변수와 설정
 
 서버 예시:
 
 ```bash
-cp server/.env.example server/.env
+cp src/program_server/.env.example src/program_server/.env
 ```
 
 카메라 워커 예시:
 
 ```bash
-cp camera-worker/.env.example camera-worker/.env
+cp src/program_camera_worker/.env.example src/program_camera_worker/.env
 ```
 
 주요 설정:
@@ -48,7 +49,7 @@ cp camera-worker/.env.example camera-worker/.env
 | `SERVER_URL` | camera-worker | 카메라 워커가 연결할 서버 LAN 주소 |
 | `CAMERA_ID` | camera-worker | 워커 고유 ID |
 | `FPS` | camera-worker | 영상 전송 FPS |
-| `LOG_DIR` | camera-worker | 실제 워커 실행 로그와 FPS JSONL 저장 위치, 기본 `../log` |
+| `LOG_DIR` | camera-worker | 실제 워커 실행 로그와 FPS JSONL 저장 위치, 기본 `../../log` |
 | `LOG_INTERVAL_SECONDS` | camera-worker | `frame_fps`, `pose_fps` 측정/기록 주기 |
 | `METRICS_LOG_ENABLED` | camera-worker | 실제 FPS JSONL 저장 여부 |
 | `POSE_MODEL_COMPLEXITY` | camera-worker | MediaPipe Pose complexity, `0`은 Lite |
@@ -91,7 +92,7 @@ EDGE_TTS_ENABLED=false
 서버:
 
 ```bash
-cd server
+cd src/program_server
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -101,7 +102,7 @@ pip check
 카메라 워커:
 
 ```bash
-cd camera-worker
+cd src/program_camera_worker
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -113,7 +114,7 @@ pip check
 서버:
 
 ```bash
-cd server
+cd src/program_server
 . .venv/bin/activate
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
@@ -121,7 +122,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 카메라 워커:
 
 ```bash
-cd camera-worker
+cd src/program_camera_worker
 . .venv/bin/activate
 python -m app.main
 ```
@@ -153,22 +154,22 @@ RECREATE_VENV=1 bash scripts/verify_devops.sh
 
 | 로그 | 내용 |
 |---|---|
-| `test-results/requirements/R-27-configuration-environment.log` | Python, pip, OS, Git 정보 |
-| `test-results/requirements/R-27-server-install.log` | 서버 venv 생성, requirements 설치, `pip check` |
-| `test-results/requirements/R-27-camera-worker-install.log` | 카메라 워커 venv 생성, requirements 설치, `pip check` |
-| `test-results/requirements/R-01-R-27-requirements-unittest.log` | R-01~R-27 요구사항 unittest 실행 결과 |
-| `test-results/requirements/R-26-offline-lan-server.log` | FastAPI 서버 실기동 로그 |
-| `test-results/requirements/R-26-offline-lan-server-health.log` | `/health` 응답 확인 |
-| `test-results/requirements/R-11-game-state-api.log` | `/api/game/state` 응답 확인 |
-| `test-results/requirements/R-01-multi-camera-websocket-camera-01.log` | 카메라 워커 WebSocket smoke 실행 로그 |
+| `test-results/program_server/requirements/R-27-configuration-environment.log` | Python, pip, OS, Git 정보 |
+| `test-results/program_server/requirements/R-27-server-install.log` | 서버 venv 생성, requirements 설치, `pip check` |
+| `test-results/program_camera_worker/requirements/R-27-camera-worker-install.log` | 카메라 워커 venv 생성, requirements 설치, `pip check` |
+| `test-results/program_server/requirements/R-01-R-27-requirements-unittest.log` | R-01~R-27 요구사항 unittest 실행 결과 |
+| `test-results/program_server/requirements/R-26-offline-lan-server.log` | FastAPI 서버 실기동 로그 |
+| `test-results/program_server/requirements/R-26-offline-lan-server-health.log` | `/health` 응답 확인 |
+| `test-results/program_server/requirements/R-11-game-state-api.log` | `/api/game/state` 응답 확인 |
+| `test-results/program_camera_worker/requirements/R-01-multi-camera-websocket-camera-01.log` | 카메라 워커 WebSocket smoke 실행 로그 |
 | `log/camera-worker-<CAMERA_ID>.log` | 실제 카메라 워커 실행 시 frame_fps/pose_fps 포함 |
 | `log/camera-worker-<CAMERA_ID>-metrics.jsonl` | 실제 카메라 FPS/포즈 FPS 검증용 JSONL |
-| `test-results/requirements/R-05-dashboard-camera-api.log` | 서버가 smoke pose/metrics를 수신했는지 확인 |
-| `test-results/requirements/R-26-offline-lan-checklist.log` | R-26 오프라인 LAN 현장 검증 체크리스트 |
-| `test-results/requirements/R-26-offline-lan-summary.log` | DevOps 6~8 기준 충족 근거 요약 |
+| `test-results/program_server/requirements/R-05-dashboard-camera-api.log` | 서버가 smoke pose/metrics를 수신했는지 확인 |
+| `test-results/program_camera_worker/requirements/R-26-offline-lan-checklist.log` | R-26 오프라인 LAN 현장 검증 체크리스트 |
+| `test-results/program_server/requirements/R-26-offline-lan-summary.log` | DevOps 6~8 기준 충족 근거 요약 |
 
 위 로그는 요구사항 ID 기준의 평가용 원본이며, 호환을 위해 동일 내용이 `log/*.log`에도 복사된다.
-실제 카메라 워커 로그가 `log/camera-worker-camera_01.log`처럼 이미 존재하면, 스크립트가 `test-results/requirements/R-03-pose-fps-33-landmarks-camera-01.log`처럼 요구사항 ID 기준 이름으로도 복사한다.
+실제 카메라 워커 로그가 `log/camera-worker-camera_01.log`처럼 이미 존재하면, 스크립트가 `test-results/program_camera_worker/requirements/R-03-pose-fps-33-landmarks-camera-01.log`처럼 요구사항 ID 기준 이름으로도 복사한다.
 
 ## 8. R-26 오프라인 LAN 검증
 
@@ -189,24 +190,26 @@ RECREATE_VENV=1 bash scripts/verify_devops.sh
 상세 체크리스트는 다음 파일에 있다.
 
 ```text
-test-results/offline-lan/R-26-offline-lan-guide.md
+test-results/program_camera_worker/offline-lan/R-26-offline-lan-guide.md
 ```
 
 ## 9. 제출 전 점검
 
 ```bash
-python3 -m unittest discover -s tests/requirements -p 'test_R_*.py'
+python3 -m unittest discover -s tests -p 'test_R_*.py'
 ```
 
 최종 제출 ZIP에는 최소한 다음을 포함한다.
 
-- `server/`
-- `camera-worker/`
+- `src/program_server/`
+- `src/program_camera_worker/`
 - `tests/`
 - `test-results/`
 - `log/`
+- `docs/requirements/`
 - `README.md`
 - `RUN.md`
-- `server/requirements.txt`
-- `camera-worker/requirements.txt`
+- `requirements.txt`
+- `src/program_server/requirements.txt`
+- `src/program_camera_worker/requirements.txt`
 - `.git/` 또는 `git_log.txt`

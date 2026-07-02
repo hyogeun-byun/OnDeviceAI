@@ -1,8 +1,0 @@
-requirement_id=R-20
-evidence_slug=llm-tts-fallback
-generated_at=2026-07-01T23:55:00.683756+00:00
-unit_status=fallback_paths_verified
-field_evidence_required=true
-field_success_criteria=LLM_ENABLED=false or TTS failure still reaches finished phase with visible static text/browser speech fallback
-expected_runtime_logs=test-results/requirements/R-20-llm-tts-fallback-server.log
-expected_settings=server/.env with LLM_ENABLED=false or EDGE_TTS_ENABLED=false

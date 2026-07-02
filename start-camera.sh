@@ -28,7 +28,7 @@ if [ -z "$SERVER_URL" ]; then
 fi
 SERVER_URL="${SERVER_URL%/}"
 
-WORKER_VENV="$ROOT/camera-worker/.venv"
+WORKER_VENV="$ROOT/src/program_camera_worker/.venv"
 if [ -x "$WORKER_VENV/bin/python" ]; then
   WORKER_PY="$WORKER_VENV/bin/python"
 else
@@ -37,6 +37,6 @@ fi
 
 echo "[camera] ${CAMERA_ID} (index ${CAMERA_INDEX}) → ${SERVER_URL}"
 echo "         종료하려면 Ctrl+C"
-cd "$ROOT/camera-worker"
+cd "$ROOT/src/program_camera_worker"
 CAMERA_ID="$CAMERA_ID" CAMERA_INDEX="$CAMERA_INDEX" SERVER_URL="$SERVER_URL" \
   exec "$WORKER_PY" -m app.main

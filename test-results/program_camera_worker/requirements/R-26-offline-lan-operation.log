@@ -1,0 +1,9 @@
+requirement_id=R-26
+evidence_slug=offline-lan-operation
+generated_at=2026-07-02T00:31:54.318293+00:00
+unit_status=offline_configuration_and_fallback_paths_verified
+field_evidence_required=true
+field_success_criteria=WAN disconnected, server, camera worker, and browser on same LAN, /game and /stage finish one 60-second sprint
+expected_runtime_logs=test-results/program_camera_worker/requirements/R-26-offline-lan-server.log
+expected_camera_logs=test-results/program_camera_worker/requirements/R-26-offline-lan-camera-<CAMERA_NO>.log
+guide=test-results/program_camera_worker/offline-lan/R-26-offline-lan-guide.md

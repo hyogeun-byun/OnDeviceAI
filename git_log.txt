@@ -1,0 +1,1658 @@
+commit f27534bce9ad680d8540e1835494cc8ade99b12e
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-02 09:01:53 +0900
+Subject: change log
+
+ ...54\244\221\352\260\204\353\260\234\355\221\234" | Bin 886666 -> 0 bytes
+ ...7\211\352\260\200\352\262\260\352\263\274.html" | 407 +++++++++++----------
+ .../requirements/R-01-multi-camera-websocket.log   |   2 +-
+ .../requirements/R-03-pose-fps-33-landmarks.log    |   2 +-
+ .../R-04-threaded-capture-frame-pose.log           |   2 +-
+ .../requirements/R-17-game-websocket-10hz-sync.log |   2 +-
+ .../requirements/R-19-no-llm-playing-path.log      |   2 +-
+ .../requirements/R-20-llm-tts-fallback.log         |   2 +-
+ .../requirements/R-22-speech-id-dedup-fallback.log |   2 +-
+ .../requirements/R-26-offline-lan-operation.log    |   2 +-
+ 10 files changed, 224 insertions(+), 199 deletions(-)
+
+commit 35a7ce5fd18ce1830bb4d6bec0a925f287fe5261
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-02 08:51:37 +0900
+Subject: modify docs name
+
+ ...6\274(3\341\204\220\341\205\265\341\206\267).mp4" | Bin 10452948 -> 0 bytes
+ .../2026-07-01 09-12-44.mp4"                         |   3 ---
+ .../2026-07-01 10-10-25.mp4"                         |   3 ---
+ ...4\354\213\234_\352\262\214\354\236\204_v1.1.pptx" | Bin 8602711 -> 0 bytes
+ ...\262\260\352\263\274\355\214\214\354\235\274.zip" | Bin
+ ...\213\234\354\227\260\354\230\201\354\203\201.mp4" |   3 +++
+ ...\354\244\221\352\260\204\353\260\234\355\221\234" | Bin
+ ...\244\221\352\260\204\353\260\234\355\221\234.pdf" | Bin
+ ...\265\234\354\242\205\353\260\234\355\221\234.pdf" | Bin
+ ...265\234\354\242\205\353\260\234\355\221\234.pptx" | Bin
+ 10 files changed, 3 insertions(+), 6 deletions(-)
+
+commit ac711c51e126e48b75484fdcc91695964b50ed35
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-02 08:48:22 +0900
+Subject: add final code freeze
+
+ ...2\262\260\352\263\274\355\214\214\354\235\274.zip" | Bin 0 -> 9665945 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+commit 132b89823e115d904f32f246fed8f0ac56b01014
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-07-02 08:46:13 +0900
+Subject: final ppt added
+
+ ...65\234\354\242\205\353\260\234\355\221\234.pdf" |  Bin 0 -> 6357756 bytes
+ ...5\234\354\242\205\353\260\234\355\221\234.pptx" |  Bin 0 -> 22459580 bytes
+ log/camera-worker-camera_03-metrics.jsonl          |  802 +++++++++++++++
+ log/camera-worker-camera_03.log                    | 1075 ++++++++++++++++++++
+ 4 files changed, 1877 insertions(+)
+
+commit d9edac99585b4da252f592692f2c98f38f2c2ab9
+Author: Dain Lee <76834485+manypeople-AI@users.noreply.github.com>
+Date: 2026-07-02 08:39:46 +0900
+Subject: Add files via upload
+
+ ...6\274(3\341\204\220\341\205\265\341\206\267).mp4" | Bin 0 -> 10452948 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+commit 6ee684c30cad9cf605e91e60c8ae454b6c76216b
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-01 17:02:01 +0900
+Subject: del files
+
+ ...04\211\341\205\263\341\204\220\341\205\245.pdf" | Bin 166888 -> 133641 bytes
+ ...4\211\341\205\263\341\204\220\341\205\245.pptx" | Bin 1298980 -> 1409390 bytes
+ ...05\246\341\204\216\341\205\256\341\206\257.pdf" | Bin 133641 -> 0 bytes
+ ...5\246\341\204\216\341\205\256\341\206\257.pptx" | Bin 1409390 -> 0 bytes
+ ...05\254\341\204\214\341\205\251\341\206\274.png" | Bin 1252673 -> 0 bytes
+ 5 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 3acbaf0c3b129be502b8d27966e840f603d70ebd
+Author: Dain Lee <76834485+manypeople-AI@users.noreply.github.com>
+Date: 2026-07-01 16:59:37 +0900
+Subject: Add files via upload
+
+ ...1\205\246\341\204\216\341\205\256\341\206\257.pdf" | Bin 0 -> 133641 bytes
+ ...\205\246\341\204\216\341\205\256\341\206\257.pptx" | Bin 0 -> 1409390 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit ca730ad76d2d91e9dc1d5c510b658b4b22b6ed43
+Author: Dain Lee <76834485+manypeople-AI@users.noreply.github.com>
+Date: 2026-07-01 16:55:32 +0900
+Subject: Add files via upload
+
+ ...1\204\211\341\205\263\341\204\220\341\205\245.pdf" | Bin 0 -> 166888 bytes
+ ...\204\211\341\205\263\341\204\220\341\205\245.pptx" | Bin 0 -> 1298980 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 41fdde8c2772f93789484a8a128bec3baaf31947
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-07-01 16:48:36 +0900
+Subject: Fix report scoring (20s/60s = 실패), best/worst selection, PNG overflow; add poster v2
+
+ poster/poster.html                  |   2 +-
+ poster/poster_v2.html               | 375 ++++++++++++++++++++++++++++++++++++
+ poster/poster_v2.pdf                | Bin 0 -> 917577 bytes
+ poster/poster_v2.png                | Bin 0 -> 524364 bytes
+ server/app/services/game_manager.py |  40 ++--
+ server/app/web/static/js/game.js    | 117 ++++++++---
+ 6 files changed, 490 insertions(+), 44 deletions(-)
+
+commit fa61cb822d625988a2f29110e3929acd780b5676
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-07-01 16:47:33 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 427b585e6ca8352fb2b439db74f73666a7224912
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-07-01 14:37:31 +0900
+Subject: poster update
+
+ ...1\205\254\341\204\214\341\205\251\341\206\274.png" | Bin 0 -> 1252673 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+commit 03fba8efbb3ea4c56500dd002dfb5de7c21b2c8c
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-01 13:44:51 +0900
+Subject: docs(submission): update evaluation artifacts and readme
+
+ README.md                                          |  280 ++++--
+ ...25\255_\353\252\205\354\204\270\354\204\234.md" |    6 +-
+ ...7\211\352\260\200\352\262\260\352\263\274.html" | 1016 +++++++++-----------
+ log/requirements-unittest.log                      |    2 +-
+ .../R-01-R-27-requirements-unittest.log            |    2 +-
+ .../requirements/R-01-multi-camera-websocket.log   |    2 +-
+ .../requirements/R-03-pose-fps-33-landmarks.log    |    2 +-
+ .../R-04-threaded-capture-frame-pose.log           |    2 +-
+ .../requirements/R-17-game-websocket-10hz-sync.log |    2 +-
+ .../requirements/R-19-no-llm-playing-path.log      |    2 +-
+ .../requirements/R-20-llm-tts-fallback.log         |    2 +-
+ .../requirements/R-22-speech-id-dedup-fallback.log |    2 +-
+ .../requirements/R-26-offline-lan-operation.log    |    2 +-
+ test-results/requirements/unittest-results.txt     |    2 +-
+ tests/requirements/test_R_11.py                    |    5 +-
+ tests/requirements/test_R_14.py                    |    6 +-
+ tests/requirements/test_R_15.py                    |    5 +-
+ 17 files changed, 664 insertions(+), 676 deletions(-)
+
+commit b6ac54a40aa8b6da46418b27f5703dceaeefd633
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-01 10:27:10 +0900
+Subject: add video
+
+ .gitattributes                                                         | 1 +
+ .../2026-07-01 09-12-44.mp4"                                           | 3 +++
+ .../2026-07-01 10-10-25.mp4"                                           | 3 +++
+ 3 files changed, 7 insertions(+)
+
+commit 44b7bd3f01274ab5eec41e21d9c8dad0abfd88a2
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-07-01 10:30:41 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit f8038e5b86f3d89eae4298d7719e563c3e442d3d
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-07-01 10:30:01 +0900
+Subject: Fix timeup wrap, best/worst report, camtest snapshot polling
+
+ server/app/services/game_manager.py     |  47 ++++-
+ server/app/services/game_narrator.py    |  14 +-
+ server/app/web/static/css/dashboard.css |   4 +-
+ server/app/web/static/css/game.css      |  46 ++++-
+ server/app/web/static/js/game.js        | 306 +++++++++++++++++++++++---------
+ server/app/web/templates/game.html      |  10 +-
+ server/app/web/templates/index.html     |   6 +
+ server/app/web/templates/stage.html     |   2 +-
+ 8 files changed, 336 insertions(+), 99 deletions(-)
+
+commit 3c645f00a17d2b90e534ab6cbccf3ba765a79ad2
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-07-01 10:18:50 +0900
+Subject: add cam2 log
+
+ log/camera-worker-camera_02-metrics.jsonl |   869 ++
+ log/camera-worker-camera_02.log           | 20462 ++++++++++++++++++++++++++++
+ 2 files changed, 21331 insertions(+)
+
+commit d13414c603d76509b08d7e18c2ba258f4ca4654c
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-07-01 09:20:10 +0900
+Subject: add new ppt v1.1
+
+ ...354\213\234_\352\262\214\354\236\204_v1.1.pptx" |   Bin 0 -> 8602711 bytes
+ log/camera-worker-camera_03-metrics.jsonl          |   196 +
+ log/camera-worker-camera_03.log                    | 11551 +++++++++++++++++++
+ 3 files changed, 11747 insertions(+)
+
+commit ef50efb65e12a06046e697e1cbdccb102849ca80
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 16:47:21 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit b2fdca9cc0075217aaa95075890f4ef33c960b7e
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 16:46:47 +0900
+Subject: feat(game): pass/fail per keyword, full-screen overlays, MC repositioning, longer hint, demo overlay
+
+ server/app/services/game_manager.py      |  43 ++++++--
+ server/app/services/game_narrator.py     |  13 ++-
+ server/app/web/static/css/game.css       | 141 +++++++++++++++++++-----
+ server/app/web/static/js/demo-overlay.js | 183 +++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js         |  93 +++++++++-------
+ server/app/web/templates/game.html       |  15 ++-
+ 6 files changed, 398 insertions(+), 90 deletions(-)
+
+commit 0fad569c87448e0d9c7e6d1d7a5fcf9dbda288d0
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-30 16:26:20 +0900
+Subject: test(submission): add requirement and devops verification
+
+ RUN.md                                             |  27 +-
+ ...25\255_\353\252\205\354\204\270\354\204\234.md" |  31 +-
+ ...7\211\352\260\200\352\262\260\352\263\274.html" | 375 ++++++++++-----------
+ log/requirements-unittest.log                      |   4 +-
+ scripts/verify_devops.sh                           | 114 +++++--
+ test-results/offline-lan/R-26-offline-lan-guide.md |  25 +-
+ .../R-01-R-27-requirements-unittest.log            |   5 +
+ .../requirements/R-01-multi-camera-websocket.log   |   9 +
+ .../requirements/R-03-pose-fps-33-landmarks.log    |  10 +
+ .../R-04-threaded-capture-frame-pose.log           |   9 +
+ .../requirements/R-17-game-websocket-10hz-sync.log |   9 +
+ .../requirements/R-19-no-llm-playing-path.log      |   7 +
+ .../requirements/R-20-llm-tts-fallback.log         |   8 +
+ .../requirements/R-22-speech-id-dedup-fallback.log |   7 +
+ .../requirements/R-26-offline-lan-operation.log    |   9 +
+ test-results/requirements/unittest-results.txt     |   2 +-
+ tests/requirements/_helpers.py                     |  20 ++
+ tests/requirements/test_R_01.py                    |  12 +-
+ tests/requirements/test_R_03.py                    |  13 +-
+ tests/requirements/test_R_04.py                    |  12 +-
+ tests/requirements/test_R_09.py                    |  22 +-
+ tests/requirements/test_R_11.py                    |  19 +-
+ tests/requirements/test_R_14.py                    |  19 +-
+ tests/requirements/test_R_15.py                    |  24 +-
+ tests/requirements/test_R_17.py                    |  12 +-
+ tests/requirements/test_R_19.py                    |  10 +-
+ tests/requirements/test_R_20.py                    |  11 +-
+ tests/requirements/test_R_22.py                    |  10 +-
+ tests/requirements/test_R_24.py                    |  15 +-
+ tests/requirements/test_R_26.py                    |  21 +-
+ 30 files changed, 575 insertions(+), 296 deletions(-)
+
+commit ea9882da0f966c20dd49e2bda078fd7dec9c4555
+Author: jongmin <jijongmin0617@gmail.com>
+Date: 2026-06-30 15:14:39 +0900
+Subject: logs: add camera-worker camera_01 run logs
+
+ log/camera-worker-camera_01-metrics.jsonl |  2479 ++
+ log/camera-worker-camera_01.log           | 46270 ++++++++++++++++++++++++++++
+ 2 files changed, 48749 insertions(+)
+
+commit 3dcd736a59f66549be4e844d23adab4edfb65598
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-30 15:14:30 +0900
+Subject: add cam log
+
+ log/camera-worker-camera_02-metrics.jsonl | 151 ++++++++++++++++++++++++
+ log/camera-worker-camera_02.log           | 186 ++++++++++++++++++++++++++++++
+ 2 files changed, 337 insertions(+)
+
+commit 85a1587a237e7e63b1d2caa6558766e90d99abdd
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-06-30 15:13:37 +0900
+Subject:  log update
+
+ log/camera-worker-camera_03-metrics.jsonl |  1005 +
+ log/camera-worker-camera_03.log           | 43402 ++++++++++++++++++++++++++++
+ 2 files changed, 44407 insertions(+)
+
+commit 4264bd93e678143f7e91264a87626a610be64f77
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 11:27:15 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit e0fca20f6b8a35fb3998c9195e2d6d92df69a676
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 11:26:55 +0900
+Subject: Final screen summary, no-repeat prompts, robust bigger report, resilient leaderboard
+
+ server/app/services/game_manager.py | 43 ++++++++++++++++++++++++++-----------
+ server/app/web/static/css/game.css  | 26 ++++++++++++++--------
+ server/app/web/static/js/game.js    | 22 +++++++++++++++++--
+ server/app/web/templates/game.html  |  1 +
+ 4 files changed, 69 insertions(+), 23 deletions(-)
+
+commit 7fa1edfe53a45c5a8db151627b3c8bc7e1a26832
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-06-30 11:17:21 +0900
+Subject: Add presentation pdf
+
+ ...44\221\352\260\204\353\260\234\355\221\234.pdf" |  Bin 0 -> 4757300 bytes
+ log/camera-worker-camera_03-metrics.jsonl          |  297 +
+ log/camera-worker-camera_03.log                    | 6546 ++++++++++++++++++++
+ 3 files changed, 6843 insertions(+)
+
+commit 88e8711b5b545e75ccfb64b7daad8eff4909f528
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 11:16:28 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit b7a2472c46ec98b6170313a6b4a14f4b9fe11719
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 11:15:53 +0900
+Subject: Fix MJPEG stream connection leak that froze skeleton+MC+report images; end game after 5 clears
+
+ server/app/services/game_manager.py |  8 ++++++-
+ server/app/web/static/js/game.js    | 42 ++++++++++++++++++++++++++++++++++---
+ 2 files changed, 46 insertions(+), 4 deletions(-)
+
+commit 6809b0c7d44e59f4cb30ddf6515e795f1c7bbf19
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-30 11:12:11 +0900
+Subject: add benchmark
+
+ .mplconfig/fontlist-v3.11.0.json                  | 6163 +++++++++++++++++++++
+ scratch/bkp_output/benchmark_20260625_164643.log  |   40 -
+ scratch/bkp_output/benchmark_20260626_114020.json |   70 +
+ scratch/bkp_output/benchmark_20260626_114020.log  |   43 +
+ scratch/bkp_output/benchmark_20260626_114253.json |   87 +
+ scratch/bkp_output/benchmark_20260626_114253.log  |   48 +
+ scratch/bkp_output/mediapipe_full_20ms.mp4        |  Bin 0 -> 2339764 bytes
+ scratch/bkp_output/mediapipe_full_44ms.mp4        |  Bin 2389718 -> 0 bytes
+ scratch/bkp_output/mediapipe_heavy_68ms.mp4       |  Bin 0 -> 2241968 bytes
+ scratch/bkp_output/mediapipe_lite_14ms.mp4        |  Bin 0 -> 2284700 bytes
+ scratch/bkp_output/mediapipe_lite_30ms.mp4        |  Bin 2335549 -> 0 bytes
+ scratch/bkp_output/movenet_lightning_19ms.mp4     |  Bin 2445684 -> 0 bytes
+ scratch/bkp_output/movenet_lightning_5ms.mp4      |  Bin 0 -> 2375169 bytes
+ scratch/bkp_output/movenet_thunder_14ms.mp4       |  Bin 0 -> 2332450 bytes
+ scratch/bkp_output/movenet_thunder_48ms.mp4       |  Bin 2408352 -> 0 bytes
+ scratch/compare_models.py                         |  202 +-
+ 16 files changed, 6604 insertions(+), 49 deletions(-)
+
+commit 4a7b3e37e6b67f48b1495f0fbe3c7614dab1f4c4
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-06-30 10:48:37 +0900
+Subject: Add presentation
+
+ ...4\244\221\352\260\204\353\260\234\355\221\234.pptx" | Bin 0 -> 886666 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+commit 15a2e8934056f73dc254d47c6c2aeeba60e97c92
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 10:41:12 +0900
+Subject: Harden game loop against freezes; lower category arm-raise angle; show selected category clearly
+
+ server/app/main.py                     | 19 ++++++++++++--
+ server/app/services/game_manager.py    | 13 +++++++---
+ server/app/services/pose_similarity.py |  8 +++++-
+ server/app/web/static/css/game.css     | 46 ++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js       | 35 +++++++++++++++++++++++---
+ 5 files changed, 111 insertions(+), 10 deletions(-)
+
+commit 750d85320e8447c5e45eb7cf87f5ba93ff788922
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 10:28:21 +0900
+Subject: add prompt-reveal step: MC announces each new prompt big (이번 제시어는 …) before the gauge game; clock paused during reveal+timeout notice
+
+ server/app/services/game_manager.py  | 76 ++++++++++++++++++++++++++++--------
+ server/app/services/game_narrator.py |  9 +++++
+ server/app/web/static/css/game.css   | 48 +++++++++++++++++++++++
+ server/app/web/static/js/game.js     | 26 ++++++++++++
+ server/app/web/templates/game.html   |  7 ++++
+ 5 files changed, 149 insertions(+), 17 deletions(-)
+
+commit e09f5c4009195e39530d90b36ff0a292fb955cf3
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 10:12:16 +0900
+Subject: fix MC going silent from camtest onward: prewarm static neural-TTS lines at startup (parallel), cache audio by text, and unlock browser autoplay on first gesture
+
+ server/app/main.py                   | 21 ++++++++++
+ server/app/services/game_narrator.py | 38 +++++++++++++++++
+ server/app/services/speech_audio.py  | 81 +++++++++++++++++++++++++++++++++---
+ server/app/web/static/js/game.js     | 36 ++++++++++++++++
+ 4 files changed, 171 insertions(+), 5 deletions(-)
+
+commit 85e3f182b41217df28a87a7438d8714277d1d260
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:58:44 +0900
+Subject: add 20s timeout transition: pause clock + 'next prompt' notice before swapping prompt
+
+ server/app/services/game_manager.py  | 34 +++++++++++++++++++++++---
+ server/app/services/game_narrator.py | 13 ++++++++++
+ server/app/web/static/css/game.css   | 47 ++++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js     | 17 +++++++++++++
+ server/app/web/templates/game.html   |  8 ++++++
+ 5 files changed, 115 insertions(+), 4 deletions(-)
+
+commit 0c45fc26c02c0f1f44ec1d85ba55227704780aeb
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:49:30 +0900
+Subject: tour: drop duplicate 10s hint mention from ready step
+
+ server/app/services/game_narrator.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2992d6191ce29e4a37983f7a8804a846ce5149a6
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:48:34 +0900
+Subject: tour: explain 20s auto-advance to next prompt in the final ready step
+
+ server/app/services/game_narrator.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 38fb97c78bef3b33f8125e4c23cd18df4a1ffc91
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:45:25 +0900
+Subject: move countdown timer bar above the prompt and make it larger/clearer
+
+ server/app/web/static/css/game.css | 14 ++++++++++++++
+ server/app/web/templates/game.html | 10 +++++-----
+ 2 files changed, 19 insertions(+), 5 deletions(-)
+
+commit 3fa1004deef98ce8062e4371a5c90998631fd81a
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:44:05 +0900
+Subject: remove merged pose-sync skeleton hint (40점↓); intro tour now explains the 10s camera-image hint
+
+ server/app/services/game_narrator.py |   2 +-
+ server/app/web/static/css/game.css   |  23 -------
+ server/app/web/static/js/game.js     | 130 ++---------------------------------
+ server/app/web/templates/game.html   |  14 ++--
+ 4 files changed, 10 insertions(+), 159 deletions(-)
+
+commit 919a5d0220769417ecc91c68de61f4295da01b27
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:40:52 +0900
+Subject: show MC dialogue text on camtest/confirm screen; update on-screen rules for 60s sprint, 90pt pass, 10s camera hint
+
+ server/app/web/static/css/game.css |  9 +++++++++
+ server/app/web/static/js/game.js   | 10 ++++++++++
+ server/app/web/templates/game.html |  7 ++++---
+ 3 files changed, 23 insertions(+), 3 deletions(-)
+
+commit f2f1cd1a130183f6fe189f7f0302e01e0bfe0a8e
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:26:08 +0900
+Subject: pass score 90; per-prompt 10s big camera-image hint flash, 20s give-up to next prompt
+
+ server/app/services/game_manager.py  | 38 ++++++++++++-------
+ server/app/services/game_narrator.py |  4 +-
+ server/app/web/static/css/game.css   | 71 ++++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js     | 41 ++++++++++++++++++---
+ server/app/web/templates/game.html   |  7 ++++
+ 5 files changed, 141 insertions(+), 20 deletions(-)
+
+commit a953af29b0dc398179575f36fdd4c39e28955914
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-30 09:05:54 +0900
+Subject: camtest: linger 1.4s on full pass so the green 통과 overlay/color is broadcast before moving to completion
+
+ server/app/services/game_manager.py  | 36 +++++++++++++++++++++++++++++++++---
+ server/app/services/game_narrator.py | 21 ++++++++++++++-------
+ server/app/web/static/js/game.js     |  8 +++++++-
+ 3 files changed, 54 insertions(+), 11 deletions(-)
+
+commit 8a9fe151d33894258a5da5d0c6c8b3de24300eda
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 17:24:58 +0900
+Subject: 60s sprint mode: clear as many prompts as possible, 10s skeleton hint flash, leaderboard by match count (tiebreak time)
+
+ server/app/services/game_manager.py  | 130 ++++++++++++++++++++++++-----------
+ server/app/services/game_narrator.py |  29 ++++----
+ server/app/services/leaderboard.py   |  19 +++--
+ server/app/web/static/js/game.js     |  16 +++--
+ 4 files changed, 130 insertions(+), 64 deletions(-)
+
+commit 6b9b3cf933ce2748719c7be4161d0210302e2f97
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 17:13:43 +0900
+Subject: feat: round clears early at 95, extends to 15s cap, longer result view; explain new rule in tour
+
+ server/app/services/game_manager.py  | 14 +++++++++-----
+ server/app/services/game_narrator.py |  4 ++--
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+commit cfad5580fa0365eba159b465d646baa42e0c7100
+Author: jongmin <jijongmin0617@gmail.com>
+Date: 2026-06-29 16:56:32 +0900
+Subject: game: expand category prompts and fix first-round prompt order
+
+ server/app/services/game_narrator.py | 53 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 47 insertions(+), 6 deletions(-)
+
+commit eeda563ac8494d50df2e0a9144bc83306b21f0e4
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:56:09 +0900
+Subject: fix: stay on camera-test screen through confirm (no category re-show); announce category at camtest start, completion before countdown
+
+ server/app/services/game_manager.py  |  2 +-
+ server/app/services/game_narrator.py | 19 +++++++++----------
+ server/app/web/static/js/game.js     |  2 +-
+ 3 files changed, 11 insertions(+), 12 deletions(-)
+
+commit 3a684eacb9f6743e880ea03aefd919fe19a0a076
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:50:49 +0900
+Subject: style: enlarge camtest sample-pose caption
+
+ server/app/web/static/css/game.css | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 28e2e5ae1af3165ec1931147b3c51d05ae4c4dc0
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:49:24 +0900
+Subject: feat: camtest passes when all connected cams ok; use cheer (만세) sample pose instead of T-pose
+
+ server/app/services/game_manager.py    | 18 ++++++++++++------
+ server/app/services/game_narrator.py   |  4 ++--
+ server/app/services/pose_similarity.py | 22 ++++++++++++++++++++++
+ server/app/web/static/css/game.css     | 18 ++++++++++++++++++
+ server/app/web/static/js/game.js       |  1 +
+ server/app/web/templates/game.html     |  4 ++--
+ 6 files changed, 57 insertions(+), 10 deletions(-)
+
+commit d5285116b71c9df780261c1c238fe8396bb263d4
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:40:11 +0900
+Subject: feat: enlarge round-result camera cards; backfill missing keypoints from last good frame
+
+ server/app/services/stream_manager.py | 36 +++++++++++++++++++++++++++++++++++
+ server/app/web/static/css/game.css    |  4 ++--
+ 2 files changed, 38 insertions(+), 2 deletions(-)
+
+commit 61fcb39e1e7fe3ebfb04291d6ca079ec7aad06eb
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:33:16 +0900
+Subject: merge origin/main
+
+commit e007ac6c5e2be6a5f2ff410b69e00237bfba1d12
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 16:32:05 +0900
+Subject: feat: camera-test phase (3 cams, T-pose pass + chime) after category; widen T-pose threshold
+
+ server/app/api/game_routes.py          |  8 +++++
+ server/app/services/game_manager.py    | 55 +++++++++++++++++++++++++++++-
+ server/app/services/game_narrator.py   |  9 +++++
+ server/app/services/pose_similarity.py |  4 +--
+ server/app/web/static/css/game.css     | 62 ++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js       | 54 ++++++++++++++++++++++++++++-
+ server/app/web/templates/game.html     |  9 +++++
+ 7 files changed, 197 insertions(+), 4 deletions(-)
+
+commit f32210cfa24f366d68aa144fb3d0502f9946847c
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 16:13:30 +0900
+Subject: feat(camera-worker): log actual fps metrics
+
+ RUN.md                                             | 12 +++++
+ ...7\211\352\260\200\352\262\260\352\263\274.html" |  2 +-
+ camera-worker/.env.example                         |  3 ++
+ camera-worker/README.md                            | 10 ++++-
+ camera-worker/app/config.py                        |  6 +++
+ camera-worker/app/main.py                          | 51 ++++++++++++++++++++--
+ camera-worker/app/metrics.py                       | 22 ++++++++++
+ config/camera-worker.example.yaml                  |  4 ++
+ log/devops-summary.log                             |  1 +
+ log/requirements-unittest.log                      |  5 +--
+ scripts/verify_devops.sh                           |  1 +
+ test-results/requirements/unittest-results.txt     |  4 +-
+ tests/requirements/_helpers.py                     |  7 ++-
+ tests/requirements/test_R_03.py                    | 37 +++++++++++++++-
+ tests/requirements/test_R_27.py                    | 10 ++++-
+ 15 files changed, 162 insertions(+), 13 deletions(-)
+
+commit fdaa096a6b0a41c8ad4cd6983710f1e85ea8bda5
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 15:32:45 +0900
+Subject: test(submission): add requirement and devops verification
+
+ README.md                                          |  14 +-
+ RUN.md                                             | 197 +++++++++++++++++++++
+ ...25\255_\353\252\205\354\204\270\354\204\234.md" |  11 +-
+ ...7\211\352\260\200\352\262\260\352\263\274.html" |  74 ++++----
+ camera-worker/.env.example                         |   2 +-
+ camera-worker/README.md                            |   9 +-
+ camera-worker/requirements.txt                     |   2 +-
+ camera-worker/scripts/verify_worker_smoke.py       | 113 ++++++++++++
+ log/00-environment.log                             |  26 +++
+ log/camera-api-smoke.log                           |  35 ++++
+ log/camera-worker-install.log                      | 181 +++++++++++++++++++
+ log/camera-worker-reinstall.log                    |  42 +++++
+ log/camera-worker-run.log                          |  12 ++
+ log/devops-summary.log                             |   9 +
+ log/offline-lan-checklist.log                      |  44 +++++
+ log/requirements-unittest.log                      |   8 +
+ log/server-game-state.log                          |  59 ++++++
+ log/server-health.log                              |   5 +
+ log/server-install.log                             | 119 +++++++++++++
+ log/server-run.log                                 |  24 +++
+ scripts/verify_devops.sh                           | 189 ++++++++++++++++++++
+ server/README.md                                   |  14 +-
+ server/app/web/static/js/dashboard.js              |   8 +-
+ server/app/web/templates/index.html                |   2 +-
+ test-results/offline-lan/R-26-offline-lan-guide.md |  91 ++++++++++
+ test-results/requirements/unittest-results.txt     |   5 +
+ tests/requirements/_helpers.py                     |  55 ++++++
+ tests/requirements/test_R_01.py                    |  24 +++
+ tests/requirements/test_R_02.py                    |  20 +++
+ tests/requirements/test_R_03.py                    |  28 +++
+ tests/requirements/test_R_04.py                    |  22 +++
+ tests/requirements/test_R_05.py                    |  30 ++++
+ tests/requirements/test_R_06.py                    |  21 +++
+ tests/requirements/test_R_07.py                    |  27 +++
+ tests/requirements/test_R_08.py                    |  24 +++
+ tests/requirements/test_R_09.py                    |  17 ++
+ tests/requirements/test_R_10.py                    |  30 ++++
+ tests/requirements/test_R_11.py                    |  24 +++
+ tests/requirements/test_R_12.py                    |  32 ++++
+ tests/requirements/test_R_13.py                    |  15 ++
+ tests/requirements/test_R_14.py                    |  26 +++
+ tests/requirements/test_R_15.py                    |  25 +++
+ tests/requirements/test_R_16.py                    |  29 +++
+ tests/requirements/test_R_17.py                    |  19 ++
+ tests/requirements/test_R_18.py                    |  27 +++
+ tests/requirements/test_R_19.py                    |  24 +++
+ tests/requirements/test_R_20.py                    |  27 +++
+ tests/requirements/test_R_21.py                    |  27 +++
+ tests/requirements/test_R_22.py                    |  26 +++
+ tests/requirements/test_R_23.py                    |  21 +++
+ tests/requirements/test_R_24.py                    |  27 +++
+ tests/requirements/test_R_25.py                    |  28 +++
+ tests/requirements/test_R_26.py                    |  33 ++++
+ tests/requirements/test_R_27.py                    |  30 ++++
+ 54 files changed, 1964 insertions(+), 69 deletions(-)
+
+commit f198143b41a1f7b9a70746418be08cd234d5be58
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 15:22:54 +0900
+Subject: feat: MC bridge line before final report; edge-triggered category step (no runaway scroll)
+
+ server/app/services/game_manager.py  | 17 +++++++++++++----
+ server/app/services/game_narrator.py |  8 ++++++++
+ 2 files changed, 21 insertions(+), 4 deletions(-)
+
+commit 3c2606c3520762f54c093c77dbf65bd1ca5c5ed7
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 15:06:23 +0900
+Subject: style: shrink temporary fallback buttons so gestures stay primary
+
+ server/app/web/static/css/game.css | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+commit 49d88d728334fef6fb60fe076fc96359d055d03a
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 15:03:52 +0900
+Subject: fix: category screen hidden after skip (shared node toggle bug)
+
+ server/app/web/static/js/game.js | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit d3364aba938bbb56fe94b4a9524e547bf1d568e7
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 15:02:51 +0900
+Subject: feat: announce T-pose skip in MC opening line
+
+ server/app/services/game_narrator.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit a99c479dec4de05c06a2e7763fe64523ba2870f3
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 15:00:34 +0900
+Subject: feat: T-pose skip intro + fallback buttons (start/category/skip), trim hint line
+
+ server/app/api/game_routes.py        | 25 ++++++++++++++++
+ server/app/services/game_manager.py  | 55 +++++++++++++++++++++++++++++++-----
+ server/app/services/game_narrator.py |  2 +-
+ server/app/web/static/css/game.css   |  7 +++++
+ server/app/web/static/js/game.js     | 21 ++++++++++++++
+ server/app/web/templates/game.html   |  9 +++++-
+ 6 files changed, 110 insertions(+), 9 deletions(-)
+
+commit 79c0a9602315be9a370d35f51a2f16660f5d3e36
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:53:26 +0900
+Subject: feat: sequential category-confirm lines then 3,2,1; advance each spoken step on audio end (shorter gaps)
+
+ server/app/services/game_manager.py  | 41 +++++++++++++++++++++++++++++++++---
+ server/app/services/game_narrator.py |  9 ++++++++
+ server/app/web/static/js/game.js     | 12 ++++++++---
+ 3 files changed, 56 insertions(+), 6 deletions(-)
+
+commit 092902844f254076d9fc2dcf339177b0f73106f0
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:47:06 +0900
+Subject: feat: spoken category-confirm line before countdown; lower MC at prompt; tighter step pacing
+
+ server/app/services/game_manager.py  | 12 +++++++-----
+ server/app/services/game_narrator.py |  7 +++++++
+ server/app/web/static/css/game.css   |  6 +++---
+ server/app/web/static/js/game.js     |  2 +-
+ 4 files changed, 18 insertions(+), 9 deletions(-)
+
+commit ceac43fcac6b0b6b2e2141b9993de5b3a57c5382
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:41:07 +0900
+Subject: fix: category line as small subtitle (no bubble); clearer hint copy; MC beside prompt
+
+ server/app/services/game_narrator.py |  2 +-
+ server/app/web/static/css/game.css   | 14 +++++++++++---
+ server/app/web/static/js/game.js     |  7 +++++--
+ server/app/web/templates/game.html   |  1 +
+ 4 files changed, 18 insertions(+), 6 deletions(-)
+
+commit 7c99e0ba5b947df4687039f59cf2dc83e450de24
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:36:55 +0900
+Subject: fix: hide MC bubble during intro tour so it never covers demo/gauge
+
+ server/app/web/static/js/game.js | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit e6f5ce0faf25f90c4fb479751df841e023b4f8f4
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:33:50 +0900
+Subject: feat: explain rules before category pick; remove crowded how-to list
+
+ server/app/services/game_manager.py  | 12 +++++++++---
+ server/app/services/game_narrator.py |  6 ++----
+ server/app/web/templates/game.html   | 10 ++--------
+ 3 files changed, 13 insertions(+), 15 deletions(-)
+
+commit 8c8aeaa3881b70c4ee80f96c535d8b5ba2e8ad26
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:29:01 +0900
+Subject: feat: guided intro tour (MC flies to prompt/gauge/hint then ready); slow first-word reveal
+
+ server/app/services/game_manager.py  | 37 +++++++++++++++++++++++--
+ server/app/services/game_narrator.py | 31 +++++++++++++++++----
+ server/app/web/static/css/game.css   | 53 ++++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js     | 22 +++++++++++++--
+ server/app/web/templates/game.html   | 24 ++++++++++++++--
+ 5 files changed, 153 insertions(+), 14 deletions(-)
+
+commit 0e6a653f3b3a810975f176e0092aa1dd11c87db3
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:17:21 +0900
+Subject: fix: category MC bubble shown to the left of the character (no title overlap)
+
+ server/app/web/static/css/game.css | 9 +++++++++
+ server/app/web/static/js/game.js   | 6 +++---
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+commit bb7c0400e7522fa8590213dd7f2a2708086ae34a
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:13:18 +0900
+Subject: fix: intro no longer cut off; keep male server voice; hide bubble + thinner title on category
+
+ server/app/services/game_manager.py |  2 +-
+ server/app/web/static/css/game.css  |  3 ++-
+ server/app/web/static/js/game.js    | 10 ++++++----
+ 3 files changed, 9 insertions(+), 6 deletions(-)
+
+commit baee6767ec9b236d5435e35a710d0958d1dfa07a
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:05:10 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit b5f3d1a61fe4e704a8663b4bf1d9fd80f9a63d8f
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 14:04:33 +0900
+Subject: style: thinner prompt font (drop Black Han Sans, weight 800)
+
+ server/app/web/static/css/game.css | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+commit 2ce13046129dc88c3608948aa20a0494a7051178
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 14:00:10 +0900
+Subject: docs(submission): add self evaluation report
+
+ ...25\255_\353\252\205\354\204\270\354\204\234.md" |  78 +--
+ ...7\211\352\260\200\352\262\260\352\263\274.html" | 601 +++++++++++++++++++++
+ 2 files changed, 646 insertions(+), 33 deletions(-)
+
+commit 488185ab506917298bd253c2a46f4a0d4347ef63
+Author: jongmin <jijongmin0617@gmail.com>
+Date: 2026-06-29 13:57:41 +0900
+Subject: game: update category prompts for telepathy rounds
+
+ server/app/services/game_narrator.py | 37 ++++++++++++++++--------------------
+ 1 file changed, 16 insertions(+), 21 deletions(-)
+
+commit 5f3efe115f5c6e0976585b97c7d902e4064a2b8a
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 13:56:12 +0900
+Subject: feat: MC explains the rules (prompt/gauge/hint/rounds) in the spoken intro
+
+ server/app/services/game_narrator.py | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+commit 4785ef1b18c2b51f696ad22d87d7105653ae8d31
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 13:49:47 +0900
+Subject: feat: pose-sync hint only when score <=40; add how-to-play guide on idle screen
+
+ server/app/web/static/css/game.css | 39 ++++++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js   | 24 +++++++++++++++++++----
+ server/app/web/templates/game.html |  9 ++++++++-
+ 3 files changed, 67 insertions(+), 5 deletions(-)
+
+commit 9567cb945f814b844f7a79df2b11e74df1932a6b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 13:40:05 +0900
+Subject: merge origin/main into manypeople
+
+commit a334b9361cf89eda1bff029e725e181b78caabba
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 13:38:54 +0900
+Subject: chore: remove category picker from idle screen (now chosen by body)
+
+ server/app/web/templates/game.html | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+commit cafb36c152bf851f7df8f259bf9f776211f01d40
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 11:57:23 +0900
+Subject: fix(web): render merged pose overlay during gameplay
+
+ server/app/web/static/js/game.js | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+commit 394143d4236558a6d9a26dcb9899c836b134c470
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:49:58 +0900
+Subject: feat: show full leaderboard with my team highlighted on the final screen
+
+ server/app/web/static/css/game.css |  5 +++++
+ server/app/web/static/js/game.js   | 18 +++++++++++-------
+ server/app/web/templates/game.html |  5 +++++
+ 3 files changed, 21 insertions(+), 7 deletions(-)
+
+commit 132c9ce3682b05c4173d157384bfbc465052c7e9
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:45:46 +0900
+Subject: fix: shorten game-start line so the 3,2,1 countdown no longer cuts it off
+
+ server/app/services/game_narrator.py | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit d7f8ba95d90059443d46aa297358bb9d0d562e14
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:40:49 +0900
+Subject: tweak: replace post-intro T-pose line with game-start cheer; faster MC voice (+22%)
+
+ server/.env.example                  | 2 +-
+ server/app/config.py                 | 2 +-
+ server/app/services/game_narrator.py | 6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+commit 3854644136317443fdcb649d5270a48203cd165f
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:36:01 +0900
+Subject: feat: MC mentions the selected category in the intro greeting
+
+ server/app/services/game_manager.py  | 2 +-
+ server/app/services/game_narrator.py | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+commit 3402e04f1dd02dfa1f827147384433b31ceeb4b9
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:31:15 +0900
+Subject: fix: feed poses to merged pose-sync overlay during play (color per player)
+
+ server/app/web/static/js/game.js | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+commit 96d66cc8446c5161a5e422b9b94dc04654479b8b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:27:19 +0900
+Subject: fix: category picker must wait for start T-pose to release before confirming
+
+ server/app/services/game_manager.py | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+commit 19f0772a105270aabbe04c826135588258b03f4c
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:22:16 +0900
+Subject: feat: body-controlled category picker + intro waits for full MC speech
+
+ server/app/api/game_routes.py          |   9 +++
+ server/app/services/game_manager.py    |  81 ++++++++++++++++++++--
+ server/app/services/game_narrator.py   |   9 +++
+ server/app/services/pose_similarity.py |  34 ++++++++++
+ server/app/web/static/css/game.css     | 119 +++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js       |  40 ++++++++++-
+ server/app/web/templates/game.html     |  13 ++++
+ 7 files changed, 300 insertions(+), 5 deletions(-)
+
+commit 0311ffff010869c03efca841b14f6424d63fbcb7
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 11:04:54 +0900
+Subject: fix: intro waits for full MC opening before countdown (dynamic duration)
+
+ server/app/services/game_manager.py | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+commit dab74ba9345c58eff6390f946c0648936bfefe25
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 10:58:49 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 9b97d572df1d0b0c564b1788eb09fc3508758ef8
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 10:57:43 +0900
+Subject: feat: any-player T-pose auto-start; unify coach voice with MC (edge-tts)
+
+ server/app/services/game_manager.py | 18 ++++++++++++++----
+ server/app/web/static/js/game.js    | 20 ++------------------
+ 2 files changed, 16 insertions(+), 22 deletions(-)
+
+commit 90a1988e6e4de8e62b6e4befbda648d3c7bb5ade
+Author: jongmin <jijongmin0617@gmail.com>
+Date: 2026-06-29 10:44:43 +0900
+Subject: docs: add project evaluation spec and student deliverable guide
+
+ ...54\274_\352\260\200\354\235\264\353\223\234.md" | 168 ++++++++++++++++++++
+ ..._Agent_\354\240\225\354\235\230\354\204\234.md" | 174 +++++++++++++++++++++
+ 2 files changed, 342 insertions(+)
+
+commit 24925dbd54b9d81abcdcc5964b3a5edfe60c59fe
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 10:23:55 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 906b34818f6916f7d27026e622c50ba814f8b76d
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 10:15:58 +0900
+Subject: feat(ui): add torso-normalised merged skeleton overlay on playing screen
+
+ server/app/web/static/css/game.css |  23 ++++++++
+ server/app/web/static/js/game.js   | 110 ++++++++++++++++++++++++++++++++++++-
+ server/app/web/templates/game.html |   6 ++
+ 3 files changed, 136 insertions(+), 3 deletions(-)
+
+commit 79d8a82b477ec2d4013107e3610081ea7a1ffb9b
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 10:09:30 +0900
+Subject: perf: lower pose_input_width default and offload analyze_group to thread pool
+
+ camera-worker/app/config.py         | 2 +-
+ config/camera-worker.example.yaml   | 2 +-
+ server/app/main.py                  | 2 +-
+ server/app/services/game_manager.py | 9 +++++----
+ 4 files changed, 8 insertions(+), 7 deletions(-)
+
+commit f063ddf4610f8c7495a0e770fa41d3531955ee82
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 09:16:55 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 044936867abc14e63293d6ad0680267a589965b3
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 09:09:48 +0900
+Subject: feat(scoring): replace lower-body bones with face+upper-body only
+
+ server/app/services/pose_similarity.py | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+commit e31772fa378f4a8e80bc5df8f70b01d969d65395
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-29 09:01:22 +0900
+Subject: feat(game): relax T-pose start conditions
+
+ server/app/services/game_manager.py    | 28 +++++++++++++++++++++-------
+ server/app/services/pose_similarity.py | 18 +++++++++---------
+ 2 files changed, 30 insertions(+), 16 deletions(-)
+
+commit ebfc2e249e15399f73da96a34b6e29c34a1a7e21
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 08:47:05 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 828b384f2589f2739abc27f766d66f45b8c2ab81
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-29 08:47:05 +0900
+Subject: feat: T-pose start robustness (wrist-optional) + WIP
+
+ README.md                                          |   2 +-
+ server/README.md                                   |   8 +-
+ server/app/api/game_routes.py                      |  22 ++++
+ server/app/services/game_manager.py                |  52 ++++++++--
+ server/app/services/pose_similarity.py             |  29 ++++--
+ server/app/web/static/js/game.js                   |  49 +++++----
+ .../tts-samples/ko-KR-HyunsuMultilingualNeural.mp3 | Bin 0 -> 60768 bytes
+ .../web/static/tts-samples/ko-KR-InJoonNeural.mp3  | Bin 0 -> 68688 bytes
+ .../web/static/tts-samples/ko-KR-SunHiNeural.mp3   | Bin 0 -> 60048 bytes
+ server/app/web/static/tts-samples/preview.html     | 113 +++++++++++++++++++++
+ server/app/web/templates/game.html                 |  12 ++-
+ 11 files changed, 244 insertions(+), 43 deletions(-)
+
+commit 55ffde679f06474fdc207f5072e1ee3095d3411b
+Author: hyogeun-byun <hyogeun-byun@users.noreply.github.com>
+Date: 2026-06-28 22:28:07 +0900
+Subject: feat: score poses with bone vectors
+
+ server/app/api/camera_routes.py         |   4 +-
+ server/app/services/game_manager.py     |  35 ++++---
+ server/app/services/game_narrator.py    |   8 ++
+ server/app/services/pose_similarity.py  | 161 +++++++++++++++++++++++---------
+ server/app/web/static/css/dashboard.css |   2 +
+ server/app/web/static/js/dashboard.js   |  33 +++----
+ server/app/web/templates/index.html     |   4 +-
+ 7 files changed, 166 insertions(+), 81 deletions(-)
+
+commit 85305b29935fe637e8d3b56ecb39f6b1b4c211ba
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-26 16:32:49 +0900
+Subject: bug fix
+
+ server/app/services/game_manager.py | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
+
+commit 63846f1ac604056cb02a83d4f3895b655e0f9959
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-26 16:19:49 +0900
+Subject: add start pose and torso norm
+
+ server/app/services/game_manager.py    | 177 ++++++++++++++++++++++++++++++---
+ server/app/services/game_narrator.py   |  68 ++++++++++++-
+ server/app/services/pose_similarity.py | 122 +++++++++++++++++++++--
+ 3 files changed, 343 insertions(+), 24 deletions(-)
+
+commit 00361e1fc0840b36f9ba45b0eab3cf02b1a1c450
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-26 15:59:53 +0900
+Subject: feat(pose): add torso-frame normalisation to compute_joint_angles
+
+ server/app/services/pose_similarity.py | 137 +++++++++++++++++++++++++++++----
+ 1 file changed, 122 insertions(+), 15 deletions(-)
+
+commit 1d52596d25b02c62ddbeb58e5e0e1bc7011657dc
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-26 10:25:23 +0900
+Subject: Add benchmark
+
+ scratch/benchmark_llm.py                           | 981 +++++++++++++++++++++
+ .../benchmark_20260625_164643.log                  |   0
+ .../{output => bkp_output}/mediapipe_full_44ms.mp4 | Bin
+ .../{output => bkp_output}/mediapipe_lite_30ms.mp4 | Bin
+ .../movenet_lightning_19ms.mp4                     | Bin
+ .../movenet_thunder_48ms.mp4                       | Bin
+ scratch/compare_llm_results.py                     | 214 +++++
+ scratch/llm_output/benchmark_20260626_095913.log   |  90 ++
+ scratch/llm_output/compare_20260626_095913.json    | 407 +++++++++
+ scratch/llm_output/compare_20260626_102141.log     | 206 +++++
+ .../model_exaone3.5-2.4b_20260626_095913.json      | 106 +++
+ .../model_exaone3.5-2.4b_20260626_095913.log       |  42 +
+ .../llm_output/model_gemma-2b_20260626_095913.json | 106 +++
+ .../llm_output/model_gemma-2b_20260626_095913.log  |  50 ++
+ .../model_llama3.2-3b_20260626_095913.json         | 106 +++
+ .../model_llama3.2-3b_20260626_095913.log          |  44 +
+ .../model_qwen2.5-3b_20260626_095913.json          | 106 +++
+ .../model_qwen2.5-3b_20260626_095913.log           |  42 +
+ scratch/run_llm_benchmark.sh                       | 186 ++++
+ 19 files changed, 2686 insertions(+)
+
+commit b16a5419fb79d4ea7118dd43747fc2210b5abe0e
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-25 17:02:09 +0900
+Subject: feat: revert to MediaPipe Pose Lite, set inference FPS to 10
+
+ camera-worker/README.md                       |  28 +--
+ camera-worker/app/config.py                   |  17 +-
+ camera-worker/app/constants.py                |   4 +-
+ camera-worker/app/inference/pose_estimator.py | 271 ++++++++------------------
+ camera-worker/app/main.py                     |  11 +-
+ camera-worker/requirements.txt                |   8 +-
+ config/camera-worker.example.yaml             |  10 +-
+ 7 files changed, 109 insertions(+), 240 deletions(-)
+
+commit 9c3736176a94bc3bc3c777aa125212fb8237f533
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 16:56:47 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 0eb8ca3bc8bf1e0faaf9e2d2b941a596ee61334f
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 16:54:50 +0900
+Subject: fix(ui): MC 캐릭터를 중앙 콘텐츠 기준으로 고정해 텍스트 겹침 제거
+
+ server/app/web/static/css/game.css | 65 +++++++++++++++++++++++---------------
+ 1 file changed, 40 insertions(+), 25 deletions(-)
+
+commit 32f6a048d7c2e16a245f0b01668b699f63bb816e
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-25 16:49:14 +0900
+Subject: feat: scratch 폴더 추가 및 Thunder 모델 추가
+
+ .../movenet-singlepose-thunder-tflite-int8.tflite  | Bin 0 -> 7126768 bytes
+ scratch/compare_models.py                          | 494 +++++++++++++++++++++
+ scratch/output/benchmark_20260625_164643.log       |  40 ++
+ scratch/output/mediapipe_full_44ms.mp4             | Bin 0 -> 2389718 bytes
+ scratch/output/mediapipe_lite_30ms.mp4             | Bin 0 -> 2335549 bytes
+ scratch/output/movenet_lightning_19ms.mp4          | Bin 0 -> 2445684 bytes
+ scratch/output/movenet_thunder_48ms.mp4            | Bin 0 -> 2408352 bytes
+ scratch/record_camera.py                           | 129 ++++++
+ scratch/test.mp4                                   | Bin 0 -> 1847563 bytes
+ 9 files changed, 663 insertions(+)
+
+commit ce3bb87c47b34ce75a23d00f87962827712acc9b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 16:36:52 +0900
+Subject: feat(diag): 종횡비 보정 각도 + 점수 분해 진단 오버레이
+
+ server/app/api/camera_routes.py         |  20 +++++
+ server/app/main.py                      |   2 +
+ server/app/services/pose_similarity.py  |  76 ++++++++++++++++-
+ server/app/web/static/css/dashboard.css | 143 ++++++++++++++++++++++++++++++++
+ server/app/web/static/js/dashboard.js   |  69 +++++++++++++++
+ server/app/web/templates/index.html     |  22 +++++
+ 6 files changed, 329 insertions(+), 3 deletions(-)
+
+commit 840d58e9875bb63fab14484244c30f382142a56b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 15:40:08 +0900
+Subject: docs: 포즈 백엔드 표기 MediaPipe→MoveNet int8 정정 + 1차 발표 슬라이드(Marp)
+
+ README.md                       |  10 +--
+ docs/presentation/1st-review.md | 178 ++++++++++++++++++++++++++++++++++++++++
+ poster/poster.html              |   2 +-
+ server/README.md                |   8 +-
+ 4 files changed, 188 insertions(+), 10 deletions(-)
+
+commit c20c2d55e194f319b0be20d380060bf8ff494c4b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 15:15:33 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 8b00c39d5f994465dec221ededd733a51bb29b5f
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 15:14:51 +0900
+Subject: feat(game): MC 위치·크기 개편, 페이지 스크롤 복구, 인트로/결산 말풍선 중복 제거
+
+ server/app/web/static/css/game.css | 84 ++++++++++++++++++++++++++------------
+ server/app/web/static/js/game.js   | 74 ++++++++++++++++++++++++++++++---
+ 2 files changed, 125 insertions(+), 33 deletions(-)
+
+commit 9291b1c8fd57ffcf7faf5e8b80d930e7fe33990d
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-25 15:00:45 +0900
+Subject: docs: 제출용 폴더 생성 및 요구사항 명세서 작성
+
+ ...25\255_\353\252\205\354\204\270\354\204\234.md" | 54 ++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+
+commit 39aea6778a9d527fef89ef38ff87edda255cdc31
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 14:48:34 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit be76d1feedeb5a2799da1838e2856bbff2f7e7f5
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 14:46:53 +0900
+Subject: feat: 결과/리포트에 실제 사진+포즈 오버레이(AI Vision) 공개
+
+ server/app/api/game_routes.py       |  17 ++++++
+ server/app/services/game_manager.py |  21 ++++++++
+ server/app/web/static/css/game.css  |  10 ++++
+ server/app/web/static/js/game.js    | 104 ++++++++++++++++++++++++++----------
+ server/app/web/templates/game.html  |   1 +
+ 5 files changed, 125 insertions(+), 28 deletions(-)
+
+commit d39403dda1b88b75d8b958b03b069097381116fa
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-25 14:33:43 +0900
+Subject: feat: replace MediaPipe with MoveNet SinglePose Lightning TFLite int8
+
+ camera-worker/README.md                       |  37 +++-
+ camera-worker/app/config.py                   |  19 +-
+ camera-worker/app/inference/pose_estimator.py | 281 ++++++++++++++++++--------
+ camera-worker/app/main.py                     |  12 +-
+ camera-worker/requirements.txt                |   8 +-
+ config/camera-worker.example.yaml             |  10 +-
+ 6 files changed, 259 insertions(+), 108 deletions(-)
+
+commit 7971b6d668fb1d62922019b006a9252a04f93b80
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 14:18:56 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 67d094be72e1c3086cbbb98a96a300877a8cb027
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-25 14:17:07 +0900
+Subject: feat: 팀 리더보드 - 팀명 입력·점수 SQLite 누적 저장·랭킹 표시·초기화 기능
+
+ .gitignore                           |   7 ++
+ server/app/api/game_routes.py        |   6 +-
+ server/app/api/leaderboard_routes.py |  26 ++++++
+ server/app/config.py                 |   2 +
+ server/app/main.py                   |   6 ++
+ server/app/services/game_manager.py  |  33 ++++++-
+ server/app/services/leaderboard.py   | 108 ++++++++++++++++++++++
+ server/app/web/static/css/game.css   | 171 +++++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js     | 103 ++++++++++++++++++++-
+ server/app/web/templates/game.html   |  26 ++++++
+ 10 files changed, 484 insertions(+), 4 deletions(-)
+
+commit 1661f2e713d5e280197b22f8e9cf8b6784195a3f
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-25 12:02:38 +0900
+Subject: modify readme
+
+ README.md | 144 +++++++++++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 114 insertions(+), 30 deletions(-)
+
+commit ba0b047e5b876a9da437ecc6476b63d53bc65679
+Author: jongmin <jijongmin0617@gmail.com>
+Date: 2026-06-25 09:01:13 +0900
+Subject: game: 카테고리 기반 랜덤 5문제 제시어 시스템으로 변경
+
+ server/README.md                     |   7 +-
+ server/app/api/game_routes.py        |   6 +-
+ server/app/config.py                 |   2 +-
+ server/app/services/game_manager.py  |  35 ++++-----
+ server/app/services/game_narrator.py | 143 +++++++++++++++--------------------
+ server/app/web/static/js/game.js     |  21 +----
+ server/app/web/templates/game.html   |  15 +---
+ 7 files changed, 86 insertions(+), 143 deletions(-)
+
+commit 22766d2015914d9a898f637f7b998dcc2d454035
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 17:12:51 +0900
+Subject: UI: lighter, cleaner idle title font (Gothic A1 800) instead of overly heavy Black Han Sans
+
+ server/app/web/static/css/game.css | 9 +++++----
+ server/app/web/templates/game.html | 2 +-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+commit ec4081b324a4a264d01a5afdd431f772aeb9a66e
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 17:01:40 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 31c2a278c10b4b0b4190866d7ba0b9dc6f25b270
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:58:33 +0900
+Subject: Fix: header sits above screen layers (z-index) so the '처음부터' restart button is clickable during play
+
+ server/app/web/static/css/game.css | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 1a4638dacfd440d3fc1cd82dae946639b82928f9
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-24 16:45:02 +0900
+Subject: Fix game reset and result snapshots
+
+ server/app/services/game_manager.py |  6 +++
+ server/app/web/static/css/game.css  |  3 +-
+ server/app/web/static/js/game.js    | 26 +++++++++--
+ stop.sh                             | 88 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 119 insertions(+), 4 deletions(-)
+
+commit a1a6b5fa7b135a611c7f38b1fe53977ec27d289c
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:42:46 +0900
+Subject: start.sh: kill stale supervisors + wait for port free to stop 'address already in use' restart loop
+
+ start.sh | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+commit a0f3bfc8b6591d91b51c5a242630121bd47298fa
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:38:20 +0900
+Subject: Fix stale page (no-store on /game,/stage HTML); keep MC 민수 in corner so it never covers buttons; wide horizontal speech bubble
+
+ server/app/main.py                 | 10 +++++--
+ server/app/web/static/css/game.css | 53 ++++++++++++++++----------------------
+ 2 files changed, 30 insertions(+), 33 deletions(-)
+
+commit f7e2ccfe23f2f18a0880d6c6c3e9c58eee0a6b29
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:31:56 +0900
+Subject: Merge remote-tracking branch 'origin/main' into manypeople
+
+commit 7407a2a93913613c9d33cc1787f9329bb1e02649
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:30:15 +0900
+Subject: MC 민수: center & enlarge while presenting, drift to the side like a cute ghost during play
+
+ server/app/web/static/css/game.css | 81 ++++++++++++++++++++++++++++++++++----
+ server/app/web/static/js/game.js   | 10 ++++-
+ 2 files changed, 83 insertions(+), 8 deletions(-)
+
+commit 989642685787e7ca1d0369007727318a060fd1b6
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-24 16:18:34 +0900
+Subject: add checklist.md
+
+ checklist.md | 195 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 195 insertions(+)
+
+commit c37c8a8e8d0a96cb8d9709e21e0d472fef05e0d0
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:16:16 +0900
+Subject: start.sh: server-only with auto-restart supervisor (no camera, resilient to crashes)
+
+ start.sh | 103 ++++++++++++++++++++++-----------------------------------------
+ 1 file changed, 36 insertions(+), 67 deletions(-)
+
+commit 48d8ed52d54be50c12b6bfc9cd59c79d2f18a7d6
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 16:13:15 +0900
+Subject: Fix launcher (restore camera section, robust shutdown) and bust static asset cache so restart buttons reflect latest build
+
+ server/app/main.py                  |  7 ++++++
+ server/app/web/templates/game.html  |  4 ++--
+ server/app/web/templates/stage.html |  4 ++--
+ start.sh                            | 44 +++++++++++++++++++++++--------------
+ 4 files changed, 38 insertions(+), 21 deletions(-)
+
+commit 42d3ebc05d47a80fd05806a853153b8cc6cc79cf
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 15:46:37 +0900
+Subject: Add one-command launcher scripts (server + camera)
+
+ start-camera.sh | 42 ++++++++++++++++++++++++++
+ start.sh        | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 135 insertions(+)
+
+commit def76462cee304d60164e5d5577972915f48c22c
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 15:41:00 +0900
+Subject: merge: main의 양자화 모델/벤치 스크립트 흡수 (충돌 시 manypeople 작업 우선)
+
+commit 556f763e2efd2a8f742c1f295e3a7e28ad36f975
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 15:39:42 +0900
+Subject: feat(game): 2-스크린 파티 게임 리디자인 (참가자/관객 분리 + 난이도 + 활동성 점수 + 실시간 코칭)
+
+ server/README.md                       |  32 ++--
+ server/app/api/game_routes.py          |  13 +-
+ server/app/main.py                     |  12 ++
+ server/app/services/game_manager.py    |  94 +++++++++--
+ server/app/services/game_narrator.py   | 161 +++++++++++++++---
+ server/app/services/pose_similarity.py | 128 +++++++++++++--
+ server/app/web/static/css/game.css     | 291 +++++++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js       |  53 +++++-
+ server/app/web/static/js/stage.js      | 141 ++++++++++++++++
+ server/app/web/templates/game.html     |  30 +++-
+ server/app/web/templates/stage.html    |  78 +++++++++
+ 11 files changed, 949 insertions(+), 84 deletions(-)
+
+commit c80c871f7e0a8df8c47ca35f3aeefb38fb877e59
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-24 14:22:38 +0900
+Subject: add quantized model
+
+ ...movenet-singlepose-lightning-tflite-int8.tflite | Bin 0 -> 2894840 bytes
+ camera-worker/scripts/benchmark_movenet_int8.py    | 189 +++++++++++
+ .../scripts/compare_pose_backends_live.py          | 355 +++++++++++++++++++++
+ 3 files changed, 544 insertions(+)
+
+commit 3ebb068933a1298a638118164a2bfb4066545af2
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 12:04:54 +0900
+Subject: add poster
+
+ poster/poster.html | 219 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ poster/poster.pdf  | Bin 0 -> 9732744 bytes
+ 2 files changed, 219 insertions(+)
+
+commit 8340d4313465596542af19112dba8c1d80f0537f
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 11:31:05 +0900
+Subject: add README
+
+ server/README.md | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+commit a81d47464764ee3abf01f3f8b29c256a21aa27a4
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-24 11:10:02 +0900
+Subject: feat(game): AI MC with LLM + natural TTS, intro trigger, abstract prompts, rich report
+
+ server/.env.example                     |  38 +++
+ server/README.md                        |  95 ++++++
+ server/app/api/game_routes.py           |  30 +-
+ server/app/config.py                    |  32 ++
+ server/app/main.py                      |  58 +++-
+ server/app/services/game_manager.py     | 192 +++++++++--
+ server/app/services/game_narrator.py    | 237 ++++++++++++++
+ server/app/services/llm_client.py       |  92 ++++++
+ server/app/services/pose_similarity.py  |   2 +-
+ server/app/services/speech_audio.py     |  68 ++++
+ server/app/services/tts.py              | 207 ++++++++++++
+ server/app/web/static/css/dashboard.css |   9 +
+ server/app/web/static/css/game.css      | 471 ++++++++++++++++++++++++++-
+ server/app/web/static/js/dashboard.js   |  97 ++++++
+ server/app/web/static/js/game.js        | 549 +++++++++++++++++++++++++++++++-
+ server/app/web/templates/game.html      |  83 ++++-
+ server/app/web/templates/index.html     |   1 +
+ server/requirements.txt                 |   3 +
+ 18 files changed, 2230 insertions(+), 34 deletions(-)
+
+commit 6eae9d7af6663119313237d4b9b92aa589a71ba5
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-06-24 10:45:27 +0900
+Subject: ui 고도화 06/24 오전
+
+ frontend/src/app/App.tsx | 1639 ++++++++++++++++++++++------------------------
+ 1 file changed, 770 insertions(+), 869 deletions(-)
+
+commit cb9908a80b42306ff2ed064ec9038dcd8662626b
+Author: langleman2 <minsu97@gmail.com>
+Date: 2026-06-24 09:20:15 +0900
+Subject: feat: add frontend
+
+ .gitignore                                         |    1 +
+ frontend/ATTRIBUTIONS.md                           |    3 +
+ frontend/README.md                                 |   11 +
+ frontend/default_shadcn_theme.css                  |  120 +
+ frontend/guidelines/Guidelines.md                  |   61 +
+ frontend/index.html                                |   22 +
+ frontend/package-lock.json                         | 5539 ++++++++++++++++++++
+ frontend/package.json                              |   90 +
+ frontend/pnpm-workspace.yaml                       |   10 +
+ frontend/postcss.config.mjs                        |   15 +
+ frontend/src/app/App.tsx                           | 1132 ++++
+ .../src/app/components/figma/ImageWithFallback.tsx |   27 +
+ frontend/src/app/components/ui/accordion.tsx       |   66 +
+ frontend/src/app/components/ui/alert-dialog.tsx    |  157 +
+ frontend/src/app/components/ui/alert.tsx           |   66 +
+ frontend/src/app/components/ui/aspect-ratio.tsx    |   11 +
+ frontend/src/app/components/ui/avatar.tsx          |   53 +
+ frontend/src/app/components/ui/badge.tsx           |   46 +
+ frontend/src/app/components/ui/breadcrumb.tsx      |  109 +
+ frontend/src/app/components/ui/button.tsx          |   58 +
+ frontend/src/app/components/ui/calendar.tsx        |   75 +
+ frontend/src/app/components/ui/card.tsx            |   92 +
+ frontend/src/app/components/ui/carousel.tsx        |  241 +
+ frontend/src/app/components/ui/chart.tsx           |  353 ++
+ frontend/src/app/components/ui/checkbox.tsx        |   32 +
+ frontend/src/app/components/ui/collapsible.tsx     |   33 +
+ frontend/src/app/components/ui/command.tsx         |  177 +
+ frontend/src/app/components/ui/context-menu.tsx    |  252 +
+ frontend/src/app/components/ui/dialog.tsx          |  135 +
+ frontend/src/app/components/ui/drawer.tsx          |  132 +
+ frontend/src/app/components/ui/dropdown-menu.tsx   |  257 +
+ frontend/src/app/components/ui/form.tsx            |  168 +
+ frontend/src/app/components/ui/hover-card.tsx      |   44 +
+ frontend/src/app/components/ui/input-otp.tsx       |   77 +
+ frontend/src/app/components/ui/input.tsx           |   21 +
+ frontend/src/app/components/ui/label.tsx           |   24 +
+ frontend/src/app/components/ui/menubar.tsx         |  276 +
+ frontend/src/app/components/ui/navigation-menu.tsx |  168 +
+ frontend/src/app/components/ui/pagination.tsx      |  127 +
+ frontend/src/app/components/ui/popover.tsx         |   48 +
+ frontend/src/app/components/ui/progress.tsx        |   31 +
+ frontend/src/app/components/ui/radio-group.tsx     |   45 +
+ frontend/src/app/components/ui/resizable.tsx       |   56 +
+ frontend/src/app/components/ui/scroll-area.tsx     |   58 +
+ frontend/src/app/components/ui/select.tsx          |  189 +
+ frontend/src/app/components/ui/separator.tsx       |   28 +
+ frontend/src/app/components/ui/sheet.tsx           |  139 +
+ frontend/src/app/components/ui/sidebar.tsx         |  726 +++
+ frontend/src/app/components/ui/skeleton.tsx        |   13 +
+ frontend/src/app/components/ui/slider.tsx          |   63 +
+ frontend/src/app/components/ui/sonner.tsx          |   25 +
+ frontend/src/app/components/ui/switch.tsx          |   31 +
+ frontend/src/app/components/ui/table.tsx           |  116 +
+ frontend/src/app/components/ui/tabs.tsx            |   66 +
+ frontend/src/app/components/ui/textarea.tsx        |   18 +
+ frontend/src/app/components/ui/toggle-group.tsx    |   73 +
+ frontend/src/app/components/ui/toggle.tsx          |   47 +
+ frontend/src/app/components/ui/tooltip.tsx         |   61 +
+ frontend/src/app/components/ui/use-mobile.ts       |   21 +
+ frontend/src/app/components/ui/utils.ts            |    6 +
+ frontend/src/main.tsx                              |    7 +
+ frontend/src/styles/fonts.css                      |    1 +
+ frontend/src/styles/globals.css                    |    0
+ frontend/src/styles/index.css                      |    3 +
+ frontend/src/styles/tailwind.css                   |    4 +
+ frontend/src/styles/theme.css                      |  181 +
+ frontend/vite.config.ts                            |   36 +
+ 67 files changed, 12373 insertions(+)
+
+commit 1c8215e51225cb2a29e0226be2522e66018ace06
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-23 15:36:35 +0900
+Subject: feat: add pose measurement workflow
+
+ camera-worker/README.md                   |   4 +-
+ camera-worker/app/constants.py            |   2 -
+ camera-worker/app/main.py                 |   8 +-
+ raspberry-pi-multi-camera-architecture.md |   2 +-
+ server/app/api/camera_routes.py           |  25 +++
+ server/app/services/pose_similarity.py    | 130 +++++++++++++++
+ server/app/services/stream_manager.py     |  59 +++++++
+ server/app/web/static/css/dashboard.css   | 145 +++++++++++++++++
+ server/app/web/static/js/dashboard.js     | 252 ++++++++++++++++++++++++++++++
+ server/app/web/templates/index.html       |  30 +++-
+ 10 files changed, 645 insertions(+), 12 deletions(-)
+
+commit 46f7f8e81ce05aa8e11a062f983d6fded2f8656b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-23 15:20:18 +0900
+Subject: fix: restore camera-worker to maintained websocket version
+
+ camera-worker/app/main.py                  | 210 ++++++++++++++++++++---------
+ camera-worker/app/network/server_client.py |  27 +++-
+ 2 files changed, 173 insertions(+), 64 deletions(-)
+
+commit 5ac4624bc594c94746fa10b5569400d9eb0b1f8b
+Author: manypeople <na05128@ewhain.net>
+Date: 2026-06-23 15:10:03 +0900
+Subject: feat: add 이구동성 telepathy pose game + ignore proj venv
+
+ .gitignore                                 |   1 +
+ camera-worker/app/main.py                  | 210 ++++-------
+ camera-worker/app/network/server_client.py |  27 +-
+ server/README.md                           |  17 +
+ server/app/api/game_routes.py              |  44 +++
+ server/app/main.py                         |  48 ++-
+ server/app/services/game_hub.py            |  38 ++
+ server/app/services/game_manager.py        | 179 ++++++++++
+ server/app/services/pose_similarity.py     | 117 ++++++
+ server/app/web/static/css/game.css         | 549 +++++++++++++++++++++++++++++
+ server/app/web/static/js/game.js           | 192 ++++++++++
+ server/app/web/templates/game.html         | 100 ++++++
+ 12 files changed, 1348 insertions(+), 174 deletions(-)
+
+commit b9ac27e024674500c85ec30f7f6106fd775658a0
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-23 14:35:30 +0900
+Subject: feat: stream camera worker data over websocket
+
+ camera-worker/.env.example                    |   1 -
+ camera-worker/README.md                       |   8 +-
+ camera-worker/app/config.py                   |   2 -
+ camera-worker/app/constants.py                |   2 +
+ camera-worker/app/main.py                     | 170 ++++++++++++++++++++------
+ camera-worker/app/metrics.py                  | 137 +++++++++++----------
+ camera-worker/app/network/websocket_client.py |  71 +++++++++++
+ camera-worker/requirements.txt                |   1 +
+ config/camera-worker.example.yaml             |   1 -
+ raspberry-pi-multi-camera-architecture.md     |   2 +-
+ server/app/api/camera_routes.py               | 107 +++++++++++++---
+ 11 files changed, 375 insertions(+), 127 deletions(-)
+
+commit b297725b4d8a6b1feb72e4892074441a492c73b6
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-23 13:46:38 +0900
+Subject: feat: visualize camera performance metrics
+
+ camera-worker/.env.example                 |   1 +
+ camera-worker/README.md                    |  20 +++++
+ camera-worker/app/config.py                |   2 +
+ camera-worker/app/main.py                  |  44 +++++++++-
+ camera-worker/app/metrics.py               | 128 +++++++++++++++++++++++++++++
+ camera-worker/app/network/server_client.py |  31 ++++++-
+ config/server.example.yaml                 |   2 +-
+ server/.env.example                        |   2 +-
+ server/README.md                           |  15 ++++
+ server/app/api/camera_routes.py            |  54 +++++++++++-
+ server/app/config.py                       |   9 ++
+ server/app/main.py                         |   5 +-
+ server/app/services/stream_manager.py      |  41 ++++++++-
+ server/app/services/traffic_metrics.py     |  72 ++++++++++++++++
+ server/app/web/static/css/dashboard.css    |  62 ++++++++++++++
+ server/app/web/static/js/dashboard.js      |  49 +++++++++++
+ server/app/web/templates/index.html        |  46 ++++++++++-
+ 17 files changed, 569 insertions(+), 14 deletions(-)
+
+commit 298672e27b271a89c76e9223d160b5df2868d933
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-23 11:52:06 +0900
+Subject: feat: add pose estimation results to camera workers
+
+ camera-worker/.env.example                    |   9 +-
+ camera-worker/README.md                       |  11 +++
+ camera-worker/app/config.py                   |  23 +++++
+ camera-worker/app/inference/__init__.py       |   1 +
+ camera-worker/app/inference/pose_estimator.py | 136 ++++++++++++++++++++++++++
+ camera-worker/app/main.py                     |  20 +++-
+ camera-worker/app/network/server_client.py    |  11 +++
+ camera-worker/requirements.txt                |   1 +
+ config/camera-worker.example.yaml             |   9 +-
+ raspberry-pi-multi-camera-architecture.md     |   2 +
+ server/README.md                              |   1 +
+ server/app/api/camera_routes.py               |  47 ++++++++-
+ server/app/services/stream_manager.py         |  41 +++++++-
+ server/app/web/static/css/dashboard.css       |  29 +++++-
+ server/app/web/static/js/dashboard.js         |  12 ++-
+ server/app/web/templates/index.html           |  11 ++-
+ server/requirements.txt                       |   1 +
+ 17 files changed, 356 insertions(+), 9 deletions(-)
+
+commit 6e9ea8bab783262f494c44c10b53899e9fda65ea
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-23 11:11:05 +0900
+Subject: feat: add raspberry pi camera streaming prototype
+
+ .gitignore                                 |  17 +
+ camera-worker/.env.example                 |   8 +
+ camera-worker/README.md                    |  30 ++
+ camera-worker/app/__init__.py              |   1 +
+ camera-worker/app/camera/__init__.py       |   1 +
+ camera-worker/app/camera/camera_reader.py  |  34 ++
+ camera-worker/app/camera/frame_encoder.py  |  19 ++
+ camera-worker/app/config.py                |  31 ++
+ camera-worker/app/main.py                  |  48 +++
+ camera-worker/app/network/__init__.py      |   1 +
+ camera-worker/app/network/server_client.py |  24 ++
+ camera-worker/requirements.txt             |   3 +
+ camera-worker/scripts/run_worker.sh        |   6 +
+ config/camera-worker.example.yaml          |   8 +
+ config/server.example.yaml                 |   7 +
+ raspberry-pi-multi-camera-architecture.md  | 496 +++++++++++++++++++++++++++++
+ server/.env.example                        |   4 +
+ server/README.md                           |  32 ++
+ server/app/__init__.py                     |   1 +
+ server/app/api/__init__.py                 |   1 +
+ server/app/api/camera_routes.py            |  75 +++++
+ server/app/api/health_routes.py            |  11 +
+ server/app/config.py                       |  29 ++
+ server/app/main.py                         |  35 ++
+ server/app/services/__init__.py            |   1 +
+ server/app/services/stream_manager.py      |  55 ++++
+ server/app/web/static/css/dashboard.css    | 143 +++++++++
+ server/app/web/static/js/dashboard.js      |  28 ++
+ server/app/web/templates/index.html        |  41 +++
+ server/requirements.txt                    |   4 +
+ server/scripts/run_server.sh               |   6 +
+ 31 files changed, 1200 insertions(+)
+
+commit dc594eefd6290c6f8def277932a947d74ac44249
+Author: hyogeun_byun <withwidin@naver.com>
+Date: 2026-06-22 09:32:46 +0900
+Subject: docs(policy): add project documentation and coding policies
+
+ docs/file-naming-policy.md                   | 124 ++++++++++++++++++++++
+ docs/git-commit-policy.md                    | 151 +++++++++++++++++++++++++++
+ docs/python-coding-policy.md                 |  51 +++++++++
+ docs/python/python-linting-and-formatting.md |  72 +++++++++++++
+ docs/python/python-runtime-quality-policy.md |  60 +++++++++++
+ docs/python/python-style-guide.md            |  87 +++++++++++++++
+ docs/python/python-testing-policy.md         |  78 ++++++++++++++
+ docs/python/python-typing-policy.md          |  81 ++++++++++++++
+ 8 files changed, 704 insertions(+)
+
+commit cf6d636de45c6f5171008b947856e972a02b2f3c
+Author: hyogeun-byun <73457577+hyogeun-byun@users.noreply.github.com>
+Date: 2026-06-08 15:41:23 +0900
+Subject: Update README.md
+
+ README.md | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 46 insertions(+), 2 deletions(-)
+
+commit bc801e2c12cd63c2ff4e0b9dfff18985040c0d70
+Author: hyogeun-byun <73457577+hyogeun-byun@users.noreply.github.com>
+Date: 2026-06-08 10:34:09 +0900
+Subject: Initial commit
+
+ README.md | 2 ++
+ 1 file changed, 2 insertions(+)
