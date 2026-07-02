@@ -1,6 +1,6 @@
 requirement_id=R-04
 evidence_slug=threaded-capture-frame-pose
-generated_at=2026-07-01T02:35:20.364628+00:00
+generated_at=2026-07-01T23:54:59.732153+00:00
 unit_status=thread_structure_verified
 field_evidence_required=true
 field_success_criteria=frame_fps stays near target while pose_fps is recorded and failed_frames does not accumulate

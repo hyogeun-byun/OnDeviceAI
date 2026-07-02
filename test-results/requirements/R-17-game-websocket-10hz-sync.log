@@ -1,6 +1,6 @@
 requirement_id=R-17
 evidence_slug=game-websocket-10hz-sync
-generated_at=2026-07-01T02:35:20.471121+00:00
+generated_at=2026-07-01T23:55:00.683756+00:00
 unit_status=server_broadcast_loop_verified
 field_evidence_required=true
 field_reason=requires_two_browser clients or recorded timing comparison between /game and /stage

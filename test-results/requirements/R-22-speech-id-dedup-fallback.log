@@ -1,6 +1,6 @@
 requirement_id=R-22
 evidence_slug=speech-id-dedup-fallback
-generated_at=2026-07-01T02:35:20.473925+00:00
+generated_at=2026-07-01T23:55:00.683756+00:00
 unit_status=speech_id_and_client_dedup_verified
 field_evidence_required=optional
 field_success_criteria=same speech_id is played once; failed mp3 request falls back to browser speech once

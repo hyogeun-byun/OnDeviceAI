@@ -1,6 +1,6 @@
 requirement_id=R-03
 evidence_slug=pose-fps-33-landmarks
-generated_at=2026-07-01T02:35:20.364150+00:00
+generated_at=2026-07-01T23:54:59.732153+00:00
 unit_status=metrics_jsonl_writer_verified
 unit_generated_metrics_jsonl=true
 field_evidence_required=true
